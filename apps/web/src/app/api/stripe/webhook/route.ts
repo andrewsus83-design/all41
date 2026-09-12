@@ -1,3 +1,4 @@
+import { primeSecrets } from "@/lib/env";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe/client";
 import { grantTopup } from "@/lib/stripe/grant";
@@ -20,6 +21,7 @@ function amountUsdOf(session: Stripe.Checkout.Session): number {
 
 /** POST /api/stripe/webhook — verifies the signature on the raw body, grants credit idempotently. */
 export async function POST(request: Request) {
+  await primeSecrets();
   const stripe = getStripe();
   if (!stripe || !env.stripeWebhookSecret) {
     return Response.json({ error: "Payments not configured yet" }, { status: 503 });

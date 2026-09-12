@@ -1,11 +1,11 @@
 export type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
 
-/** Model ids are "provider:model" — e.g. "openrouter:anthropic/claude-sonnet-4.5", "mock:mock-model". */
+/** Model ids are "provider:model" — e.g. "anthropic:claude-sonnet-5", "google:gemini-2.5-flash", "mock:mock-model". */
 export type ModelId = `${string}:${string}`;
 
 export function splitModelId(id: string): { provider: string; model: string } {
   const i = id.indexOf(":");
-  if (i < 0) return { provider: "openrouter", model: id };
+  if (i < 0) return { provider: "mock", model: id };
   return { provider: id.slice(0, i), model: id.slice(i + 1) };
 }
 
@@ -25,7 +25,7 @@ export type ModelCallResult = {
   latencyMs: number;
   provider: string;
   model: string;
-  /** Exact cost reported by provider (OpenRouter returns this) — preferred over rate math when present. */
+  /** Exact cost reported by the provider, if any — preferred over rate math when present. */
   reportedCostUsd?: number;
   isMock?: boolean;
 };

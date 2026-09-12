@@ -20,7 +20,7 @@ pnpm dev:graph      # graph engine on http://localhost:3401
 pnpm typecheck && pnpm test
 ```
 
-Env: copy `apps/web/.env.example` → `apps/web/.env.local` and `services/graph-engine/.env.example` → `.env`. With **no provider keys** the whole loop still runs on deterministic mock providers (results are flagged `isMock`) — so the financial spine, briefing flow, graph, and apps are testable offline.
+Env: copy `apps/web/.env.example` → `apps/web/.env.local` and `services/graph-engine/.env.example` → `.env`. Keys are managed at `/admin` (Supabase Vault; direct first-party providers only, no aggregators). With **no provider keys** the whole loop still runs on deterministic mock providers (results are flagged `isMock`) — so the financial spine, briefing flow, graph, and apps are testable offline.
 
 See `docs/RUNBOOK.md` for what to add to go from mock to real, and how to deploy the graph engine.
 

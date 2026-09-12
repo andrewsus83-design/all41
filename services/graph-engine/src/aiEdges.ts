@@ -1,9 +1,9 @@
 /**
  * Async AI edge pass (/link/ai) — called by the app's Inngest job, never on the request path.
  * Per chunk: vector pre-filter → top-k candidates not from this source → ONE cheap LLM call
- * (OpenRouter llama-3.3-70b) proposing edges + entities. confidence < 0.6 dropped.
+ * (Groq llama-3.3-70b, first-party key) proposing edges + entities. confidence < 0.6 dropped.
  * Entities converge into one `entity` node per (user, lower(name)); chunk → entity `about`.
- * Without OPENROUTER_API_KEY: deterministic mock (top-1 same_topic_as @0.7 if cosine > 0.3,
+ * Without GROQ_API_KEY: deterministic mock (top-1 same_topic_as @0.7 if cosine > 0.3,
  * entities = capitalized multi-word phrases), logged at cost 0 so the flow is demonstrable offline.
  */
 import { z } from 'zod';
@@ -12,7 +12,7 @@ import { cosine, embedMetered, parseVector, toVectorLiteral } from './embed.js';
 import { HttpError } from './errors.js';
 import { insertEdges } from './link.js';
 
-export const AI_MODEL = 'meta-llama/llama-3.3-70b-instruct';
+export const AI_MODEL = 'llama-3.3-70b-versatile';
 const RELATIONS = ['about', 'mentions', 'contradicts', 'supports', 'same_topic_as'] as const;
 const MIN_CONFIDENCE = 0.6;
 
@@ -29,7 +29,7 @@ export type AiLinkInput = { user_id: string; source_type: string; source_id: str
 export async function aiLink(input: AiLinkInput) {
   const { user_id, source_type, source_id } = input;
   const k = input.k ?? 6;
-  const mode: 'ai' | 'mock' = process.env.OPENROUTER_API_KEY ? 'ai' : 'mock';
+  const mode: 'ai' | 'mock' = process.env.GROQ_API_KEY ? 'ai' : 'mock';
 
   const { data: rows, error } = await admin.from('knowledge_nodes').select('id,title,content,embedding,node_type')
     .eq('user_id', user_id).eq('source_type', source_type).eq('source_id', source_id)
@@ -53,8 +53,8 @@ export async function aiLink(input: AiLinkInput) {
     let out: LlmOut;
     if (mode === 'ai') {
       await assertHasCredit(user_id);
-      const r = await callOpenRouter(chunk, cands);
-      money = sumMetered(money, await meterAndDeduct({ user_id, provider: 'openrouter', model: AI_MODEL, call_kind: 'graph_edge', input_tokens: r.input_tokens, output_tokens: r.output_tokens, latency_ms: r.latency_ms }));
+      const r = await callGroq(chunk, cands);
+      money = sumMetered(money, await meterAndDeduct({ user_id, provider: 'groq', model: AI_MODEL, call_kind: 'graph_edge', input_tokens: r.input_tokens, output_tokens: r.output_tokens, latency_ms: r.latency_ms }));
       out = r.out;
     } else {
       out = mockPass(chunk, cands);
@@ -133,7 +133,7 @@ function mockPass(chunk: ChunkNode, cands: Candidate[]): LlmOut {
   return { edges, entities: [...names].map((name) => ({ name, type: 'thing' })) };
 }
 
-async function callOpenRouter(chunk: ChunkNode, cands: Candidate[]) {
+async function callGroq(chunk: ChunkNode, cands: Candidate[]) {
   const t0 = Date.now();
   const candList = cands.map((c, i) => `[${i}] ${c.title ?? '(untitled)'}: ${c.content.slice(0, 400).replace(/\s+/g, ' ')}`).join('\n');
   const prompt = `You link a knowledge graph. Given the NEW chunk and CANDIDATE nodes, return JSON only:
@@ -146,12 +146,12 @@ ${chunk.content.slice(0, 2400)}
 
 CANDIDATES:
 ${candList || '(none)'}`;
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model: AI_MODEL, temperature: 0, response_format: { type: 'json_object' }, messages: [{ role: 'user', content: prompt }] }),
   });
-  if (!res.ok) throw new HttpError(502, `OPENROUTER_${res.status}: ${(await res.text()).slice(0, 200)}`);
+  if (!res.ok) throw new HttpError(502, `GROQ_${res.status}: ${(await res.text()).slice(0, 200)}`);
   const data = (await res.json()) as { choices?: { message?: { content?: string } }[]; usage?: { prompt_tokens?: number; completion_tokens?: number } };
   const text = data.choices?.[0]?.message?.content ?? '{}';
   let parsed: unknown = {};

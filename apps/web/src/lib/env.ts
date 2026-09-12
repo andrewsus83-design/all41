@@ -1,5 +1,7 @@
-// Server-only env access. Provider keys NEVER leave the server (Ground Rule 2).
+// Server-only env/secrets access. Provider keys NEVER leave the server (Ground Rule 2).
 import "server-only";
+import { getSecret } from "./secrets";
+export { primeSecrets } from "./secrets";
 
 export const env = {
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,43 +10,33 @@ export const env = {
   appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3400",
   graphEngineUrl: process.env.GRAPH_ENGINE_URL ?? "",
   graphEngineSecret: process.env.GRAPH_ENGINE_SECRET ?? "",
-  stripeSecretKey: process.env.STRIPE_SECRET_KEY ?? "",
-  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? "",
   cronSecret: process.env.CRON_SECRET ?? "",
-  telegramBotToken: process.env.TELEGRAM_BOT_TOKEN ?? "",
-  telegramChatId: process.env.TELEGRAM_CHAT_ID ?? "",
+  adminEmails: (process.env.ADMIN_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean),
+  // secrets: vault-first (call primeSecrets() first in async paths), env fallback
+  get stripeSecretKey() { return getSecret("STRIPE_SECRET_KEY"); },
+  get stripeWebhookSecret() { return getSecret("STRIPE_WEBHOOK_SECRET"); },
+  get telegramBotToken() { return getSecret("TELEGRAM_BOT_TOKEN"); },
+  get telegramChatId() { return getSecret("TELEGRAM_CHAT_ID"); },
 };
 
-/**
- * Provider key vault (Task 0.5). Keys are read from server env — on Vercel these are
- * encrypted at rest and injected at runtime; locally from .env.local (gitignored).
- * Migration path to Supabase Vault: swap the body of this function for a
- * `select decrypted_secret from vault.decrypted_secrets where name = $1` via the admin client.
- */
+/** LLM + tool providers — direct first-party keys only (no aggregators). */
 export type Provider =
-  | "openrouter"
-  | "openai"
-  | "anthropic"
-  | "google"
-  | "groq"
-  | "firecrawl"
-  | "serpapi";
+  | "anthropic" | "openai" | "google" | "groq" | "perplexity" | "deepseek" | "xai" | "mistral"
+  | "firecrawl" | "serpapi";
 
 const KEY_ENV: Record<Provider, string> = {
-  openrouter: "OPENROUTER_API_KEY",
-  openai: "OPENAI_API_KEY",
-  anthropic: "ANTHROPIC_API_KEY",
-  google: "GOOGLE_API_KEY",
-  groq: "GROQ_API_KEY",
-  firecrawl: "FIRECRAWL_API_KEY",
-  serpapi: "SERPAPI_API_KEY",
+  anthropic: "ANTHROPIC_API_KEY", openai: "OPENAI_API_KEY", google: "GOOGLE_API_KEY", groq: "GROQ_API_KEY",
+  perplexity: "PERPLEXITY_API_KEY", deepseek: "DEEPSEEK_API_KEY", xai: "XAI_API_KEY", mistral: "MISTRAL_API_KEY",
+  firecrawl: "FIRECRAWL_API_KEY", serpapi: "SERPAPI_API_KEY",
 };
 
-export function getProviderKey(provider: Provider): string | null {
-  const v = process.env[KEY_ENV[provider]];
-  return v && v.length > 0 ? v : null;
-}
+export function providerKeyName(provider: Provider) { return KEY_ENV[provider]; }
+export function isProvider(p: string): p is Provider { return p in KEY_ENV; }
 
-export function hasProviderKey(provider: Provider): boolean {
-  return getProviderKey(provider) !== null;
+export function getProviderKey(provider: Provider): string | null {
+  const v = getSecret(KEY_ENV[provider]);
+  return v.length > 0 ? v : null;
+}
+export function hasProviderKey(provider: string): boolean {
+  return isProvider(provider) && getProviderKey(provider) !== null;
 }

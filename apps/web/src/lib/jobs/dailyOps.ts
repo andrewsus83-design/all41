@@ -3,7 +3,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { getRoutingWeights } from "@/lib/ai/router";
 import { splitModelId } from "@/lib/ai/types";
 import { getPricing, getRates } from "@/lib/finance/cost";
-import { getProviderKey } from "@/lib/env";
+import { getProviderKey, primeSecrets } from "@/lib/env";
 import { sendTelegram, escapeHtml } from "@/lib/telegram";
 import { computePnl, rollupDailyPnl, utcDateString, utcDayRange, yesterdayUtc, type PnlResult, type UsageRow } from "./pnl";
 import { runBenchmark, type BenchmarkSummary } from "./benchmark";
@@ -19,35 +19,12 @@ import { ALERT_THRESHOLDS } from "./alerts";
 export type PricingScrapeResult = { updated: string[]; missing: string[]; skipped?: string; fetchedModels?: number };
 
 export async function scrapePricing(): Promise<PricingScrapeResult> {
+  // Direct providers publish prices on HTML pages, not a stable API. Rates are seeded and edited in /admin;
+  // this step only reports which routed models are missing a cost_rates row (those calls refuse to run).
   const weights = await getRoutingWeights(true);
-  const wanted = new Set(weights.map((w) => splitModelId(w.model)).filter((m) => m.provider === "openrouter").map((m) => m.model));
-  if (!wanted.size) return { updated: [], missing: [] };
-  let list: Array<{ id: string; pricing?: { prompt?: string | number; completion?: string | number } }>;
-  try {
-    const res = await fetch("https://openrouter.ai/api/v1/models", { signal: AbortSignal.timeout(20_000) });
-    if (!res.ok) return { updated: [], missing: [...wanted], skipped: `openrouter models ${res.status}` };
-    list = (await res.json()).data ?? [];
-  } catch (err) {
-    return { updated: [], missing: [...wanted], skipped: `fetch failed: ${err instanceof Error ? err.message : String(err)}` };
-  }
-  const byId = new Map(list.map((m) => [m.id, m]));
-  const updated: string[] = [];
-  const missing: string[] = [];
-  const db = adminClient();
-  for (const model of wanted) {
-    const m = byId.get(model);
-    const prompt = Number(m?.pricing?.prompt);
-    const completion = Number(m?.pricing?.completion);
-    if (!m || !Number.isFinite(prompt) || !Number.isFinite(completion)) { missing.push(model); continue; }
-    const { error } = await db.from("cost_rates").upsert(
-      { api_provider: "openrouter", api_model: model, input_rate: round8(prompt * 1e6), output_rate: round8(completion * 1e6), unit: "per_1m_tokens", source: "scrape", updated_at: new Date().toISOString() },
-      { onConflict: "api_provider,api_model" },
-    );
-    if (error) missing.push(`${model} (${error.message})`);
-    else updated.push(model);
-  }
-  await getRates(true); // refresh the in-process cache
-  return { updated, missing, fetchedModels: list.length };
+  const rates = await getRates(true);
+  const missing = weights.map((w) => splitModelId(w.model)).filter((m) => m.provider !== "mock" && !rates.has(`${m.provider}:${m.model}`)).map((m) => `${m.provider}:${m.model}`);
+  return { updated: [], missing, skipped: "rates are admin-managed (no aggregator)" , fetchedModels: rates.size };
 }
 
 // ---------- (b) recalcMarkup ----------
@@ -85,21 +62,11 @@ export async function recalcMarkup(date = yesterdayUtc()): Promise<MarkupResult>
 export type ProviderBalances = Record<string, { remainingUsd?: number; totalCredits?: number; totalUsage?: number; note?: string }>;
 
 export async function checkProviderBalances(): Promise<ProviderBalances> {
+  // Most first-party providers expose no balance endpoint; report which providers are keyed so the digest shows coverage.
+  await primeSecrets();
   const out: ProviderBalances = {};
-  const key = getProviderKey("openrouter");
-  if (!key) {
-    out.openrouter = { note: "no key" };
-    return out;
-  }
-  try {
-    const res = await fetch("https://openrouter.ai/api/v1/credits", { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(15_000) });
-    if (!res.ok) { out.openrouter = { note: `credits ${res.status}` }; return out; }
-    const d = (await res.json()).data ?? {};
-    const totalCredits = Number(d.total_credits ?? 0);
-    const totalUsage = Number(d.total_usage ?? 0);
-    out.openrouter = { totalCredits, totalUsage, remainingUsd: Math.round((totalCredits - totalUsage) * 100) / 100 };
-  } catch (err) {
-    out.openrouter = { note: `fetch failed: ${err instanceof Error ? err.message : String(err)}` };
+  for (const p of ["anthropic", "openai", "google", "groq", "perplexity", "deepseek", "xai", "mistral", "firecrawl", "serpapi"] as const) {
+    out[p] = { note: getProviderKey(p) ? "key set" : "no key" };
   }
   return out;
 }
@@ -158,7 +125,7 @@ export function formatDigest(r: DailyOpsReport): string {
     lines.push(`<b>Provider balances</b> ${b.join(" · ")}`);
   }
   if (r.benchmark) {
-    lines.push("", `<b>Benchmark leaders</b>${r.benchmark.mock ? " (mock — no OPENROUTER_API_KEY)" : ""}`);
+    lines.push("", `<b>Benchmark leaders</b>${r.benchmark.mock ? " (mock — no provider keys; add them in /admin)" : ""}`);
     for (const l of r.benchmark.leaders) lines.push(`• ${escapeHtml(l.task_type)} → ${escapeHtml(l.model)} ${l.score.toFixed(1)}/10 @ ${l.cost_per_run.toFixed(4)}`);
     if (r.benchmark.errors.length) lines.push(`${r.benchmark.errors.length} benchmark call error(s)`);
   }
@@ -208,6 +175,3 @@ export function runDailyOps(opts: { date?: string; skipBenchmark?: boolean } = {
   return runDailyOpsWith((_name, fn) => fn(), opts);
 }
 
-function round8(n: number) {
-  return Math.round(n * 1e8) / 1e8;
-}

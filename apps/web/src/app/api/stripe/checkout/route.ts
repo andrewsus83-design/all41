@@ -1,3 +1,4 @@
+import { primeSecrets } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe/client";
 import { env } from "@/lib/env";
@@ -7,6 +8,7 @@ const MAX_USD = 500;
 
 /** POST /api/stripe/checkout — body {amountUsd}. Creates a one-time Checkout Session for a credit top-up. */
 export async function POST(request: Request) {
+  await primeSecrets();
   const stripe = getStripe();
   if (!stripe) return Response.json({ error: "Payments not configured yet" }, { status: 503 });
 

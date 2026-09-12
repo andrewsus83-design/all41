@@ -1,3 +1,4 @@
+import { primeSecrets } from "@/lib/env";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe/client";
 import { grantTopup, paymentAlreadyGranted } from "@/lib/stripe/grant";
@@ -13,6 +14,7 @@ const LOOKBACK_DAYS = 3;
  * payment_intent is not yet in credit_ledger. Safe to run repeatedly.
  */
 export async function POST(request: Request) {
+  await primeSecrets();
   if (!isCronAuthorized(request)) return cronUnauthorized();
   const stripe = getStripe();
   if (!stripe) return Response.json({ ok: true, skipped: "Payments not configured yet", granted: [] });

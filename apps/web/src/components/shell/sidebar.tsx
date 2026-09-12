@@ -12,7 +12,7 @@ const NAV = [
   { href: "/settings", label: "Settings", hint: "Billing · profile · security" },
 ] as const;
 
-export function Sidebar() {
+export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   return (
     <aside className="w-60 shrink-0 border-r border-line flex flex-col p-6 gap-8 min-h-screen sticky top-0">
@@ -20,7 +20,7 @@ export function Sidebar() {
         all41
       </Link>
       <nav className="flex flex-col gap-1">
-        {NAV.map((n) => {
+        {[...NAV, ...(isAdmin ? [{ href: "/admin", label: "Admin", hint: "Keys · routing · pricing" }] : [])].map((n) => {
           const active = pathname === n.href || pathname.startsWith(n.href + "/");
           return (
             <Link

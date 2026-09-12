@@ -4,7 +4,7 @@ import type { Json } from "@/lib/supabase/database.types";
 import { callModel } from "@/lib/ai/callModel";
 import { getRoutingWeights } from "@/lib/ai/router";
 import { splitModelId, type ChatMessage } from "@/lib/ai/types";
-import { hasProviderKey } from "@/lib/env";
+import { hasProviderKey, primeSecrets } from "@/lib/env";
 import { logApiUsage } from "@/lib/finance/usage";
 import { utcDateString } from "./pnl";
 
@@ -195,7 +195,8 @@ export async function runBenchmark(opts: { date?: string; taskTypes?: string[] }
   const db = adminClient();
   const date = opts.date ?? utcDateString();
   const weights = await getRoutingWeights(true);
-  const liveKey = hasProviderKey("openrouter");
+  await primeSecrets();
+  const liveKey = ["anthropic","openai","google","groq","perplexity","deepseek","xai","mistral"].some((p) => hasProviderKey(p));
   const types = (opts.taskTypes ?? Object.keys(BENCH_SUITE)).filter((t) => BENCH_SUITE[t]);
   const runs: BenchRun[] = [];
   const leaders: BenchmarkSummary["leaders"] = [];
@@ -204,9 +205,8 @@ export async function runBenchmark(opts: { date?: string; taskTypes?: string[] }
   for (const task_type of types) {
     const prompts = BENCH_SUITE[task_type];
     const candidates = weights.filter((w) => w.task_type === task_type).map((w) => w.model);
-    const runnable = liveKey
-      ? candidates.filter((m) => { const p = splitModelId(m).provider; return p === "openrouter" || p === "mock"; })
-      : ["mock:mock-model"];
+    const keyed = candidates.filter((m) => { const p = splitModelId(m).provider; return p === "mock" || hasProviderKey(p); });
+    const runnable = keyed.length ? keyed : ["mock:mock-model"];
     const typeRuns: BenchRun[] = [];
 
     for (const modelId of runnable) {

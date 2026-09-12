@@ -10,12 +10,13 @@ Status as of 2026-09-12: **Phase 0 + Phase 1 done and live-verified; Phase 2/3/4
 
 ## 2. Keys to add (go from mock → real)
 
-Add to **Vercel → all41 → Environment Variables** (Production + Preview) and to `apps/web/.env.local`:
+**Easiest: sign in as the admin email (`ADMIN_EMAILS` env, currently andrewsus83@gmail.com) and paste keys at `https://all41.app/admin`.** They are encrypted in Supabase Vault and read by both the web app and the graph engine; Vercel env vars remain a fallback.
 
 | Key | Unlocks | Where to get |
 |---|---|---|
-| `OPENROUTER_API_KEY` | every LLM call (classify, execute, verify, benchmark, AI edges) | openrouter.ai → Keys. Top-up note: 5.5% fee + $0.80 min per top-up |
-| `OPENAI_API_KEY` | real embeddings (`text-embedding-3-small`, 1536-d) — also needed by the graph engine | platform.openai.com |
+| `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `GROQ_API_KEY`, `PERPLEXITY_API_KEY`, `DEEPSEEK_API_KEY`, `XAI_API_KEY`, `MISTRAL_API_KEY` | direct first-party LLM providers (no aggregator). Each key unlocks that provider's candidates in Routing; the benchmark picks leaders across whatever is keyed | paste in **all41.app/admin** (stored in Supabase Vault) — the "get key ↗" links are there |
+| `OPENAI_API_KEY` | also real embeddings (`text-embedding-3-small`, 1536-d) for the graph engine | same |
+| `GROQ_API_KEY` | also the graph engine's cheap AI-edge classifier | same |
 | `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` | credit top-ups. Webhook endpoint: `https://all41.app/api/stripe/webhook`, event `checkout.session.completed` | dashboard.stripe.com |
 | `SERPAPI_API_KEY` | real search step in Morning Briefing / Competitor Crawler | serpapi.com |
 | `FIRECRAWL_API_KEY` | real crawl step in Competitor Crawler | firecrawl.dev |
@@ -33,7 +34,7 @@ Plan says Hetzner/DigitalOcean + Coolify (~$15–25/mo). Steps:
 
 1. Create the VPS, install Coolify, add this GitHub repo as a source.
 2. New service → Dockerfile build, **base directory** `services/graph-engine`, port `3401`.
-3. Env: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GRAPH_ENGINE_SECRET` (same as Vercel), `OPENAI_API_KEY`, `OPENROUTER_API_KEY`.
+3. Env: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GRAPH_ENGINE_SECRET` (same as Vercel), `OPENAI_API_KEY`, `GROQ_API_KEY` (or leave empty — the engine reads the vault).
 4. Set `GRAPH_ENGINE_URL=https://<your-domain>` on Vercel and redeploy.
 5. Smoke: `curl https://<your-domain>/health`.
 
@@ -41,7 +42,7 @@ Interim (no VPS yet): run it locally with `pnpm dev:graph` — the web app on lo
 
 ## 4. Daily ops
 
-`0 22 * * *` UTC (= 05:00 WIB) — pricing refresh (OpenRouter models API) → margin check / auto-markup → provider balances → P&L → benchmark → Telegram digest. Runs via Vercel Cron on `/api/cron/daily` (header `Authorization: Bearer $CRON_SECRET`) and via Inngest once configured. Manual trigger:
+`0 22 * * *` UTC (= 05:00 WIB) — rate-coverage check → margin check / auto-markup → provider balances → P&L → benchmark → Telegram digest. Runs via Vercel Cron on `/api/cron/daily` (header `Authorization: Bearer $CRON_SECRET`) and via Inngest once configured. Manual trigger:
 
 ```bash
 curl -X POST https://all41.app/api/cron/daily -H "Authorization: Bearer $CRON_SECRET"
@@ -57,4 +58,4 @@ curl -X POST https://all41.app/api/cron/daily -H "Authorization: Bearer $CRON_SE
 
 - No Supastarter (paid); auth/billing hand-built on Supabase + Stripe.
 - No Mastra; orchestration is plain TypeScript (`runTask`, `runAppInstance`) with the verification loop implemented directly. The Execute step's confirm is the human-in-the-loop pause.
-- Rates are refreshed from OpenRouter's public models API, not scraped HTML.
+- No OpenRouter or any aggregator (founder decision): every model is called through its own first-party API. Cost rates are seeded and edited in /admin; the daily digest flags routed models missing a rate.

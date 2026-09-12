@@ -11,6 +11,8 @@ import { linkSource } from './link.js';
 import { queryGraph } from './query.js';
 import { getGraph, getNode } from './graph.js';
 import { aiLink } from './aiEdges.js';
+import { startSecretsRefresh } from './secrets.js';
+startSecretsRefresh();
 
 const SECRET = process.env.GRAPH_ENGINE_SECRET;
 if (!SECRET) throw new Error('GRAPH_ENGINE_SECRET is required');

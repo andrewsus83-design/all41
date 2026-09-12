@@ -1,6 +1,6 @@
 import "server-only";
 import { adminClient } from "@/lib/supabase/admin";
-import { getProviderKey } from "@/lib/env";
+import { getProviderKey, primeSecrets } from "@/lib/env";
 import { callModel } from "@/lib/ai/callModel";
 import { routeTask } from "@/lib/ai/router";
 import { splitModelId, type ChatMessage } from "@/lib/ai/types";
@@ -76,6 +76,7 @@ Cite every factual claim with a source ref (S1/S2 for context, R1/R2 for search 
 
 async function runSearch(userId: string, taskId: string, step: WorkflowStep, config: Config): Promise<StepOutput> {
   const query = renderTemplate(step.prompt, config).trim();
+  await primeSecrets();
   const key = getProviderKey("serpapi");
   const est = await estimateCost("serpapi", "search", 0, 0);
   const r = await metered({
@@ -113,6 +114,7 @@ function guessUrl(raw: string, prior: StepOutput[]) {
 
 async function runCrawl(userId: string, taskId: string, step: WorkflowStep, config: Config, prior: StepOutput[]): Promise<StepOutput> {
   const url = guessUrl(renderTemplate(step.prompt, config), prior);
+  await primeSecrets();
   const key = getProviderKey("firecrawl");
   const est = await estimateCost("firecrawl", "scrape", 0, 0);
   const r = await metered({

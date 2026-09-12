@@ -1,11 +1,12 @@
 import "server-only";
-import { env } from "@/lib/env";
+import { env, primeSecrets } from "@/lib/env";
 
 /**
  * sendTelegram — founder digest / alert channel (Task 5.5). HTML parse mode.
  * No-op (console.warn) when TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is empty so jobs never fail on a missing key.
  */
 export async function sendTelegram(text: string): Promise<{ sent: boolean; reason?: string }> {
+  await primeSecrets();
   if (!env.telegramBotToken || !env.telegramChatId) {
     console.warn("[telegram] not configured — message dropped:\n" + text.slice(0, 500));
     return { sent: false, reason: "not configured" };

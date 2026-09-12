@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getBalance } from "@/lib/finance";
 import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
+import { isAdminUser } from "@/lib/admin";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const supabase = await createClient();
@@ -19,7 +20,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
+      <Sidebar isAdmin={isAdminUser(user)} />
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar email={user.email ?? ""} balance={balance} />
         <main className="flex-1 p-10">{children}</main>

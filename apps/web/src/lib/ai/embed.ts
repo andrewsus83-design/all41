@@ -1,11 +1,12 @@
 import "server-only";
-import { getProviderKey } from "@/lib/env";
+import { getProviderKey, primeSecrets } from "@/lib/env";
 
 export const EMBED_DIM = 1536;
 export const EMBED_MODEL = "text-embedding-3-small";
 
 /** Embeds texts. Real: OpenAI text-embedding-3-small. No key: deterministic pseudo-embeddings so the graph works offline. */
 export async function embedTexts(texts: string[]): Promise<{ vectors: number[][]; inputTokens: number; provider: string; model: string; isMock: boolean }> {
+  await primeSecrets();
   const key = getProviderKey("openai");
   if (!key) {
     return { vectors: texts.map(pseudoEmbed), inputTokens: texts.reduce((n, t) => n + Math.ceil(t.length / 4), 0), provider: "mock", model: "mock-embed", isMock: true };

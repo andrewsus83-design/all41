@@ -1,6 +1,6 @@
 import "server-only";
 import { adminClient } from "@/lib/supabase/admin";
-import { hasProviderKey } from "@/lib/env";
+import { hasProviderKey, primeSecrets } from "@/lib/env";
 import { splitModelId, type TaskType } from "./types";
 
 let cache: { at: number; rows: Array<{ task_type: string; model: string; weight: number; is_leader: boolean }> } | null = null;
@@ -18,10 +18,11 @@ export async function getRoutingWeights(force = false) {
  * If the chosen provider has no key configured, falls back to the mock provider (dev mode) so the loop still runs.
  */
 export async function routeTask(taskType: TaskType | string): Promise<{ modelId: string; isMock: boolean }> {
+  await primeSecrets();
   const rows = (await getRoutingWeights()).filter((r) => r.task_type === taskType);
-  const pick = rows.find((r) => r.is_leader) ?? [...rows].sort((a, b) => b.weight - a.weight)[0];
-  const modelId = pick?.model ?? "openrouter:openai/gpt-5-mini";
-  const { provider } = splitModelId(modelId);
-  if (provider === "openrouter" && !hasProviderKey("openrouter")) return { modelId: "mock:mock-model", isMock: true };
-  return { modelId, isMock: provider === "mock" };
+  // leader first, then the best-weighted candidate whose provider actually has a key (direct providers only)
+  const ordered = [...rows].sort((a, b) => Number(b.is_leader) - Number(a.is_leader) || b.weight - a.weight);
+  const pick = ordered.find((r) => { const p = splitModelId(r.model).provider; return p === "mock" || hasProviderKey(p); });
+  if (!pick) return { modelId: "mock:mock-model", isMock: true };
+  return { modelId: pick.model, isMock: splitModelId(pick.model).provider === "mock" };
 }

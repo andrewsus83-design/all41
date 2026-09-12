@@ -805,6 +805,14 @@ export type Database = {
         Returns: number
       }
       credit_balance: { Args: { p_user_id: string }; Returns: number }
+      delete_platform_secret: { Args: { p_name: string }; Returns: undefined }
+      get_platform_secrets: {
+        Args: never
+        Returns: {
+          name: string
+          secret: string
+        }[]
+      }
       grant_free_credit: {
         Args: { p_fingerprint?: string; p_user_id: string }
         Returns: number
@@ -846,6 +854,10 @@ export type Database = {
         }[]
       }
       normalize_email: { Args: { p_email: string }; Returns: string }
+      set_platform_secret: {
+        Args: { p_name: string; p_value: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
