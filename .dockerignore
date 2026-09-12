@@ -1,0 +1,9 @@
+node_modules
+**/node_modules
+apps
+.next
+**/.next
+**/dist
+.git
+*.md
+!services/graph-engine/README.md
