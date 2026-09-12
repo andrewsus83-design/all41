@@ -10,7 +10,7 @@ type Mode = "signin" | "signup" | "magic";
 
 export function LoginForm() {
   const params = useSearchParams();
-  const next = params.get("next") ?? "/chat";
+  const next = params.get("next") ?? "/my-apps";
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

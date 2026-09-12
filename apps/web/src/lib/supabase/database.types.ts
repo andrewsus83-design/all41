@@ -14,6 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_messages: {
+        Row: {
+          billed_usd: number
+          content: string
+          cost_usd: number
+          created_at: string
+          id: string
+          meta: Json | null
+          role: string
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          billed_usd?: number
+          content: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          role: string
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          billed_usd?: number
+          content?: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          role?: string
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "ai_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_threads: {
+        Row: {
+          app_instance_ids: string[]
+          created_at: string
+          id: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          app_instance_ids?: string[]
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          app_instance_ids?: string[]
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       api_usage_log: {
         Row: {
           api_credits: number
@@ -123,6 +194,63 @@ export type Database = {
           task_type?: string
         }
         Relationships: []
+      }
+      calendar_items: {
+        Row: {
+          app_instance_id: string | null
+          created_at: string
+          date: string
+          done: boolean
+          id: string
+          kind: string
+          note: string | null
+          task_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          app_instance_id?: string | null
+          created_at?: string
+          date: string
+          done?: boolean
+          id?: string
+          kind?: string
+          note?: string | null
+          task_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          app_instance_id?: string | null
+          created_at?: string
+          date?: string
+          done?: boolean
+          id?: string
+          kind?: string
+          note?: string | null
+          task_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_items_app_instance_id_fkey"
+            columns: ["app_instance_id"]
+            isOneToOne: false
+            referencedRelation: "user_app_instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_items_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       connections: {
         Row: {
@@ -729,6 +857,36 @@ export type Database = {
           },
         ]
       }
+      user_docs: {
+        Row: {
+          content_md: string
+          created_at: string
+          folder: string | null
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_md?: string
+          created_at?: string
+          folder?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content_md?: string
+          created_at?: string
+          folder?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_rows: {
         Row: {
           created_at: string
@@ -765,25 +923,31 @@ export type Database = {
         Row: {
           columns: Json
           created_at: string
+          folder: string | null
           icon: string | null
           id: string
           name: string
+          updated_at: string
           user_id: string
         }
         Insert: {
           columns?: Json
           created_at?: string
+          folder?: string | null
           icon?: string | null
           id?: string
           name: string
+          updated_at?: string
           user_id: string
         }
         Update: {
           columns?: Json
           created_at?: string
+          folder?: string | null
           icon?: string | null
           id?: string
           name?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

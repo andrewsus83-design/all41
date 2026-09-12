@@ -37,7 +37,7 @@ export async function proxy(request: NextRequest) {
   }
   if (user && pathname === "/login") {
     const url = request.nextUrl.clone();
-    url.pathname = "/chat";
+    url.pathname = "/my-apps";
     url.search = "";
     return NextResponse.redirect(url);
   }

@@ -9,7 +9,7 @@ export default async function OnboardingPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/onboarding");
   const { data: profile } = await supabase.from("profiles").select("onboarded_at").eq("id", user.id).maybeSingle();
-  if (profile?.onboarded_at) redirect("/chat");
+  if (profile?.onboarded_at) redirect("/build");
   return (
     <main className="min-h-screen p-8 md:p-16">
       <div className="max-w-3xl mx-auto space-y-10">

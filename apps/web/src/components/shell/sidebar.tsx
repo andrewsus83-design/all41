@@ -4,19 +4,19 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 const NAV = [
-  { href: "/chat", label: "Chat", hint: "Brief a task" },
-  { href: "/dashboard", label: "Dashboard", hint: "Balance & usage" },
-  { href: "/my-apps", label: "My Apps", hint: "Pick → chat → ready" },
-  { href: "/models", label: "Models", hint: "Daily benchmark" },
-  { href: "/graph", label: "Graph", hint: "Your connected context" },
-  { href: "/settings", label: "Settings", hint: "Billing · profile · security" },
+  { href: "/calendar", label: "Calendar", hint: "Plans & history by day" },
+  { href: "/build", label: "Build", hint: "Make an app with a consultant" },
+  { href: "/my-apps", label: "My Apps", hint: "Your apps, live" },
+  { href: "/data", label: "Data", hint: "Files · sheets · docs" },
+  { href: "/ai", label: "AI", hint: "Think tank on your apps" },
+  { href: "/settings", label: "Settings", hint: "Billing · security · help" },
 ] as const;
 
 export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   return (
     <aside className="w-60 shrink-0 border-r border-line flex flex-col p-6 gap-8 min-h-screen sticky top-0">
-      <Link href="/chat" className="font-title text-2xl font-semibold tracking-tight">
+      <Link href="/my-apps" className="font-title text-2xl font-semibold tracking-tight">
         all41
       </Link>
       <nav className="flex flex-col gap-1">

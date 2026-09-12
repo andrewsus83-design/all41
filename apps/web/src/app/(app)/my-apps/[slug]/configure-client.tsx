@@ -95,7 +95,7 @@ export function ConfigureClient({ slug, appName, questions }: { slug: string; ap
             <CardTitle className="text-2xl">✅ App ready.</CardTitle>
             <p>First run done — {done.scheduleLabel.toLowerCase()}{done.outputTarget !== "chat" ? `, delivered to ${done.outputTarget}` : ""}. Billed <Money usd={done.billedUsd} />.</p>
             <div className="flex gap-4 text-sm">
-              <Link href="/chat" className="text-green underline">Open in Chat</Link>
+              <Link href="/build" className="text-green underline">Open in Chat</Link>
               <Link href="/my-apps" className="text-fg-muted underline">Back to Apps</Link>
               <span className="num text-fg-faint">task {done.taskId.slice(0, 8)}</span>
             </div>

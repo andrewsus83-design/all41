@@ -14,6 +14,6 @@ export function isAdminUser(user: User | null | undefined) {
 export async function requireAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!isAdminUser(user)) redirect("/chat");
+  if (!isAdminUser(user)) redirect("/build");
   return user!;
 }

@@ -75,7 +75,7 @@ export default async function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {(tasks ?? []).length === 0 && <tr><td colSpan={6} className="px-6 py-8 text-fg-faint">No tasks yet. <Link href="/chat" className="text-green underline">Brief one</Link>.</td></tr>}
+              {(tasks ?? []).length === 0 && <tr><td colSpan={6} className="px-6 py-8 text-fg-faint">No tasks yet. <Link href="/build" className="text-green underline">Brief one</Link>.</td></tr>}
               {(tasks ?? []).map((t) => (
                 <tr key={t.id} className="border-b border-line last:border-0">
                   <td className="px-6 py-3 max-w-xs truncate">{String((t.briefing as { what?: string })?.what ?? "—")}{t.app_instance_id && <span className="text-fg-faint text-xs"> · app</span>}</td>

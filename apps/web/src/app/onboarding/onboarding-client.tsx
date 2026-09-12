@@ -35,7 +35,7 @@ export function OnboardingClient() {
           <CardTitle className="text-xl">Next three things</CardTitle>
           <ol className="space-y-3">
             {[
-              { href: "/chat", n: "1", t: "Try a briefing in Chat", d: "Five taps. One question at a time. See the cost before you run." },
+              { href: "/build", n: "1", t: "Try a briefing in Chat", d: "Five taps. One question at a time. See the cost before you run." },
               { href: "/graph", n: "2", t: "Add your notes to the Graph", d: "Paste anything. Every task gets grounded in your own context." },
               { href: "/my-apps", n: "3", t: "Pick another app", d: "Competitor Crawler or Content Pipeline — configured by chat in 20 seconds." },
             ].map((i) => (
@@ -47,7 +47,7 @@ export function OnboardingClient() {
               </li>
             ))}
           </ol>
-          <Link href="/chat"><Button phase="green" size="lg">Go to Chat →</Button></Link>
+          <Link href="/build"><Button phase="green" size="lg">Go to Chat →</Button></Link>
         </Card>
       </div>
     );
@@ -59,7 +59,7 @@ export function OnboardingClient() {
         <CardTitle className="text-xl">{done.blocked ? "Almost there" : "First run didn’t finish"}</CardTitle>
         <CardHint>{done.error}</CardHint>
         <div className="flex gap-3">
-          <Link href="/chat"><Button phase="green">Continue to Chat</Button></Link>
+          <Link href="/build"><Button phase="green">Continue to Chat</Button></Link>
           {done.blocked && <Link href="/settings/billing"><Button phase="ghost">Top up</Button></Link>}
         </div>
       </Card>
