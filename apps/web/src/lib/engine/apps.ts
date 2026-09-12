@@ -8,10 +8,12 @@ import { estimateCost, getBalance, InsufficientCreditError, metered } from "@/li
 import { createTask } from "./run";
 import { OUTPUT_SCHEMAS, type OutputSchemaKey } from "./schemas";
 import { fetchGrounding, groundingToContext, ingestToGraph } from "./grounding";
+import { runAgentStep, resolveAgentLimits, type AgentEvent, type AgentStep, type AgentStepResult } from "./agent";
+import type { Verification } from "./verify";
 import type { Json } from "@/lib/supabase/database.types";
 
 /** Task 3.1 — a mini app's pre-built workflow. Configured (never generated) per user. */
-export type WorkflowStep = {
+export type PipelineStep = {
   id: string;
   kind: "search" | "crawl" | "llm";
   task_type: string;
@@ -20,13 +22,20 @@ export type WorkflowStep = {
   /** Optional condition of the form "key=Value" against the instance config. The step is skipped when it doesn't match. */
   when?: string;
 };
+/** Level 1/2 steps run in order; a Level-3 `agent` step decides its own steps inside a hard cap and ceiling (engine/agent.ts). */
+export type WorkflowStep = PipelineStep | AgentStep;
 export type WorkflowDef = { steps: WorkflowStep[] };
+export type { AgentStep };
+
+/** docs/APP_AUTONOMY_GUIDE.md — 1 fixed pipeline · 2 branching workflow · 3 bounded agent. */
+export type AutonomyLevel = 1 | 2 | 3;
 
 export type SearchResult = { title: string; link: string; snippet: string };
 export type StepOutput =
   | { id: string; kind: "search"; query: string; results: SearchResult[]; isMock: boolean; billedUsd: number }
   | { id: string; kind: "crawl"; url: string; markdown: string; isMock: boolean; billedUsd: number }
-  | { id: string; kind: "llm"; model: string; output: unknown; schema: OutputSchemaKey | null; isMock: boolean; billedUsd: number };
+  | { id: string; kind: "llm"; model: string; output: unknown; schema: OutputSchemaKey | null; isMock: boolean; billedUsd: number }
+  | AgentStepResult;
 
 export type AppRunResult = { taskId: string; result: unknown; billedUsd: number };
 
@@ -38,11 +47,24 @@ export type RunEvent =
   | { step: "start"; taskId: string; preview: boolean }
   | { step: "data"; sources: number; chars: number }
   | { step: "step"; id: string; kind: WorkflowStep["kind"]; label: string; phase: "running" | "done" | "skipped"; billedUsd: number; billedSoFar: number; isMock?: boolean }
+  | AgentEvent
   | { step: "done"; taskId: string; billedUsd: number; balance: number }
   | { step: "blocked"; message: string; balance: number; needed: number }
   | { step: "error"; message: string };
 
-export type StepDescription = { id: string; kind: WorkflowStep["kind"]; label: string; when: string | null; active: boolean };
+export type StepDescription = {
+  id: string; kind: WorkflowStep["kind"]; label: string; when: string | null; active: boolean;
+  /** Level-3 only: the hard limits, so the UI can say "up to N steps, never more than $X". */
+  maxSteps?: number; ceilingUsd?: number; verify?: boolean;
+};
+
+/** The autonomy level a workflow runs at — derived from its shape (mirrors the migration rule). */
+export function autonomyLevel(def: WorkflowDef | null | undefined): AutonomyLevel {
+  const steps = def?.steps ?? [];
+  if (steps.some((s) => s.kind === "agent")) return 3;
+  if (steps.some((s) => s.when) || steps.filter((s) => s.kind === "llm").length >= 2) return 2;
+  return 1;
+}
 
 type Config = Record<string, unknown>;
 
@@ -118,6 +140,11 @@ export function describeWorkflow(def: WorkflowDef | null | undefined, config?: C
   let llmSeen = 0;
   return steps.map((s) => {
     let label: string;
+    if (s.kind === "agent") {
+      const { maxSteps, ceilingUsd, verify } = resolveAgentLimits(s, config ?? {});
+      label = `Works through it step by step (up to ${maxSteps} steps, never more than $${ceilingUsd.toFixed(2)})${verify ? ", then double-checks the result" : ""}`;
+      return { id: s.id, kind: s.kind, label, when: s.when ?? null, active: config ? stepApplies(s, config) : true, maxSteps, ceilingUsd, verify };
+    }
     if (s.kind === "search") label = "Looks up fresh information";
     else if (s.kind === "crawl") label = "Reads the pages it found";
     else {
@@ -238,8 +265,8 @@ export async function buildUserData(userId: string, data: InstanceData | null | 
 
 // ---- step runners (each metered — Ground Rule 5) ----
 
-async function runSearch(userId: string, taskId: string, step: WorkflowStep, config: Config): Promise<StepOutput> {
-  const query = renderTemplate(step.prompt, config).trim();
+/** One metered web search (SerpAPI, or a mock when no key). Shared by pipeline steps and the agent's `search` tool. */
+async function searchWeb(userId: string, taskId: string, query: string): Promise<{ results: SearchResult[]; isMock: boolean; billedUsd: number }> {
   await primeSecrets();
   const key = getProviderKey("serpapi");
   const est = await estimateCost("serpapi", "search", 0, 0);
@@ -265,7 +292,13 @@ async function runSearch(userId: string, taskId: string, step: WorkflowStep, con
       return { result: { results, isMock: false }, usage: { apiCredits: 1 }, latencyMs: Date.now() - t0 };
     },
   });
-  return { id: step.id, kind: "search", query, results: r.result.results, isMock: r.result.isMock, billedUsd: r.billedUsd };
+  return { results: r.result.results, isMock: r.result.isMock, billedUsd: r.billedUsd };
+}
+
+async function runSearch(userId: string, taskId: string, step: PipelineStep, config: Config): Promise<StepOutput> {
+  const query = renderTemplate(step.prompt, config).trim();
+  const r = await searchWeb(userId, taskId, query);
+  return { id: step.id, kind: "search", query, results: r.results, isMock: r.isMock, billedUsd: r.billedUsd };
 }
 
 function guessUrl(raw: string, prior: StepOutput[]) {
@@ -276,8 +309,8 @@ function guessUrl(raw: string, prior: StepOutput[]) {
   return `https://${s.toLowerCase().replace(/[^a-z0-9]+/g, "")}.com`;
 }
 
-async function runCrawl(userId: string, taskId: string, step: WorkflowStep, config: Config, prior: StepOutput[]): Promise<StepOutput> {
-  const url = guessUrl(renderTemplate(step.prompt, config), prior);
+/** One metered page read (Firecrawl, or a mock when no key). Shared by pipeline steps and the agent's `crawl` tool. */
+async function crawlPage(userId: string, taskId: string, url: string): Promise<{ url: string; markdown: string; isMock: boolean; billedUsd: number }> {
   await primeSecrets();
   const key = getProviderKey("firecrawl");
   const est = await estimateCost("firecrawl", "scrape", 0, 0);
@@ -301,7 +334,13 @@ async function runCrawl(userId: string, taskId: string, step: WorkflowStep, conf
       return { result: { markdown: markdown.slice(0, 20000), isMock: false }, usage: { apiCredits: 1 }, latencyMs: Date.now() - t0 };
     },
   });
-  return { id: step.id, kind: "crawl", url, markdown: r.result.markdown, isMock: r.result.isMock, billedUsd: r.billedUsd };
+  return { url, markdown: r.result.markdown, isMock: r.result.isMock, billedUsd: r.billedUsd };
+}
+
+async function runCrawl(userId: string, taskId: string, step: PipelineStep, config: Config, prior: StepOutput[]): Promise<StepOutput> {
+  const url = guessUrl(renderTemplate(step.prompt, config), prior);
+  const r = await crawlPage(userId, taskId, url);
+  return { id: step.id, kind: "crawl", url, markdown: r.markdown, isMock: r.isMock, billedUsd: r.billedUsd };
 }
 
 function priorToContext(prior: StepOutput[]) {
@@ -318,7 +357,7 @@ function priorToContext(prior: StepOutput[]) {
   return parts.join("\n\n") || "(no prior steps)";
 }
 
-async function runLlm(userId: string, taskId: string, step: WorkflowStep, config: Config, prior: StepOutput[], groundingCtx: string, userData: string): Promise<StepOutput> {
+async function runLlm(userId: string, taskId: string, step: PipelineStep, config: Config, prior: StepOutput[], groundingCtx: string, userData: string): Promise<StepOutput> {
   const { modelId, isMock } = await routeTask(step.task_type);
   const { provider, model } = splitModelId(modelId);
   const schemaKey = step.schema && step.schema in OUTPUT_SCHEMAS ? step.schema : null;
@@ -369,17 +408,22 @@ export async function getInstanceWithRuns(instanceId: string, userId: string): P
   return { instance: instance as InstanceRow, app: mini_apps as unknown as MiniAppRow, runs: (runs ?? []) as TaskRow[] };
 }
 
-/** Pre-flight estimate for one run of an instance — every applicable step, using `estimateCost`. */
-export async function estimateInstanceCost(instance: { config: Json | Config | null; mini_apps?: { workflow_def: Json } | null; workflow_def?: Json }): Promise<{ billedUsd: number; steps: Array<{ id: string; kind: WorkflowStep["kind"]; billedUsd: number }> }> {
+/**
+ * Pre-flight estimate for one run of an instance — every applicable step, using `estimateCost`.
+ * A Level-3 agent step counts at its credit CEILING (label "up to"): the run can never bill more than that, and the balance must cover it.
+ */
+export async function estimateInstanceCost(instance: { config: Json | Config | null; mini_apps?: { workflow_def: Json } | null; workflow_def?: Json }): Promise<{ billedUsd: number; steps: Array<{ id: string; kind: WorkflowStep["kind"]; billedUsd: number }>; label: "about" | "up to" }> {
   const def = ((instance.mini_apps?.workflow_def ?? instance.workflow_def ?? { steps: [] }) as unknown) as WorkflowDef;
   const config = ((instance.config ?? {}) as unknown) as Config;
   await primeSecrets();
   const steps: Array<{ id: string; kind: WorkflowStep["kind"]; billedUsd: number }> = [];
   let total = 0;
+  let label: "about" | "up to" = "about";
   for (const step of def.steps ?? []) {
     if (!stepApplies(step, config)) continue;
     let billed = 0;
-    if (step.kind === "search") billed = getProviderKey("serpapi") ? (await estimateCost("serpapi", "search", 0, 0)).billedUsd : 0;
+    if (step.kind === "agent") { billed = resolveAgentLimits(step, config).ceilingUsd; label = "up to"; }
+    else if (step.kind === "search") billed = getProviderKey("serpapi") ? (await estimateCost("serpapi", "search", 0, 0)).billedUsd : 0;
     else if (step.kind === "crawl") billed = getProviderKey("firecrawl") ? (await estimateCost("firecrawl", "scrape", 0, 0)).billedUsd : 0;
     else {
       const { modelId } = await routeTask(step.task_type);
@@ -390,7 +434,20 @@ export async function estimateInstanceCost(instance: { config: Json | Config | n
     steps.push({ id: step.id, kind: step.kind, billedUsd: billed });
     total += billed;
   }
-  return { billedUsd: Math.round(total * 1e6) / 1e6, steps };
+  return { billedUsd: Math.round(total * 1e6) / 1e6, steps, label };
+}
+
+/** The agent's tool belt — the same metered helpers the pipeline steps use, plus their pre-flight per-call estimates. */
+async function agentTools(userId: string, taskId: string) {
+  await primeSecrets();
+  return {
+    search: (query: string) => searchWeb(userId, taskId, query),
+    crawl: (url: string) => crawlPage(userId, taskId, url),
+    estimates: {
+      search: getProviderKey("serpapi") ? (await estimateCost("serpapi", "search", 0, 0)).billedUsd : 0,
+      crawl: getProviderKey("firecrawl") ? (await estimateCost("firecrawl", "scrape", 0, 0)).billedUsd : 0,
+    },
+  };
 }
 
 /**
@@ -423,7 +480,7 @@ export async function runAppInstance(instanceId: string, opts: { preview?: boole
     execute: { confirmed: true, use_context: true },
     track: inst.schedule === "once" ? ("once" as const) : ("save_app" as const),
   };
-  const lastLlm = [...steps].reverse().find((s) => s.kind === "llm");
+  const lastLlm = [...steps].reverse().find((s) => s.kind === "llm" || s.kind === "agent");
   const { taskId, briefing: stored } = await createTask(userId, briefing, { appInstanceId: instanceId, taskType: lastLlm?.task_type ?? "research" });
   await db.from("tasks").update({ status: "running", briefing: { ...stored, ...(preview ? { preview: true } : {}) } as unknown as Json }).eq("id", taskId);
   emit({ step: "start", taskId, preview });
@@ -450,22 +507,30 @@ export async function runAppInstance(instanceId: string, opts: { preview?: boole
       if (step.kind === "search") out = await runSearch(userId, taskId, step, config);
       else if (step.kind === "crawl") out = await runCrawl(userId, taskId, step, config, outputs);
       else if (step.kind === "llm") out = await runLlm(userId, taskId, step, config, outputs, groundingCtx, userData.text);
-      else throw new Error(`UNKNOWN_STEP_KIND ${String((step as { kind: string }).kind)}`);
+      else if (step.kind === "agent") {
+        // Level 3 — bounded agent: pre-flight on the ceiling, metered plan→act→observe loop, write-up, verification.
+        out = await runAgentStep({ userId, taskId, config, userData: userData.text, tools: await agentTools(userId, taskId), onEvent: (e) => emit(e) }, step);
+      } else throw new Error(`UNKNOWN_STEP_KIND ${String((step as { kind: string }).kind)}`);
       if (out.kind === "llm") modelsUsed.push(out.model);
+      if (out.kind === "agent") for (const m of out.modelsUsed) if (!modelsUsed.includes(m)) modelsUsed.push(m);
       billedUsd += out.billedUsd;
       outputs.push(out);
       emit({ step: "step", id: step.id, kind: step.kind, label, phase: "done", billedUsd: out.billedUsd, billedSoFar: billedUsd, isMock: out.isMock });
     }
     const last = outputs[outputs.length - 1];
-    const finalOutput = last?.kind === "llm" ? last.output : last?.kind === "search" ? { title: `Search: ${last.query}`, results: last.results } : last?.kind === "crawl" ? { title: last.url, markdown: last.markdown } : null;
+    const finalOutput = last?.kind === "llm" || last?.kind === "agent" ? last.output : last?.kind === "search" ? { title: `Search: ${last.query}`, results: last.results } : last?.kind === "crawl" ? { title: last.url, markdown: last.markdown } : null;
     const isMock = outputs.some((o) => o.isMock);
+    const verification: Verification | undefined = last?.kind === "agent" ? last.verification : undefined;
     const result = {
       output: finalOutput,
-      schema: last?.kind === "llm" ? (last.schema ?? "answer") : "answer",
+      schema: last?.kind === "llm" || last?.kind === "agent" ? (last.schema ?? "answer") : "answer",
       taskType: lastLlm?.task_type ?? "research",
       modelsUsed,
       grounding: { chunks: grounding.chunks.length, tokens: grounding.tokenCount, engine: grounding.engine },
       userData: { sources: userData.sources, chars: userData.chars },
+      // same optional field as engine/run.ts TaskResult — surfaced, never passed silently
+      ...(verification ? { verification } : {}),
+      ...(last?.kind === "agent" ? { agent: last.agent } : {}),
       isMock,
       preview,
       steps: outputs.map((o) => (o.kind === "crawl" ? { ...o, markdown: o.markdown.slice(0, 2000) } : o)),

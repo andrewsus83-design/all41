@@ -6,7 +6,7 @@ import { metered } from "@/lib/finance/metered";
 import { splitModelId } from "@/lib/ai/types";
 import { estimateCost } from "@/lib/finance/cost";
 
-export type Verification = { verdict: "supported" | "partially_supported" | "conflicts_found"; conflicts: string[]; unsupported_claims: string[]; confidence: number; model: string };
+export type Verification = { verdict: "supported" | "partially_supported" | "conflicts_found"; conflicts: string[]; unsupported_claims: string[]; confidence: number; model: string; costUsd?: number; billedUsd?: number };
 
 /** Task 2.8 — second model checks the first against retrieved sources; conflicts are surfaced, never passed silently. */
 export async function verifyOutput(args: { userId: string; taskId: string; output: unknown; context: string }): Promise<Verification> {
@@ -31,5 +31,7 @@ export async function verifyOutput(args: { userId: string; taskId: string; outpu
     unsupported_claims: j.unsupported_claims ?? [],
     confidence: Number(j.confidence ?? 0.5),
     model: modelId,
+    costUsd: r.costUsd,
+    billedUsd: r.billedUsd,
   };
 }

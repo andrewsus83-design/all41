@@ -30,13 +30,15 @@ export async function POST(req: NextRequest) {
       const send = (obj: unknown) => controller.enqueue(enc.encode(`data: ${JSON.stringify(obj)}\n\n`));
       try {
         // pre-flight: tell the user before we spend anything
+        // A Level-3 (agent) app estimates at its credit CEILING ("up to") — the balance must cover the whole cap before it starts.
         const [est, balance] = await Promise.all([
-          estimateInstanceCost({ config: inst.config, mini_apps: inst.mini_apps as unknown as { workflow_def: never } }).catch(() => ({ billedUsd: 0, steps: [] })),
+          estimateInstanceCost({ config: inst.config, mini_apps: inst.mini_apps as unknown as { workflow_def: never } }).catch(() => ({ billedUsd: 0, steps: [], label: "about" as const })),
           getBalance(user.id).catch(() => 0),
         ]);
-        send({ step: "estimate", billedUsd: est.billedUsd, balance });
+        const upTo = est.label === "up to";
+        send({ step: "estimate", billedUsd: est.billedUsd, balance, upTo });
         if (balance < est.billedUsd) {
-          send({ step: "blocked", message: `Not enough credit — balance $${balance.toFixed(2)}, this needs about $${est.billedUsd.toFixed(4)}. Top up to try it.`, balance, needed: est.billedUsd });
+          send({ step: "blocked", message: `Not enough credit — balance $${balance.toFixed(2)}, this needs ${upTo ? "up to" : "about"} $${est.billedUsd.toFixed(upTo ? 2 : 4)}. Top up to try it.`, balance, needed: est.billedUsd });
           return;
         }
         const r = await runAppInstance(instanceId, { preview, onEvent: (e: RunEvent) => send(e) });

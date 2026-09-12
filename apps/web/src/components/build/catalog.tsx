@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Money } from "@/components/ui/money";
 import { cn } from "@/lib/cn";
-import { categoryLabel, whoFor } from "./catalog-copy";
+import { autonomyLine, categoryLabel, costPrefix, whoFor } from "./catalog-copy";
 import type { CatalogApp } from "@/components/apps/types";
 
 /** Search + category chips + a compact grid. Filters client-side; comfortable at 100+ apps. */
@@ -50,7 +50,7 @@ export function CatalogGrid({ apps, selected, onOpen }: { apps: CatalogApp[]; se
                 <span className="font-title font-medium truncate">{a.isCustom ? "Start from scratch" : a.name}</span>
               </div>
               <p className="text-sm text-fg-muted line-clamp-2 min-h-10">{a.description}</p>
-              <p className="text-xs text-fg-faint">≈ <Money usd={a.estCostUsd} /> per run{a.category && !a.isCustom ? ` · ${categoryLabel(a.category)}` : ""}</p>
+              <p className="text-xs text-fg-faint">{costPrefix(a.slug, a.steps)} <Money usd={a.estCostUsd} /> per run{a.category && !a.isCustom ? ` · ${categoryLabel(a.category)}` : ""}</p>
             </button>
           ))}
         </div>
@@ -95,6 +95,7 @@ export function AppModal({ app, onClose, onBuild }: { app: CatalogApp; onClose: 
             ))}
             <li className="flex items-center gap-4"><span className="num text-sm text-fg-faint w-5">{app.steps.length + 1}</span><span>Delivers it where you chose, and keeps a copy in My Apps</span></li>
           </ol>
+          {!app.isCustom && <p className="text-sm text-fg-muted pt-1">{autonomyLine(app.slug, app.steps)}</p>}
         </section>
 
         <section className="space-y-3">
@@ -106,9 +107,9 @@ export function AppModal({ app, onClose, onBuild }: { app: CatalogApp; onClose: 
 
         <section className="flex items-center justify-between gap-6 flex-wrap pt-2 border-t border-line">
           <div>
-            <p className="text-xs uppercase tracking-wide text-fg-faint">Typical cost per run</p>
-            <p className="text-2xl">≈ <Money usd={app.estCostUsd} /></p>
-            <p className="text-xs text-fg-faint">You only pay when it actually runs.</p>
+            <p className="text-xs uppercase tracking-wide text-fg-faint">{costPrefix(app.slug, app.steps) === "up to" ? "Most it can cost per run" : "Typical cost per run"}</p>
+            <p className="text-2xl">{costPrefix(app.slug, app.steps)} <Money usd={app.estCostUsd} /></p>
+            <p className="text-xs text-fg-faint">{costPrefix(app.slug, app.steps) === "up to" ? "It stops itself before it passes this. You only pay for what it actually uses." : "You only pay when it actually runs."}</p>
           </div>
           <Button phase="green" size="lg" onClick={onBuild}>Build this</Button>
         </section>

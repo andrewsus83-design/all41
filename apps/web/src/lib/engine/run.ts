@@ -129,6 +129,8 @@ export async function runTask(taskId: string, onEvent?: (e: StepEvent) => void):
     if (briefing.condition.high_stakes && grounding.chunks.length > 0) {
       verification = await verifyOutput({ userId, taskId, output, context });
       modelsUsed.push(verification.model);
+      totalBilled += verification.billedUsd ?? 0;
+      totalCost += verification.costUsd ?? 0;
       emit({ step: "verify", verdict: verification.verdict, conflicts: verification.conflicts.length });
     }
 
