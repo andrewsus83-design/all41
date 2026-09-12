@@ -10,5 +10,5 @@ export default defineConfig({
       "server-only": path.resolve(__dirname, "tests/server-only-stub.ts"),
     },
   },
-  test: { include: ["tests/**/*.test.ts"], testTimeout: 60_000, hookTimeout: 60_000 },
+  test: { include: ["tests/**/*.test.ts"], testTimeout: 60_000, hookTimeout: 60_000, fileParallelism: false },
 });

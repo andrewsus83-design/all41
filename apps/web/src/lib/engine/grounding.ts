@@ -37,7 +37,16 @@ export async function ingestToGraph(payload: {
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(20000),
     });
-    return res.ok ? await res.json() : null;
+    if (!res.ok) return null;
+    const data = await res.json();
+    // Task 2.9 — kick off async AI edge linking off the request path (never blocks, never throws).
+    try {
+      const { inngest } = await import("@/lib/jobs/inngest");
+      await inngest.send({ name: "graph/node.ingested", data: { user_id: payload.user_id, source_type: payload.source_type, source_id: payload.source_id } });
+    } catch (err) {
+      console.warn("[grounding] inngest send skipped:", err instanceof Error ? err.message : String(err));
+    }
+    return data;
   } catch {
     return null;
   }

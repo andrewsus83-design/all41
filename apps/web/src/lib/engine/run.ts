@@ -6,7 +6,7 @@ import { heuristicIntent, INTENT_SCHEMA, CLASSIFY_SYSTEM, type Intent } from "@/
 import { splitModelId, type ChatMessage } from "@/lib/ai/types";
 import { metered } from "@/lib/finance/metered";
 import { estimateCost, getBalance, InsufficientCreditError } from "@/lib/finance";
-import { BriefingSchema, briefingToUserPrompt, type Briefing } from "./briefing";
+import { BriefingSchema, briefingToUserPrompt } from "./briefing";
 import { OUTPUT_SCHEMAS, type OutputSchemaKey } from "./schemas";
 import { fetchGrounding, groundingToContext, ingestToGraph } from "./grounding";
 import { verifyOutput, type Verification } from "./verify";
