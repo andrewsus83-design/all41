@@ -51,7 +51,7 @@ export default async function DashboardPage() {
         <Card className="md:col-span-2 space-y-2">
           <CardHint>Active apps</CardHint>
           {(instances ?? []).length === 0 ? (
-            <p className="text-fg-faint text-sm">None yet — <Link href="/apps" className="text-green underline">pick one</Link>.</p>
+            <p className="text-fg-faint text-sm">None yet — <Link href="/my-apps" className="text-green underline">pick one</Link>.</p>
           ) : (
             <ul className="space-y-1 text-sm">
               {(instances ?? []).map((i) => (

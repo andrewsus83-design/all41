@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC = ["/", "/login", "/auth", "/preview", "/api/stripe/webhook", "/api/stripe/reconcile", "/api/inngest", "/api/cron", "/api/health"];
+const PUBLIC = ["/", "/login", "/auth", "/preview", "/solutions", "/apps", "/pricing", "/faq", "/resources", "/api/public", "/api/stripe/webhook", "/api/stripe/reconcile", "/api/inngest", "/api/cron", "/api/health"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -35,7 +35,7 @@ export async function proxy(request: NextRequest) {
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
-  if (user && (pathname === "/login" || pathname === "/")) {
+  if (user && pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/chat";
     url.search = "";

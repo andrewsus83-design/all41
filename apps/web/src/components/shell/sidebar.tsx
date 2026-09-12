@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 const NAV = [
   { href: "/chat", label: "Chat", hint: "Brief a task" },
   { href: "/dashboard", label: "Dashboard", hint: "Balance & usage" },
-  { href: "/apps", label: "Apps", hint: "Pick → chat → ready" },
+  { href: "/my-apps", label: "My Apps", hint: "Pick → chat → ready" },
   { href: "/models", label: "Models", hint: "Daily benchmark" },
   { href: "/graph", label: "Graph", hint: "Your connected context" },
   { href: "/settings", label: "Settings", hint: "Billing · profile · security" },

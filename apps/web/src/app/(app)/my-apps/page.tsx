@@ -61,7 +61,7 @@ export default async function AppsPage() {
         <h2 className="text-xl">Available</h2>
         <div className="grid md:grid-cols-3 gap-4">
           {(apps ?? []).map((a) => (
-            <Link key={a.id} href={`/apps/${a.slug}`} className="group">
+            <Link key={a.id} href={`/my-apps/${a.slug}`} className="group">
               <Card className="h-full space-y-4 transition group-hover:border-line-strong group-hover:bg-bg-elev-2">
                 <span className="text-4xl">{a.icon ?? "◻"}</span>
                 <div className="space-y-1">

@@ -96,7 +96,7 @@ export function ConfigureClient({ slug, appName, questions }: { slug: string; ap
             <p>First run done — {done.scheduleLabel.toLowerCase()}{done.outputTarget !== "chat" ? `, delivered to ${done.outputTarget}` : ""}. Billed <Money usd={done.billedUsd} />.</p>
             <div className="flex gap-4 text-sm">
               <Link href="/chat" className="text-green underline">Open in Chat</Link>
-              <Link href="/apps" className="text-fg-muted underline">Back to Apps</Link>
+              <Link href="/my-apps" className="text-fg-muted underline">Back to Apps</Link>
               <span className="num text-fg-faint">task {done.taskId.slice(0, 8)}</span>
             </div>
           </Card>
@@ -109,7 +109,7 @@ export function ConfigureClient({ slug, appName, questions }: { slug: string; ap
           <CardHint>{done.error}</CardHint>
           <div className="flex gap-3">
             {done.blocked && <Link href="/settings/billing"><Button phase="green" size="sm">Top up</Button></Link>}
-            <Link href="/apps"><Button phase="ghost" size="sm">Back to Apps</Button></Link>
+            <Link href="/my-apps"><Button phase="ghost" size="sm">Back to Apps</Button></Link>
           </div>
         </Card>
       )}
