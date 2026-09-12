@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   if (!env.graphEngineUrl) return NextResponse.json(empty);
   const focus = req.nextUrl.searchParams.get("focus") ?? "";
   try {
-    const url = `${env.graphEngineUrl}/graph?user_id=${encodeURIComponent(user.id)}&focus=${encodeURIComponent(focus)}&limit=300`;
+    const url = `${env.graphEngineUrl}/graph?user_id=${encodeURIComponent(user.id)}${focus ? `&focus=${encodeURIComponent(focus)}` : ""}&limit=300`;
     const res = await fetch(url, { headers: { Authorization: `Bearer ${env.graphEngineSecret}` }, signal: AbortSignal.timeout(8000), cache: "no-store" });
     if (!res.ok) return NextResponse.json({ ...empty, engine: "error" });
     const data = await res.json();

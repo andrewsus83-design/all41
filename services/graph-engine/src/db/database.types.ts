@@ -606,6 +606,7 @@ export type Database = {
       }
       mini_apps: {
         Row: {
+          brief_template: string | null
           category: string | null
           config_schema: Json
           created_at: string
@@ -617,9 +618,12 @@ export type Database = {
           name: string
           slug: string
           sort_order: number
+          tags: string[]
+          who_for: string | null
           workflow_def: Json
         }
         Insert: {
+          brief_template?: string | null
           category?: string | null
           config_schema?: Json
           created_at?: string
@@ -631,9 +635,12 @@ export type Database = {
           name: string
           slug: string
           sort_order?: number
+          tags?: string[]
+          who_for?: string | null
           workflow_def?: Json
         }
         Update: {
+          brief_template?: string | null
           category?: string | null
           config_schema?: Json
           created_at?: string
@@ -645,6 +652,8 @@ export type Database = {
           name?: string
           slug?: string
           sort_order?: number
+          tags?: string[]
+          who_for?: string | null
           workflow_def?: Json
         }
         Relationships: []

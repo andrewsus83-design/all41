@@ -36,7 +36,7 @@ export function OnboardingClient() {
           <ol className="space-y-3">
             {[
               { href: "/build", n: "1", t: "Try a briefing in Chat", d: "Five taps. One question at a time. See the cost before you run." },
-              { href: "/graph", n: "2", t: "Add your notes to the Graph", d: "Paste anything. Every task gets grounded in your own context." },
+              { href: "/data", n: "2", t: "Add your notes in Data", d: "Paste anything. Every task gets grounded in your own context." },
               { href: "/my-apps", n: "3", t: "Pick another app", d: "Competitor Crawler or Content Pipeline — configured by chat in 20 seconds." },
             ].map((i) => (
               <li key={i.n}>

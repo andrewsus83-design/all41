@@ -17,6 +17,8 @@ export type WorkflowStep = {
   task_type: string;
   prompt: string;
   schema?: OutputSchemaKey;
+  /** Optional condition of the form "key=Value" against the instance config. The step is skipped when it doesn't match. */
+  when?: string;
 };
 export type WorkflowDef = { steps: WorkflowStep[] };
 
@@ -28,7 +30,33 @@ export type StepOutput =
 
 export type AppRunResult = { taskId: string; result: unknown; billedUsd: number };
 
+/** What the user attached to an app — included on every run ("uploaded data"). Lives in `config.data`. */
+export type InstanceData = { file_ids?: string[]; doc_ids?: string[]; sheet_ids?: string[]; note?: string };
+
+/** Live progress emitted while an instance runs. Labels are plain words — safe to show as-is. */
+export type RunEvent =
+  | { step: "start"; taskId: string; preview: boolean }
+  | { step: "data"; sources: number; chars: number }
+  | { step: "step"; id: string; kind: WorkflowStep["kind"]; label: string; phase: "running" | "done" | "skipped"; billedUsd: number; billedSoFar: number; isMock?: boolean }
+  | { step: "done"; taskId: string; billedUsd: number; balance: number }
+  | { step: "blocked"; message: string; balance: number; needed: number }
+  | { step: "error"; message: string };
+
+export type StepDescription = { id: string; kind: WorkflowStep["kind"]; label: string; when: string | null; active: boolean };
+
 type Config = Record<string, unknown>;
+
+export const SCHEDULES = ["once", "daily", "weekly", "monthly"] as const;
+export const OUTPUT_TARGETS = ["chat", "email", "dashboard"] as const;
+
+export function normalizeSchedule(v: unknown): (typeof SCHEDULES)[number] {
+  const s = String(v ?? "once").toLowerCase();
+  return (SCHEDULES as readonly string[]).includes(s) ? (s as (typeof SCHEDULES)[number]) : "once";
+}
+export function normalizeTarget(v: unknown): (typeof OUTPUT_TARGETS)[number] {
+  const s = String(v ?? "chat").toLowerCase();
+  return (OUTPUT_TARGETS as readonly string[]).includes(s) ? (s as (typeof OUTPUT_TARGETS)[number]) : "chat";
+}
 
 /** mustache-style {{key}} substitution from the instance config. Arrays join with ", ". */
 export function renderTemplate(tpl: string, config: Config) {
@@ -41,6 +69,7 @@ export function renderTemplate(tpl: string, config: Config) {
 
 export function configSummary(config: Config) {
   return Object.entries(config)
+    .filter(([k]) => k !== "data" && k !== "brief_note")
     .filter(([, v]) => v !== "" && v !== null && v !== undefined)
     .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`)
     .join(" · ");
@@ -63,14 +92,149 @@ export function nextRunFrom(schedule: string, from = new Date()): string | null 
   }
 }
 
-/** TODO(email): wire a provider (Resend) — until then the run is visible in Chat/Dashboard and we log the intent. */
+// ---- conditions ("key=Value") ----
+
+function norm(v: unknown) {
+  if (typeof v === "boolean") return v ? "yes" : "no";
+  return String(v ?? "").trim().toLowerCase();
+}
+
+/** `when: "needs_fresh=Yes"` → true when config.needs_fresh is "Yes" (case-insensitive; arrays match if they include it). */
+export function stepApplies(step: Pick<WorkflowStep, "when">, config: Config): boolean {
+  if (!step.when) return true;
+  const i = step.when.indexOf("=");
+  if (i < 0) return true;
+  const key = step.when.slice(0, i).trim();
+  const want = norm(step.when.slice(i + 1));
+  const have = config[key];
+  if (Array.isArray(have)) return have.some((x) => norm(x) === want);
+  return norm(have) === want;
+}
+
+/** Plain-words description of what the app does when it runs (no model names, no infra terms). */
+export function describeWorkflow(def: WorkflowDef | null | undefined, config?: Config): StepDescription[] {
+  const steps = def?.steps ?? [];
+  const llmCount = steps.filter((s) => s.kind === "llm").length;
+  let llmSeen = 0;
+  return steps.map((s) => {
+    let label: string;
+    if (s.kind === "search") label = "Looks up fresh information";
+    else if (s.kind === "crawl") label = "Reads the pages it found";
+    else {
+      llmSeen += 1;
+      const isLast = llmSeen === llmCount;
+      if (!isLast) label = "Thinks it through";
+      else if (s.schema === "briefing") label = "Writes your briefing";
+      else if (s.schema === "report") label = "Writes the comparison report";
+      else if (s.schema === "content_pack") label = "Writes the drafts";
+      else label = "Writes the result";
+    }
+    return { id: s.id, kind: s.kind, label, when: s.when ?? null, active: config ? stepApplies(s, config) : true };
+  });
+}
+
+/** TODO(email): wire a provider (Resend) — until then the run is visible in My Apps and we log the intent. */
 async function deliverByEmail(userId: string, taskId: string, result: unknown) {
   const o = result as { title?: string } | null;
   console.info(`[apps] deliverByEmail TODO — user=${userId} task=${taskId} title=${o?.title ?? ""}`);
 }
 
-const SYSTEM = `You are all41, a sharp work engine for solo operators. Answer ONLY from the provided CONTEXT and PRIOR STEPS plus clearly-labelled general knowledge.
-Cite every factual claim with a source ref (S1/S2 for context, R1/R2 for search results, C1 for crawled pages, or "general"). Never invent numbers. Respond with JSON matching the schema.`;
+const SYSTEM = `You are all41, a sharp work engine for solo operators. Answer ONLY from the provided CONTEXT, USER DATA and PRIOR STEPS plus clearly-labelled general knowledge.
+Cite every factual claim with a source ref (S1/S2 for context, D1/D2 for user data, R1/R2 for search results, C1 for crawled pages, or "general"). Never invent numbers. Respond with JSON matching the schema.`;
+
+const GROUNDING_CHARS = 6000 * 4;
+
+// ---- user data ("uploaded data") ----
+
+const TEXT_TYPES = /^(text\/|application\/(json|csv|x-ndjson))/;
+const TEXT_EXT = /\.(txt|md|markdown|csv|tsv|json|log)$/i;
+
+function csvCell(v: unknown) {
+  const s = v === null || v === undefined ? "" : typeof v === "object" ? JSON.stringify(v) : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function columnKeys(columns: unknown, firstRow: Record<string, unknown> | undefined): string[] {
+  if (Array.isArray(columns) && columns.length) {
+    return columns.map((c) => (typeof c === "string" ? c : String((c as Record<string, unknown>)?.key ?? (c as Record<string, unknown>)?.id ?? (c as Record<string, unknown>)?.name ?? ""))).filter(Boolean);
+  }
+  return firstRow ? Object.keys(firstRow) : [];
+}
+
+/**
+ * Build the "USER DATA" block from `config.data`: file chunks (graph-ingested, or the raw text file as a fallback),
+ * docs, sheets as CSV, and the free-text note. Capped so it never crowds out the task itself.
+ */
+export async function buildUserData(userId: string, data: InstanceData | null | undefined): Promise<{ text: string; sources: number; chars: number }> {
+  if (!data) return { text: "", sources: 0, chars: 0 };
+  const db = adminClient();
+  const parts: string[] = [];
+  let ref = 0;
+  const FILE_CAP = 24_000; // ≈6k tokens across all files
+  const DOC_CAP = 24_000;
+  const SHEET_CAP = 24_000;
+
+  const fileIds = (data.file_ids ?? []).slice(0, 12);
+  if (fileIds.length) {
+    let used = 0;
+    const [{ data: files }, { data: nodes }] = await Promise.all([
+      db.from("files").select("id, name, type, storage_path").eq("user_id", userId).in("id", fileIds),
+      db.from("knowledge_nodes").select("source_id, chunk_index, content").eq("user_id", userId).eq("source_type", "file").in("source_id", fileIds).order("chunk_index", { ascending: true }),
+    ]);
+    for (const f of files ?? []) {
+      if (used >= FILE_CAP) break;
+      let text = (nodes ?? []).filter((n) => n.source_id === f.id).map((n) => n.content).join("\n");
+      if (!text && (TEXT_TYPES.test(f.type ?? "") || TEXT_EXT.test(f.name))) {
+        const dl = await db.storage.from("user-files").download(f.storage_path).catch(() => null);
+        if (dl && !dl.error) text = await dl.data.text().catch(() => "");
+      }
+      if (!text) continue;
+      const slice = text.slice(0, FILE_CAP - used);
+      used += slice.length;
+      ref += 1;
+      parts.push(`[D${ref}] FILE “${f.name}”:\n${slice}`);
+    }
+  }
+
+  const docIds = (data.doc_ids ?? []).slice(0, 12);
+  if (docIds.length) {
+    const { data: docs } = await db.from("user_docs").select("id, title, content_md").eq("user_id", userId).in("id", docIds);
+    let used = 0;
+    for (const d of docs ?? []) {
+      if (used >= DOC_CAP) break;
+      const slice = (d.content_md ?? "").slice(0, DOC_CAP - used);
+      used += slice.length;
+      ref += 1;
+      parts.push(`[D${ref}] DOC “${d.title}”:\n${slice}`);
+    }
+  }
+
+  const sheetIds = (data.sheet_ids ?? []).slice(0, 6);
+  if (sheetIds.length) {
+    const { data: tables } = await db.from("user_tables").select("id, name, columns").eq("user_id", userId).in("id", sheetIds);
+    let used = 0;
+    for (const t of tables ?? []) {
+      if (used >= SHEET_CAP) break;
+      const { data: rows } = await db.from("user_rows").select("data").eq("user_id", userId).eq("table_id", t.id).order("created_at", { ascending: true }).limit(200);
+      const rowObjs = (rows ?? []).map((r) => (r.data && typeof r.data === "object" && !Array.isArray(r.data) ? (r.data as Record<string, unknown>) : {}));
+      const keys = columnKeys(t.columns, rowObjs[0]);
+      const csv = [keys.map(csvCell).join(","), ...rowObjs.map((r) => keys.map((k) => csvCell(r[k])).join(","))].join("\n");
+      const slice = csv.slice(0, SHEET_CAP - used);
+      used += slice.length;
+      ref += 1;
+      parts.push(`[D${ref}] SHEET “${t.name}” (${rowObjs.length} rows, CSV):\n${slice}`);
+    }
+  }
+
+  const note = (data.note ?? "").trim();
+  if (note) {
+    ref += 1;
+    parts.push(`[D${ref}] NOTE:\n${note.slice(0, 8000)}`);
+  }
+
+  const text = parts.join("\n\n");
+  return { text, sources: ref, chars: text.length };
+}
 
 // ---- step runners (each metered — Ground Rule 5) ----
 
@@ -154,13 +318,13 @@ function priorToContext(prior: StepOutput[]) {
   return parts.join("\n\n") || "(no prior steps)";
 }
 
-async function runLlm(userId: string, taskId: string, step: WorkflowStep, config: Config, prior: StepOutput[], groundingCtx: string): Promise<StepOutput> {
+async function runLlm(userId: string, taskId: string, step: WorkflowStep, config: Config, prior: StepOutput[], groundingCtx: string, userData: string): Promise<StepOutput> {
   const { modelId, isMock } = await routeTask(step.task_type);
   const { provider, model } = splitModelId(modelId);
   const schemaKey = step.schema && step.schema in OUTPUT_SCHEMAS ? step.schema : null;
   const messages: ChatMessage[] = [
     { role: "system", content: SYSTEM },
-    { role: "user", content: `CONTEXT:\n${groundingCtx}\n\nPRIOR STEPS:\n${priorToContext(prior)}\n\nTASK:\n${renderTemplate(step.prompt, config)}` },
+    { role: "user", content: `CONTEXT:\n${groundingCtx}\n\nUSER DATA:\n${userData || "(none attached)"}\n\nPRIOR STEPS:\n${priorToContext(prior)}\n\nTASK:\n${renderTemplate(step.prompt, config)}${typeof config.brief_note === "string" && config.brief_note.trim() ? `\n\nTHE USER'S OWN WORDING OF THE BRIEF (follow it where it adds detail):\n${config.brief_note.trim().slice(0, 2000)}` : ""}` },
   ];
   const est = await estimateCost(provider, model, messages.reduce((n, m) => n + m.content.length, 0), 1200);
   const r = await metered({
@@ -174,12 +338,69 @@ async function runLlm(userId: string, taskId: string, step: WorkflowStep, config
   return { id: step.id, kind: "llm", model: modelId, output, schema: schemaKey, isMock, billedUsd: r.billedUsd };
 }
 
+// ---- helpers the pages need ----
+
+type InstanceRow = {
+  id: string; user_id: string; mini_app_id: string; name: string | null; config: Json; schedule: string; output_target: string;
+  status: string; run_count: number; last_run_at: string | null; next_run_at: string | null; created_at: string; updated_at: string;
+};
+type MiniAppRow = {
+  id: string; slug: string; name: string; description: string | null; icon: string | null; category: string | null;
+  config_schema: Json; workflow_def: Json; est_credit_cost: number; is_published: boolean; sort_order: number;
+};
+export type TaskRow = {
+  id: string; status: string; task_type: string | null; models_used: string[]; total_billed: number; total_cost: number;
+  result: Json | null; briefing: Json; error: string | null; created_at: string; completed_at: string | null;
+};
+
+/** Instance + its template + the last 20 runs. Scoped to the owner (null when it isn't theirs). */
+export async function getInstanceWithRuns(instanceId: string, userId: string): Promise<{ instance: InstanceRow; app: MiniAppRow; runs: TaskRow[] } | null> {
+  const db = adminClient();
+  const { data: inst } = await db.from("user_app_instances").select("*, mini_apps(*)").eq("id", instanceId).eq("user_id", userId).maybeSingle();
+  if (!inst) return null;
+  const { data: runs } = await db
+    .from("tasks")
+    .select("id, status, task_type, models_used, total_billed, total_cost, result, briefing, error, created_at, completed_at")
+    .eq("app_instance_id", instanceId)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  const { mini_apps, ...instance } = inst;
+  return { instance: instance as InstanceRow, app: mini_apps as unknown as MiniAppRow, runs: (runs ?? []) as TaskRow[] };
+}
+
+/** Pre-flight estimate for one run of an instance — every applicable step, using `estimateCost`. */
+export async function estimateInstanceCost(instance: { config: Json | Config | null; mini_apps?: { workflow_def: Json } | null; workflow_def?: Json }): Promise<{ billedUsd: number; steps: Array<{ id: string; kind: WorkflowStep["kind"]; billedUsd: number }> }> {
+  const def = ((instance.mini_apps?.workflow_def ?? instance.workflow_def ?? { steps: [] }) as unknown) as WorkflowDef;
+  const config = ((instance.config ?? {}) as unknown) as Config;
+  await primeSecrets();
+  const steps: Array<{ id: string; kind: WorkflowStep["kind"]; billedUsd: number }> = [];
+  let total = 0;
+  for (const step of def.steps ?? []) {
+    if (!stepApplies(step, config)) continue;
+    let billed = 0;
+    if (step.kind === "search") billed = getProviderKey("serpapi") ? (await estimateCost("serpapi", "search", 0, 0)).billedUsd : 0;
+    else if (step.kind === "crawl") billed = getProviderKey("firecrawl") ? (await estimateCost("firecrawl", "scrape", 0, 0)).billedUsd : 0;
+    else {
+      const { modelId } = await routeTask(step.task_type);
+      const { provider, model } = splitModelId(modelId);
+      const dataChars = config.data ? 24_000 : 0;
+      billed = (await estimateCost(provider, model, SYSTEM.length + renderTemplate(step.prompt, config).length + GROUNDING_CHARS + dataChars + 4000, 1200)).billedUsd;
+    }
+    steps.push({ id: step.id, kind: step.kind, billedUsd: billed });
+    total += billed;
+  }
+  return { billedUsd: Math.round(total * 1e6) / 1e6, steps };
+}
+
 /**
  * Task 3.1 — run one configured instance through the same engine as any task.
  * Every provider call is metered; the final step's output is stored on the task and fed to the graph.
+ * `preview` (or a draft instance): still metered and billed, but the schedule is untouched and the task is tagged `briefing.preview`.
  */
-export async function runAppInstance(instanceId: string): Promise<AppRunResult> {
+export async function runAppInstance(instanceId: string, opts: { preview?: boolean; onEvent?: (e: RunEvent) => void } = {}): Promise<AppRunResult> {
   const db = adminClient();
+  const emit = (e: RunEvent) => opts.onEvent?.(e);
   const { data: inst, error } = await db
     .from("user_app_instances")
     .select("*, mini_apps(*)")
@@ -190,34 +411,50 @@ export async function runAppInstance(instanceId: string): Promise<AppRunResult> 
   const config = (inst.config ?? {}) as Config;
   const steps = app.workflow_def?.steps ?? [];
   const userId = inst.user_id;
+  const preview = opts.preview ?? inst.status === "draft";
+  const descriptions = describeWorkflow(app.workflow_def, config);
+  const labelOf = (id: string) => descriptions.find((d) => d.id === id)?.label ?? "Working";
 
   const briefing = {
     what: `${app.name}: ${configSummary(config) || "default run"}`.slice(0, 600),
     what_format: "report" as const,
-    goal: "Run scheduled app and deliver its output",
+    goal: preview ? "Preview this app before publishing" : "Run scheduled app and deliver its output",
     condition: { constraints: "", freshness: "day" as const, tone: "direct" as const, high_stakes: false },
     execute: { confirmed: true, use_context: true },
     track: inst.schedule === "once" ? ("once" as const) : ("save_app" as const),
   };
   const lastLlm = [...steps].reverse().find((s) => s.kind === "llm");
-  const { taskId } = await createTask(userId, briefing, { appInstanceId: instanceId, taskType: lastLlm?.task_type ?? "research" });
-  await db.from("tasks").update({ status: "running" }).eq("id", taskId);
+  const { taskId, briefing: stored } = await createTask(userId, briefing, { appInstanceId: instanceId, taskType: lastLlm?.task_type ?? "research" });
+  await db.from("tasks").update({ status: "running", briefing: { ...stored, ...(preview ? { preview: true } : {}) } as unknown as Json }).eq("id", taskId);
+  emit({ step: "start", taskId, preview });
 
   const outputs: StepOutput[] = [];
   const modelsUsed: string[] = [];
   let billedUsd = 0;
   try {
-    const grounding = await fetchGrounding(userId, `${app.name} ${configSummary(config)}`);
+    const [grounding, userData] = await Promise.all([
+      fetchGrounding(userId, `${app.name} ${configSummary(config)}`),
+      buildUserData(userId, (config.data ?? null) as InstanceData | null),
+    ]);
     const groundingCtx = groundingToContext(grounding);
+    if (userData.sources > 0) emit({ step: "data", sources: userData.sources, chars: userData.chars });
+
     for (const step of steps) {
+      const label = labelOf(step.id);
+      if (!stepApplies(step, config)) {
+        emit({ step: "step", id: step.id, kind: step.kind, label, phase: "skipped", billedUsd: 0, billedSoFar: billedUsd });
+        continue;
+      }
+      emit({ step: "step", id: step.id, kind: step.kind, label, phase: "running", billedUsd: 0, billedSoFar: billedUsd });
       let out: StepOutput;
       if (step.kind === "search") out = await runSearch(userId, taskId, step, config);
       else if (step.kind === "crawl") out = await runCrawl(userId, taskId, step, config, outputs);
-      else if (step.kind === "llm") out = await runLlm(userId, taskId, step, config, outputs, groundingCtx);
+      else if (step.kind === "llm") out = await runLlm(userId, taskId, step, config, outputs, groundingCtx, userData.text);
       else throw new Error(`UNKNOWN_STEP_KIND ${String((step as { kind: string }).kind)}`);
       if (out.kind === "llm") modelsUsed.push(out.model);
       billedUsd += out.billedUsd;
       outputs.push(out);
+      emit({ step: "step", id: step.id, kind: step.kind, label, phase: "done", billedUsd: out.billedUsd, billedSoFar: billedUsd, isMock: out.isMock });
     }
     const last = outputs[outputs.length - 1];
     const finalOutput = last?.kind === "llm" ? last.output : last?.kind === "search" ? { title: `Search: ${last.query}`, results: last.results } : last?.kind === "crawl" ? { title: last.url, markdown: last.markdown } : null;
@@ -228,7 +465,9 @@ export async function runAppInstance(instanceId: string): Promise<AppRunResult> 
       taskType: lastLlm?.task_type ?? "research",
       modelsUsed,
       grounding: { chunks: grounding.chunks.length, tokens: grounding.tokenCount, engine: grounding.engine },
+      userData: { sources: userData.sources, chars: userData.chars },
       isMock,
+      preview,
       steps: outputs.map((o) => (o.kind === "crawl" ? { ...o, markdown: o.markdown.slice(0, 2000) } : o)),
       app: { slug: app.slug, name: app.name },
     };
@@ -241,30 +480,33 @@ export async function runAppInstance(instanceId: string): Promise<AppRunResult> 
     }).eq("id", taskId);
 
     const now = new Date();
-    const nextRun = nextRunFrom(inst.schedule, now);
-    await db.from("user_app_instances").update({
-      run_count: (inst.run_count ?? 0) + 1,
-      last_run_at: now.toISOString(),
-      next_run_at: nextRun,
-      status: inst.schedule === "once" ? "done" : inst.status === "paused" ? "paused" : "active",
-    }).eq("id", instanceId);
+    const patch: { run_count: number; last_run_at: string; next_run_at?: string | null; status?: string } = { run_count: (inst.run_count ?? 0) + 1, last_run_at: now.toISOString() };
+    if (!preview && inst.status !== "draft") {
+      patch.next_run_at = nextRunFrom(inst.schedule, now);
+      patch.status = inst.schedule === "once" ? "done" : inst.status === "paused" ? "paused" : "active";
+    }
+    await db.from("user_app_instances").update(patch).eq("id", instanceId);
 
-    if (inst.output_target === "email") await deliverByEmail(userId, taskId, finalOutput);
+    if (!preview && inst.output_target === "email") await deliverByEmail(userId, taskId, finalOutput);
 
     const o = finalOutput as { title?: string } | null;
     void ingestToGraph({
       user_id: userId, source_type: "app_instance", source_id: instanceId, task_id: taskId, node_type: "task_output",
       title: o?.title ?? `${app.name} run`, content: JSON.stringify(finalOutput).slice(0, 12000),
     });
+    const balance = await getBalance(userId).catch(() => 0);
+    emit({ step: "done", taskId, billedUsd, balance });
     return { taskId, result, billedUsd };
   } catch (err) {
     if (err instanceof InsufficientCreditError) {
       const bal = await getBalance(userId).catch(() => err.balance);
       await db.from("tasks").update({ status: "blocked", error: "INSUFFICIENT_CREDIT", total_billed: billedUsd }).eq("id", taskId);
-      await db.from("user_app_instances").update({ status: "paused" }).eq("id", instanceId);
+      if (!preview && inst.status !== "draft") await db.from("user_app_instances").update({ status: "paused" }).eq("id", instanceId);
+      emit({ step: "blocked", message: `Not enough credit — balance $${bal.toFixed(2)}, this needs about $${err.needed.toFixed(4)}. Top up to continue.`, balance: bal, needed: err.needed });
       throw new InsufficientCreditError(bal, err.needed);
     }
     await db.from("tasks").update({ status: "failed", error: String(err).slice(0, 500), total_billed: billedUsd }).eq("id", taskId);
+    emit({ step: "error", message: err instanceof Error ? err.message : String(err) });
     throw err;
   }
 }

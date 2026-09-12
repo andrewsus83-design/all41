@@ -1,27 +1,21 @@
-import { notFound } from "next/navigation";
-import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Money } from "@/components/ui/money";
-import { ConfigureClient, type ConfigQuestion } from "./configure-client";
+import { adminClient } from "@/lib/supabase/admin";
 
-export default async function AppConfigurePage(props: PageProps<"/my-apps/[slug]">) {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * /my-apps/[slug] — an instance id opens that app in My Apps; a template slug (the marketing site links these)
+ * opens Build with it preselected.
+ */
+export default async function MyAppRedirect(props: PageProps<"/my-apps/[slug]">) {
   const { slug } = await props.params;
-  const supabase = await createClient();
-  const { data: app } = await supabase.from("mini_apps").select("slug, name, description, icon, est_credit_cost, config_schema").eq("slug", slug).eq("is_published", true).maybeSingle();
-  if (!app) notFound();
-  const questions = (Array.isArray(app.config_schema) ? app.config_schema : []) as ConfigQuestion[];
-  return (
-    <div className="max-w-3xl space-y-10">
-      <Link href="/my-apps" className="text-sm text-fg-muted hover:text-fg">← Apps</Link>
-      <header className="flex items-center gap-5">
-        <span className="text-5xl">{app.icon ?? "◻"}</span>
-        <div className="space-y-1">
-          <h1 className="text-4xl font-semibold">{app.name}</h1>
-          <p className="text-fg-muted">{app.description}</p>
-          <p className="text-sm text-fg-faint">≈ <Money usd={Number(app.est_credit_cost)} /> per run · pay only when it runs</p>
-        </div>
-      </header>
-      <ConfigureClient slug={app.slug} appName={app.name} questions={questions} />
-    </div>
-  );
+  if (UUID.test(slug)) {
+    const supabase = await createClient();
+    const { data } = await supabase.from("user_app_instances").select("id").eq("id", slug).maybeSingle();
+    if (data) redirect(`/my-apps?id=${data.id}`);
+  }
+  const { data: app } = await adminClient().from("mini_apps").select("slug, is_published").eq("slug", slug).maybeSingle();
+  if (app && (app.is_published || app.slug === "custom")) redirect(`/build?app=${app.slug}`);
+  notFound();
 }
