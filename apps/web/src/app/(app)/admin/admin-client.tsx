@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,7 @@ function KeyRow({ name, label, source, masked, keysUrl, provider, hint }: { name
   const [value, setValue] = useState("");
   const [res, setRes] = useState<R | null>(null);
   const [pending, start] = useTransition();
+  const router = useRouter();
   return (
     <Card className="space-y-3">
       <div className="flex items-center justify-between gap-4">
@@ -65,12 +67,12 @@ function KeyRow({ name, label, source, masked, keysUrl, provider, hint }: { name
       </div>
       <div className="flex gap-2">
         <Input type="password" placeholder={source === "unset" ? "paste key" : "paste to replace"} value={value} onChange={(e) => setValue(e.target.value)} autoComplete="off" />
-        <Button size="sm" phase="green" disabled={pending || !value} onClick={() => start(async () => { setRes(await saveKeyAction(name, value)); setValue(""); })}>Save</Button>
+        <Button size="sm" phase="green" disabled={pending || !value} onClick={() => start(async () => { setRes(await saveKeyAction(name, value)); setValue(""); router.refresh(); })}>Save</Button>
         {provider && (
           <Button size="sm" phase="amber" disabled={pending || (source === "unset" && !value)} onClick={() => start(async () => setRes(await testKeyAction(provider, value || undefined)))}>Test</Button>
         )}
         {source === "vault" && (
-          <Button size="sm" phase="ghost" disabled={pending} onClick={() => start(async () => setRes(await removeKeyAction(name)))}>Remove</Button>
+          <Button size="sm" phase="ghost" disabled={pending} onClick={() => start(async () => { setRes(await removeKeyAction(name)); router.refresh(); })}>Remove</Button>
         )}
       </div>
       <Result r={res} />
@@ -100,6 +102,7 @@ function KeysSection({ data }: { data: AdminData }) {
 
 /* ---------------- Routing ---------------- */
 function RoutingSection({ data }: { data: AdminData }) {
+  const router = useRouter();
   const [res, setRes] = useState<Record<string, R>>({});
   const [pending, start] = useTransition();
   const [form, setForm] = useState({ task_type: "", model: "", weight: "1.0" });
@@ -128,8 +131,8 @@ function RoutingSection({ data }: { data: AdminData }) {
                     {b && <span className="text-xs text-fg-faint num">bench {b.score.toFixed(1)} · ${(b.cost_per_run ?? 0).toFixed(5)} · {b.latency_ms ?? "–"} ms · {b.date}</span>}
                     <span className="flex-1" />
                     <Button size="sm" phase="amber" disabled={pending} onClick={() => start(async () => { const out = await testModelAction(r.model); setRes((s) => ({ ...s, [k]: out })); })}>Test</Button>
-                    {!r.is_leader && <Button size="sm" phase="ghost" disabled={pending} onClick={() => start(async () => { const out = await upsertRouteAction(r.task_type, r.model, r.weight, true); setRes((s) => ({ ...s, [k]: out })); })}>Make leader</Button>}
-                    <Button size="sm" phase="ghost" disabled={pending} onClick={() => start(async () => { const out = await deleteRouteAction(r.task_type, r.model); setRes((s) => ({ ...s, [k]: out })); })}>✕</Button>
+                    {!r.is_leader && <Button size="sm" phase="ghost" disabled={pending} onClick={() => start(async () => { const out = await upsertRouteAction(r.task_type, r.model, r.weight, true); setRes((s) => ({ ...s, [k]: out })); router.refresh(); })}>Make leader</Button>}
+                    <Button size="sm" phase="ghost" disabled={pending} onClick={() => start(async () => { const out = await deleteRouteAction(r.task_type, r.model); setRes((s) => ({ ...s, [k]: out })); router.refresh(); })}>✕</Button>
                     {res[k] && <div className="w-full"><Result r={res[k]} /></div>}
                   </div>
                 );
@@ -154,6 +157,7 @@ function RoutingSection({ data }: { data: AdminData }) {
 
 /* ---------------- Rates ---------------- */
 function RatesSection({ data }: { data: AdminData }) {
+  const router = useRouter();
   const [res, setRes] = useState<Record<string, R>>({});
   const [pending, start] = useTransition();
   const [edits, setEdits] = useState<Record<string, { i: string; o: string }>>({});
@@ -179,8 +183,8 @@ function RatesSection({ data }: { data: AdminData }) {
                   <td className="pr-3 text-fg-muted">{r.unit}</td>
                   <td className="pr-3 text-fg-faint">{r.source}</td>
                   <td className="whitespace-nowrap">
-                    <Button size="sm" phase="ghost" disabled={pending} onClick={() => start(async () => { const out = await upsertRateAction(r.api_provider, r.api_model, Number(e.i), Number(e.o), r.unit); setRes((s) => ({ ...s, [id]: out })); })}>Save</Button>{" "}
-                    <Button size="sm" phase="ghost" disabled={pending} onClick={() => start(async () => { const out = await deleteRateAction(r.api_provider, r.api_model); setRes((s) => ({ ...s, [id]: out })); })}>✕</Button>
+                    <Button size="sm" phase="ghost" disabled={pending} onClick={() => start(async () => { const out = await upsertRateAction(r.api_provider, r.api_model, Number(e.i), Number(e.o), r.unit); setRes((s) => ({ ...s, [id]: out })); router.refresh(); })}>Save</Button>{" "}
+                    <Button size="sm" phase="ghost" disabled={pending} onClick={() => start(async () => { const out = await deleteRateAction(r.api_provider, r.api_model); setRes((s) => ({ ...s, [id]: out })); router.refresh(); })}>✕</Button>
                     {res[id] && <Result r={res[id]} />}
                   </td>
                 </tr>
@@ -209,6 +213,7 @@ function RatesSection({ data }: { data: AdminData }) {
 
 /* ---------------- Settings ---------------- */
 function SettingsSection({ data }: { data: AdminData }) {
+  const router = useRouter();
   const [res, setRes] = useState<Record<string, R>>({});
   const [pending, start] = useTransition();
   const [vals, setVals] = useState<Record<string, string>>({});
@@ -225,7 +230,7 @@ function SettingsSection({ data }: { data: AdminData }) {
             <CardTitle>{label}</CardTitle>
             <div className="flex gap-2">
               <Input className="num" value={vals[key] ?? String(data.settings[key] ?? "")} onChange={(e) => setVals({ ...vals, [key]: e.target.value })} />
-              <Button size="sm" phase="green" disabled={pending} onClick={() => start(async () => { const out = await saveSettingAction(key, Number(vals[key] ?? data.settings[key])); setRes((s) => ({ ...s, [key]: out })); })}>Save</Button>
+              <Button size="sm" phase="green" disabled={pending} onClick={() => start(async () => { const out = await saveSettingAction(key, Number(vals[key] ?? data.settings[key])); setRes((s) => ({ ...s, [key]: out })); router.refresh(); })}>Save</Button>
             </div>
             <Result r={res[key]} />
           </Card>
