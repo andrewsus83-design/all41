@@ -9,7 +9,7 @@ export function N({ className, ...props }: HTMLAttributes<HTMLSpanElement>) {
 
 export function Section({ className, id, children }: { className?: string; id?: string; children: ReactNode }) {
   return (
-    <section id={id} className={cn("w-full max-w-6xl mx-auto px-6 py-20 md:py-28 scroll-mt-24", className)}>
+    <section id={id} className={cn("w-full lg:w-[90%] max-w-[1500px] mx-auto px-6 py-20 md:py-28 scroll-mt-24", className)}>
       {children}
     </section>
   );

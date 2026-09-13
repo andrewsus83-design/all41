@@ -22,8 +22,8 @@ export default async function HomePage() {
     <>
       {/* 1 · HERO */}
       <Section className="relative pt-24 md:pt-32 pb-16 md:pb-20 blueprint-grid">
-        <div className="hidden md:block absolute inset-y-0 left-1/2 -translate-x-1/2 w-screen -z-10 pointer-events-none">
-          <HeroBlueprint className="w-full h-full" />
+        <div className="hidden md:block absolute inset-y-0 left-1/2 -translate-x-1/2 w-screen -z-10 pointer-events-none overflow-hidden">
+          <HeroBlueprint />
         </div>
         <Sparkles />
         <div className="flex flex-col items-center text-center gap-7 max-w-4xl mx-auto">

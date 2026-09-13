@@ -17,8 +17,8 @@ async function isSignedIn() {
 export async function MarketingHeader() {
   const signedIn = await isSignedIn();
   return (
-    <header className="sticky top-3 md:top-5 z-40 px-3 md:px-4">
-      <div className="mx-auto max-w-6xl">
+    <header className="sticky top-3 md:top-5 z-40 px-4 sm:px-0">
+      <div className="mx-auto w-full sm:w-[92%] max-w-[1720px]">
         {/* floating dark pill nav — logo left, menu + CTA on the right */}
         <div className="relative grad-ink text-white rounded-full shadow-lift flex items-center justify-between gap-4 h-14 md:h-16 pl-5 md:pl-7 pr-2 md:pr-2.5">
           <Link href="/" className="font-title text-xl md:text-2xl font-bold tracking-tight text-white">
