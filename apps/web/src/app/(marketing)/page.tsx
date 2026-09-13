@@ -54,7 +54,7 @@ export default async function HomePage() {
           </p>
           <h1 className="rise-1 font-semibold leading-[1.12] tracking-tight">
             <span className="block text-7xl md:text-8xl xl:text-[7rem]">One place.</span>
-            <span className="lg:whitespace-nowrap block mt-1 text-5xl md:text-6xl xl:text-[4.5rem]">
+            <span className="block mt-1 text-5xl md:text-6xl xl:text-[4.5rem]">
               <span className="text-grad">The right AI for any </span>
               <span
               className="rounded-2 bg-bg-elev border border-line-strong"
@@ -73,7 +73,7 @@ export default async function HomePage() {
           <p className="rise-2 text-lg md:text-xl text-fg-muted max-w-2xl leading-relaxed text-pretty">
             We pick the right AI for the job and do the work —
             <span className="block">so you can focus on what matters.</span>
-            <span className="block mt-2 text-fg font-medium">No prompts. No subscription.</span>
+            <span className="block mt-2 text-fg font-medium">No Prompts · No Subscription · Pay When You Use</span>
           </p>
           <div className="rise-3 flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/login">
@@ -85,7 +85,7 @@ export default async function HomePage() {
               <Button phase="ghost" size="lg" className="w-full sm:w-auto">See how it works ↓</Button>
             </a>
           </div>
-          <p className="rise-4 reflect text-fg-muted text-lg">pay only when you use ✿</p>
+          <p className="rise-4 reflect text-fg-muted text-lg">AI, made easy ✿</p>
         </div>
       </Section>
 
