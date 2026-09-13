@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { LiveBriefingDemo } from "@/components/marketing/live-briefing-demo";
 import { GraphIllustration } from "@/components/marketing/graph-illustration";
 import { AppCard } from "@/components/marketing/app-card";
-import { Eyebrow, H2, Lead, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
+import { Eyebrow, H2, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
 import { SPRAWL_TOOLS, SPRAWL_TOTAL_USD, TASK_PRICE_USD, FREE_CREDIT_USD } from "@/content/sprawl";
 import { APP_META } from "@/content/apps";
 import { FAQ } from "@/content/faq";
