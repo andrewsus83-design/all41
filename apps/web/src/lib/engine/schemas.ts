@@ -128,6 +128,41 @@ export const OUTPUT_SCHEMAS = {
       },
     },
   },
+  proposal_report: {
+    name: "proposal_report",
+    schema: {
+      type: "object", additionalProperties: false,
+      required: ["executive_summary", "compliance_matrix", "proposal_sections", "win_themes", "compliance_summary", "flags", "sources", "confidence"],
+      properties: {
+        executive_summary: { type: "string" },
+        compliance_matrix: {
+          type: "array",
+          items: { type: "object", additionalProperties: false, required: ["req_id", "source_section", "requirement", "status", "response_location"],
+            properties: {
+              req_id: { type: "string" }, source_section: { type: "string", enum: ["L", "M", "SOW", "other"] }, requirement: { type: "string" },
+              status: { type: "string", enum: ["compliant", "partial", "missing"] }, response_location: { type: "string" }, evidence: { type: "string" },
+            } },
+        },
+        proposal_sections: {
+          type: "array",
+          items: { type: "object", additionalProperties: false, required: ["section", "action_title", "content"],
+            properties: { section: { type: "string" }, action_title: { type: "string" }, content: { type: "string" }, covers_req_ids: { type: "array", items: { type: "string" } } } },
+        },
+        win_themes: {
+          type: "array",
+          items: { type: "object", additionalProperties: false, required: ["theme", "hot_button", "discriminator", "proof_point"],
+            properties: { theme: { type: "string" }, hot_button: { type: "string" }, discriminator: { type: "string" }, proof_point: { type: "string" } } },
+        },
+        compliance_summary: {
+          type: "object", additionalProperties: false, required: ["total", "compliant", "partial", "missing"],
+          properties: { total: { type: "number" }, compliant: { type: "number" }, partial: { type: "number" }, missing: { type: "number" } },
+        },
+        flags: { type: "array", items: { type: "string" } },
+        sources: { type: "array", items: source },
+        confidence: { type: "number" },
+      },
+    },
+  },
   verification: {
     name: "verification",
     schema: {

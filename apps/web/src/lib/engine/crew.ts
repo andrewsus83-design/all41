@@ -71,6 +71,8 @@ export type CrewContext = {
   groundingCtx: string;
   tools: CrewTools;
   onEvent?: (e: CrewEvent) => void;
+  /** Which per-agent trail table this crew writes to (seo_run_steps | proposal_run_steps). */
+  stepsTable?: string;
 };
 
 // ---------- small per-agent finding schemas ----------
@@ -199,14 +201,14 @@ async function agentCall(
     });
     json = (r.result.json ?? {}) as Record<string, unknown>;
     billed = r.billedUsd;
-    await adminClient().from("seo_run_steps").insert({
+    await adminClient().from((ctx.stepsTable ?? "seo_run_steps") as "seo_run_steps").insert({
       run_id: runId, user_id: ctx.userId, agent: a.id, input: { context_chars: a.context.length } as unknown as Json,
       output: json as unknown as Json, model_used: modelId,
       tokens_in: r.result.usage.inputTokens, tokens_out: r.result.usage.outputTokens, cost_usd: r.costUsd, status: "ok",
     });
   } catch (e) {
     status = "error";
-    await adminClient().from("seo_run_steps").insert({ run_id: runId, user_id: ctx.userId, agent: a.id, model_used: modelId, status: "error", output: { error: String(e).slice(0, 300) } as unknown as Json }).select();
+    await adminClient().from((ctx.stepsTable ?? "seo_run_steps") as "seo_run_steps").insert({ run_id: runId, user_id: ctx.userId, agent: a.id, model_used: modelId, status: "error", output: { error: String(e).slice(0, 300) } as unknown as Json }).select();
   }
   const findings = Array.isArray(json.findings) ? (json.findings as unknown[]).length : Array.isArray(json.products) ? (json.products as unknown[]).length : 0;
   ctx.onEvent?.({ step: "crew.agent", id: a.id, name: a.name, label: a.label, phase: "done", billedSoFar: billedSoFar() + billed, isMock, findings });
@@ -315,7 +317,150 @@ const seoGeoRunner: Runner = async (ctx, step, depth, runId) => {
   return { output: report, schema: "seo_report", modelsUsed: [...models], agents: trail, verification, isMock: assemblerMock || trail.some((t) => t.isMock), billedUsd: billed };
 };
 
-export const CREWS: Record<string, { label: string; describe: string[]; agents: string[]; run: Runner }> = {
+// ---------- Proposal / RFP crew (App #2 — Shipley + MBB, docs/APP2_PROPOSAL_RFP.md) ----------
+const METHOD_PROPOSAL = {
+  shredder: `You are a meticulous compliance reader running the Shipley "shred". Extract EVERY requirement from the RFP into a compliance matrix. Tag each by source: Section L (instructions to offerors — format/structure/page limits), Section M (evaluation criteria — how it's scored, the most important), or SOW/PWS (the scope of work). Capture every "shall/must/will". Number each. A missed requirement = disqualified unread. Do not draft anything.`,
+  capture: `You are a sharp capture strategist (Shipley capture). Build the capture picture: the issuer's profile, their likely hot buttons (what they actually care about), the competitive landscape, and the bidder's OWN strengths and relevant past performance from the materials provided. Organize around the customer's hot buttons, not the bidder's org chart.`,
+  winthemes: `You are a competitive bid strategist. Define win themes (why THIS bidder, mapped to the customer's hot buttons) and discriminators (what makes them demonstrably different from competitors), aligned to the Section M evaluation criteria so they hit what is actually scored. Apply MECE: no two themes overlap, and together they leave no obvious "but what about…?" gap. Every theme needs a real proof point from the bidder's materials — never invent one.`,
+  writer: `You are a seasoned deal-closer who writes to win (Shipley customer-focused writing). Draft each proposal section as persuasive, customer-focused prose mapped 1:1 to the compliance matrix, weaving in the win themes and REAL proof points. Follow the RFP's required structure (Section L). Lead with benefits; make it easy for an evaluator to score. If prior gaps are listed, fix them.`,
+  editor: `You are a top-tier strategy consultant and executive-communication specialist. Rewrite the draft to MBB (McKinsey/BCG/Bain) standard WITHOUT changing what it covers: (1) Pyramid Principle — answer first, then 3 grouped supporting arguments, then evidence; (2) MECE arguments; (3) rule of three (synthesize to ~3 strong arguments per section, not a laundry list); (4) SCQA for the executive summary; (5) action titles — every section heading states the insight, not the topic ("Option B is live in 90 days", not "Timeline"); (6) every claim carries a so-what. Produce an executive_summary and the rewritten sections with action titles.`,
+  compliance: `You are a rigorous, zero-miss auditor running Shipley Pink/Red-team logic. Cross-check the draft against the compliance matrix: is EVERY requirement answered, in the right section, in the required format? Mark each row compliant / partial / missing with its response_location and evidence. List every gap. Do not pass until 100% covered — a missed requirement loses the bid.`,
+};
+
+const PROPOSAL_SCHEMAS = {
+  shredder: { name: "rfp_shred", schema: { type: "object", additionalProperties: false, required: ["matrix", "notes"], properties: {
+    matrix: { type: "array", items: { type: "object", additionalProperties: false, required: ["req_id", "source_section", "requirement"], properties: { req_id: { type: "string" }, source_section: { type: "string", enum: ["L", "M", "SOW", "other"] }, requirement: { type: "string" }, format_rule: { type: "string" } } } },
+    notes: { type: "string" } } } },
+  capture: { name: "capture", schema: { type: "object", additionalProperties: false, required: ["issuer_profile", "hot_buttons", "competitors", "bidder_strengths", "past_performance"], properties: {
+    issuer_profile: { type: "string" }, hot_buttons: { type: "array", items: { type: "string" } }, competitors: { type: "array", items: { type: "string" } }, bidder_strengths: { type: "array", items: { type: "string" } }, past_performance: { type: "array", items: { type: "string" } } } } },
+  winthemes: { name: "win_themes", schema: { type: "object", additionalProperties: false, required: ["win_themes", "notes"], properties: {
+    win_themes: { type: "array", items: { type: "object", additionalProperties: false, required: ["theme", "hot_button", "discriminator", "proof_point"], properties: { theme: { type: "string" }, hot_button: { type: "string" }, discriminator: { type: "string" }, proof_point: { type: "string" } } } }, notes: { type: "string" } } } },
+  writer: { name: "draft", schema: { type: "object", additionalProperties: false, required: ["sections", "notes"], properties: {
+    sections: { type: "array", items: { type: "object", additionalProperties: false, required: ["section", "content"], properties: { section: { type: "string" }, content: { type: "string" }, covers_req_ids: { type: "array", items: { type: "string" } } } } }, notes: { type: "string" } } } },
+  editor: { name: "edited", schema: { type: "object", additionalProperties: false, required: ["executive_summary", "sections"], properties: {
+    executive_summary: { type: "string" }, sections: { type: "array", items: { type: "object", additionalProperties: false, required: ["section", "action_title", "content"], properties: { section: { type: "string" }, action_title: { type: "string" }, content: { type: "string" }, covers_req_ids: { type: "array", items: { type: "string" } } } } } } } },
+  compliance: { name: "compliance_check", schema: { type: "object", additionalProperties: false, required: ["matrix", "gaps"], properties: {
+    matrix: { type: "array", items: { type: "object", additionalProperties: false, required: ["req_id", "source_section", "requirement", "status", "response_location"], properties: { req_id: { type: "string" }, source_section: { type: "string", enum: ["L", "M", "SOW", "other"] }, requirement: { type: "string" }, status: { type: "string", enum: ["compliant", "partial", "missing"] }, response_location: { type: "string" }, evidence: { type: "string" } } } }, gaps: { type: "array", items: { type: "string" } } } } },
+} as const;
+
+function mockProposalReport(subject: string) {
+  const s = subject || "the engagement";
+  return {
+    executive_summary: `We recommend ${s} deliver its scope through a phased, low-risk approach led by a team with directly relevant past performance. This proposal answers every requirement in the solicitation, maps our strengths to your evaluation criteria, and prices the work transparently. (Demo run — paste a real RFP and connect an AI key in /admin for a live, sourced draft.)`,
+    compliance_matrix: [
+      { req_id: "L-1", source_section: "L", requirement: "Submit a technical volume, max 20 pages", status: "compliant", response_location: "Technical Approach", evidence: "18-page technical volume drafted" },
+      { req_id: "M-1", source_section: "M", requirement: "Demonstrate relevant past performance", status: "compliant", response_location: "Past Performance", evidence: "3 relevant references from your materials" },
+      { req_id: "SOW-3", source_section: "SOW", requirement: "Provide a 90-day implementation plan", status: "partial", response_location: "Implementation", evidence: "Plan drafted — confirm dates with your team" },
+    ],
+    proposal_sections: [
+      { section: "Executive Summary", action_title: "A phased approach that is live in 90 days at lower risk", content: "SCQA-framed summary leading with the recommendation, then three grouped arguments." },
+      { section: "Technical Approach", action_title: "Our method removes the two risks that sink projects like this", content: "Answer-first, MECE breakdown of the approach with a so-what on each step." },
+      { section: "Past Performance", action_title: "We have done this exact work three times, on time", content: "Three real references pulled from your materials, each tied to a hot button." },
+    ],
+    win_themes: [
+      { theme: "Lower delivery risk through a proven phased method", hot_button: "on-time delivery", discriminator: "3 comparable projects delivered on schedule", proof_point: "past-performance references" },
+      { theme: "Faster time-to-value", hot_button: "budget certainty", discriminator: "90-day first milestone vs. typical 6 months", proof_point: "your implementation record" },
+    ],
+    compliance_summary: { total: 3, compliant: 2, partial: 1, missing: 0 },
+    flags: ["Demo run on placeholder data. Paste the real RFP and connect an AI key in /admin for a live, fact-checked draft."],
+    sources: [{ ref: "RFP", quote: "Placeholder — connect a real RFP for cited requirements." }],
+    confidence: 0.4,
+  };
+}
+
+const proposalRunner: Runner = async (ctx, step, _depth, runId) => {
+  const { config } = ctx;
+  const rfp = [pick(config, "rfp_text", "rfp", "source_text"), ctx.userData].filter(Boolean).join("\n\n").slice(0, 24000);
+  const bidder = pick(config, "bidder", "bidder_name", "business") || "the bidder";
+  const materials = ctx.userData || "(no bidder materials attached — attach past proposals & capabilities in My Apps for a sharper, specific draft)";
+  const emphasis = pick(config, "emphasis");
+
+  const trail: CrewAgentTrail[] = [];
+  const models = new Set<string>();
+  let billed = 0;
+  const soFar = () => billed;
+  const rec = (id: string, name: string, r: { model: string; billedUsd: number; findings: number; isMock: boolean }) => { trail.push({ id, name, model: r.model, billedUsd: r.billedUsd, findings: r.findings, status: "ok", isMock: r.isMock }); models.add(r.model); billed += r.billedUsd; };
+
+  // 1. Shred the RFP
+  const shred = await agentCall(ctx, runId, { id: "shredder", name: "RFP Shredder", taskType: "summarize", system: METHOD_PROPOSAL.shredder, context: `RFP:\n${rfp || "(no RFP text — ask the user to paste the RFP)"}`, schema: PROPOSAL_SCHEMAS.shredder, label: "Shredding the RFP" }, soFar);
+  rec("shredder", "RFP Shredder", shred);
+  const matrix = (shred.json.matrix as unknown[]) ?? [];
+  const sectionM = matrix.filter((m) => (m as { source_section?: string }).source_section === "M");
+
+  // 2. Capture (issuer research + bidder materials)
+  const issuerSearch = await ctx.tools.search(`${pick(config, "issuer") || bidder} priorities`);
+  billed += issuerSearch.billedUsd;
+  const capture = await agentCall(ctx, runId, { id: "capture", name: "Capture Analyst", taskType: "research", system: METHOD_PROPOSAL.capture, context: `BIDDER: ${bidder}\nEMPHASIS: ${emphasis}\nRFP SUMMARY:\n${String(shred.json.notes ?? "").slice(0, 1500)}\nBIDDER MATERIALS:\n${materials.slice(0, 8000)}\n[R] ISSUER RESEARCH: ${issuerSearch.results.map((r) => r.title).join("; ")}`, schema: PROPOSAL_SCHEMAS.capture, label: "Researching the buyer" }, soFar);
+  rec("capture", "Capture Analyst", capture);
+
+  // 3. Win themes (mapped to Section M)
+  const winthemes = await agentCall(ctx, runId, { id: "winthemes", name: "Win-Theme Strategist", taskType: "reasoning", system: METHOD_PROPOSAL.winthemes, context: `HOT BUTTONS: ${JSON.stringify(capture.json.hot_buttons)}\nBIDDER STRENGTHS: ${JSON.stringify(capture.json.bidder_strengths)}\nSECTION M (scored): ${JSON.stringify(sectionM)}\nCOMPETITORS: ${JSON.stringify(capture.json.competitors)}`, schema: PROPOSAL_SCHEMAS.winthemes, label: "Setting win themes" }, soFar);
+  rec("winthemes", "Win-Theme Strategist", winthemes);
+  const themes = winthemes.json.win_themes ?? [];
+
+  // 4–6. Write → consultant-grade edit → compliance loop (Shipley color-team; cap 2 iterations)
+  let writer!: Awaited<ReturnType<typeof agentCall>>;
+  let editor!: Awaited<ReturnType<typeof agentCall>>;
+  let compliance!: Awaited<ReturnType<typeof agentCall>>;
+  let gaps: string[] = [];
+  for (let iter = 0; iter < 2; iter++) {
+    writer = await agentCall(ctx, runId, { id: "writer", name: "Proposal Writer", taskType: "content", system: METHOD_PROPOSAL.writer, context: `COMPLIANCE MATRIX:\n${JSON.stringify(matrix).slice(0, 6000)}\nWIN THEMES:\n${JSON.stringify(themes)}\nBIDDER MATERIALS:\n${materials.slice(0, 6000)}${gaps.length ? `\nFIX THESE GAPS FROM THE LAST PASS:\n- ${gaps.join("\n- ")}` : ""}`, schema: PROPOSAL_SCHEMAS.writer, label: iter === 0 ? "Writing the draft" : "Closing the gaps" }, soFar);
+    rec("writer", "Proposal Writer", writer);
+    editor = await agentCall(ctx, runId, { id: "editor", name: "Consultant-Grade Editor", taskType: "reasoning", system: METHOD_PROPOSAL.editor, context: `WIN THEMES:\n${JSON.stringify(themes)}\nDRAFT SECTIONS:\n${JSON.stringify(writer.json.sections).slice(0, 8000)}`, schema: PROPOSAL_SCHEMAS.editor, label: "Rewriting to consultant standard" }, soFar);
+    rec("editor", "Consultant-Grade Editor", editor);
+    compliance = await agentCall(ctx, runId, { id: "compliance", name: "Compliance Checker", taskType: "reasoning", system: METHOD_PROPOSAL.compliance, context: `COMPLIANCE MATRIX:\n${JSON.stringify(matrix).slice(0, 6000)}\nPROPOSAL SECTIONS:\n${JSON.stringify(editor.json.sections).slice(0, 8000)}`, schema: PROPOSAL_SCHEMAS.compliance, label: "Checking every requirement" }, soFar);
+    rec("compliance", "Compliance Checker", compliance);
+    gaps = (compliance.json.gaps as string[]) ?? [];
+    if (!gaps.length) break;
+  }
+
+  // 7. Assemble the proposal report (mock → a realistic demo).
+  const { isMock: assemblerMock } = await routeTask(step.task_type);
+  let report: unknown;
+  if (assemblerMock) {
+    report = mockProposalReport(pick(config, "rfp_title", "issuer") || bidder);
+  } else {
+    const cMatrix = (compliance.json.matrix as Array<{ status?: string }>) ?? [];
+    const count = (st: string) => cMatrix.filter((r) => r.status === st).length;
+    report = {
+      executive_summary: editor.json.executive_summary ?? "",
+      proposal_sections: editor.json.sections ?? writer.json.sections ?? [],
+      compliance_matrix: cMatrix,
+      win_themes: themes,
+      compliance_summary: { total: cMatrix.length, compliant: count("compliant"), partial: count("partial"), missing: count("missing") },
+      flags: gaps.map((g) => `Still open after ${2} passes: ${g}`).slice(0, 10),
+      sources: [{ ref: "RFP", quote: rfp.slice(0, 200) }, ...(materials !== "" ? [{ ref: "MAT", quote: "Bidder's own materials" }] : [])],
+      confidence: gaps.length ? 0.6 : 0.8,
+    };
+  }
+
+  // Verifier gate — check claims/credentials vs the RFP + real materials (disqualification/fraud stakes; strict here).
+  let verification: Verification | undefined;
+  try {
+    verification = await verifyOutput({ userId: ctx.userId, taskId: ctx.taskId, output: report, context: `RFP:\n${rfp.slice(0, 4000)}\nBIDDER MATERIALS:\n${materials.slice(0, 4000)}` });
+    billed += verification.billedUsd ?? 0;
+    if (verification.model) models.add(verification.model);
+    if (verification.verdict !== "supported" && report && typeof report === "object") {
+      const r = report as { flags?: string[] };
+      r.flags = [...(r.flags ?? []), ...verification.conflicts.map((c) => `Check this claim: ${c}`), ...verification.unsupported_claims.map((c) => `No proof found: ${c}`)].slice(0, 14);
+    }
+    ctx.onEvent?.({ step: "crew.gate", verdict: verification.verdict, conflicts: verification.conflicts.length });
+  } catch {
+    ctx.onEvent?.({ step: "crew.gate", verdict: "skipped", conflicts: 0 });
+  }
+
+  return { output: report, schema: "proposal_report", modelsUsed: [...models], agents: trail, verification, isMock: assemblerMock || trail.some((t) => t.isMock), billedUsd: billed };
+};
+
+type CrewDef = {
+  label: string; describe: string[]; agents: string[]; run: Runner;
+  stepsTable: string;
+  createRun: (ctx: CrewContext) => Promise<string | undefined>;
+  finishRun: (runId: string, out: Awaited<ReturnType<Runner>>, taskId: string) => Promise<void>;
+  failRun: (runId: string) => Promise<void>;
+};
+
+export const CREWS: Record<string, CrewDef> = {
   seo_geo: {
     label: "SEO & GEO Optimizer",
     describe: [
@@ -327,6 +472,58 @@ export const CREWS: Record<string, { label: string; describe: string[]; agents: 
     ],
     agents: ["Crawler", "Technical Auditor", "Keyword Analyst", "Competitor Analyst", "Social Analyst", "GEO Analyst", "Report Writer", "Verifier"],
     run: seoGeoRunner,
+    stepsTable: "seo_run_steps",
+    createRun: async (ctx) => {
+      const { data } = await adminClient().from("seo_runs").insert({
+        user_id: ctx.userId, task_id: ctx.taskId, site_url: pick(ctx.config, "site_url", "website", "url"),
+        competitor_urls: (pick(ctx.config, "competitor_urls", "competitors") || "").split(",").map((s) => s.trim()).filter(Boolean),
+        goal: pick(ctx.config, "goal", "focus") || "both", selected_products: (ctx.config.products ?? null) as unknown as Json, status: "running",
+      }).select("id").single();
+      return data?.id as string | undefined;
+    },
+    finishRun: async (runId, out, taskId) => {
+      const db = adminClient();
+      const rep = out.output as { health_score?: { seo?: number; geo?: number } } | null;
+      const { data: usage } = await db.from("api_usage_log").select("cost_usd").eq("task_id", taskId);
+      await db.from("seo_runs").update({
+        status: "done", report: out.output as unknown as Json,
+        health_score_seo: Math.round(Number(rep?.health_score?.seo ?? 0)), health_score_geo: Math.round(Number(rep?.health_score?.geo ?? 0)),
+        total_cost: (usage ?? []).reduce((n, r) => n + Number(r.cost_usd), 0),
+      }).eq("id", runId);
+    },
+    failRun: async (runId) => { await adminClient().from("seo_runs").update({ status: "failed" }).eq("id", runId); },
+  },
+  proposal: {
+    label: "Proposal / RFP Maker",
+    describe: [
+      "Shreds the RFP into every requirement (a compliance matrix)",
+      "Researches the buyer and pulls your real past work",
+      "Sets the win themes that make you the obvious choice",
+      "Writes each section, then rewrites it to consultant standard",
+      "Loops until every requirement is covered, then fact-checks it",
+    ],
+    agents: ["RFP Shredder", "Capture Analyst", "Win-Theme Strategist", "Proposal Writer", "Consultant-Grade Editor", "Compliance Checker", "Verifier"],
+    run: proposalRunner,
+    stepsTable: "proposal_run_steps",
+    createRun: async (ctx) => {
+      const dl = pick(ctx.config, "deadline");
+      const { data } = await adminClient().from("proposal_runs").insert({
+        user_id: ctx.userId, task_id: ctx.taskId, tone: (pick(ctx.config, "tone") || "commercial").toLowerCase().includes("gov") ? "government" : "commercial",
+        deadline: /^\d{4}-\d{2}-\d{2}/.test(dl) ? dl.slice(0, 10) : null, status: "running",
+      }).select("id").single();
+      return data?.id as string | undefined;
+    },
+    finishRun: async (runId, out, taskId) => {
+      const db = adminClient();
+      const rep = out.output as { compliance_matrix?: unknown; proposal_sections?: unknown; win_themes?: unknown; flags?: unknown } | null;
+      const { data: usage } = await db.from("api_usage_log").select("cost_usd").eq("task_id", taskId);
+      await db.from("proposal_runs").update({
+        status: "done", proposal: out.output as unknown as Json,
+        compliance_matrix: (rep?.compliance_matrix ?? null) as unknown as Json, win_themes: (rep?.win_themes ?? null) as unknown as Json, flags: (rep?.flags ?? null) as unknown as Json,
+        total_cost: (usage ?? []).reduce((n, r) => n + Number(r.cost_usd), 0),
+      }).eq("id", runId);
+    },
+    failRun: async (runId) => { await adminClient().from("proposal_runs").update({ status: "failed" }).eq("id", runId); },
   },
 };
 
@@ -342,28 +539,15 @@ export async function runCrew(ctx: CrewContext, step: CrewStep): Promise<CrewSte
   const def = CREWS[step.crew_id];
   if (!def) throw new Error(`UNKNOWN_CREW ${step.crew_id}`);
   const depth = crewDepth(step, ctx.config);
-  const db = adminClient();
-  const { data: run } = await db.from("seo_runs").insert({
-    user_id: ctx.userId, task_id: ctx.taskId, site_url: pick(ctx.config, "site_url", "website", "url"),
-    competitor_urls: (pick(ctx.config, "competitor_urls", "competitors") || "").split(",").map((s) => s.trim()).filter(Boolean),
-    goal: pick(ctx.config, "goal", "focus") || "both", selected_products: (ctx.config.products ?? null) as unknown as Json, status: "running",
-  }).select("id").single();
-  const runId = run?.id as string;
+  ctx.stepsTable = def.stepsTable;
+  const runId = await def.createRun(ctx);
   let out: Awaited<ReturnType<Runner>>;
   try {
-    out = await def.run(ctx, step, depth, runId);
+    out = await def.run(ctx, step, depth, runId ?? "");
   } catch (e) {
-    if (runId) await db.from("seo_runs").update({ status: "failed" }).eq("id", runId);
+    if (runId) await def.failRun(runId);
     throw e;
   }
-  const rep = out.output as { health_score?: { seo?: number; geo?: number } } | null;
-  if (runId) {
-    const { data: usage } = await db.from("api_usage_log").select("cost_usd").eq("task_id", ctx.taskId);
-    await db.from("seo_runs").update({
-      status: "done", report: out.output as unknown as Json,
-      health_score_seo: Math.round(Number(rep?.health_score?.seo ?? 0)), health_score_geo: Math.round(Number(rep?.health_score?.geo ?? 0)),
-      total_cost: (usage ?? []).reduce((n, r) => n + Number(r.cost_usd), 0),
-    }).eq("id", runId);
-  }
+  if (runId) await def.finishRun(runId, out, ctx.taskId);
   return { id: step.id, kind: "crew", crew_id: step.crew_id, seoRunId: runId, ...out };
 }

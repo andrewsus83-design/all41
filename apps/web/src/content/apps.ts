@@ -77,6 +77,7 @@ export const SCHEMA_WORDS: Record<OutputSchemaKey, string> = {
   answer: "a direct answer, key points, a next action, sources cited",
   verification: "a verdict with conflicts and unsupported claims listed",
   seo_report: "two health scores, top-5 quick wins, technical/keyword/competitor/GEO/social findings, sources cited",
+  proposal_report: "a compliance matrix, an executive summary, consultant-grade sections, win themes, flags and sources",
 };
 
 /** Roadmap apps from Master Plan §11 — not available yet. */

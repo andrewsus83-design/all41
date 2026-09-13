@@ -712,6 +712,118 @@ export type Database = {
         }
         Relationships: []
       }
+      proposal_run_steps: {
+        Row: {
+          agent: string
+          cost_usd: number
+          created_at: string
+          id: string
+          input: Json | null
+          model_used: string | null
+          output: Json | null
+          run_id: string
+          status: string
+          tokens_in: number
+          tokens_out: number
+          user_id: string
+        }
+        Insert: {
+          agent: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          run_id: string
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          user_id: string
+        }
+        Update: {
+          agent?: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          run_id?: string
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_run_steps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposal_runs: {
+        Row: {
+          bidder_id: string | null
+          compliance_matrix: Json | null
+          created_at: string
+          deadline: string | null
+          flags: Json | null
+          id: string
+          proposal: Json | null
+          rfp_file_path: string | null
+          status: string
+          task_id: string | null
+          tone: string | null
+          total_cost: number
+          user_id: string
+          win_themes: Json | null
+        }
+        Insert: {
+          bidder_id?: string | null
+          compliance_matrix?: Json | null
+          created_at?: string
+          deadline?: string | null
+          flags?: Json | null
+          id?: string
+          proposal?: Json | null
+          rfp_file_path?: string | null
+          status?: string
+          task_id?: string | null
+          tone?: string | null
+          total_cost?: number
+          user_id: string
+          win_themes?: Json | null
+        }
+        Update: {
+          bidder_id?: string | null
+          compliance_matrix?: Json | null
+          created_at?: string
+          deadline?: string | null
+          flags?: Json | null
+          id?: string
+          proposal?: Json | null
+          rfp_file_path?: string | null
+          status?: string
+          task_id?: string | null
+          tone?: string | null
+          total_cost?: number
+          user_id?: string
+          win_themes?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_runs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_benchmark_entries: {
         Row: {
           benchmark_id: string
