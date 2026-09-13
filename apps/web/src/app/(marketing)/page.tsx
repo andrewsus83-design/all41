@@ -75,17 +75,20 @@ export default async function HomePage() {
       {/* 2 · SOCIAL-PROOF STRIP — honest, build-in-public facts (no fake logos) */}
       <div className="border-y border-line bg-bg-elev/50">
         <div className="w-full lg:w-[80%] max-w-[1280px] mx-auto px-6 py-5">
-          <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 font-mono text-base text-fg-muted">
-            <li className="text-fg">Built in public</li>
-            <Sep />
-            <li><N>{liveCount}</N> tools live</li>
-            <Sep />
-            <li>The right AI picked per job</li>
-            <Sep />
-            <li>Every run priced first</li>
-            <Sep />
-            <li>Quiet week = <N>$0</N></li>
-          </ul>
+          <div className="flex flex-col items-center gap-y-2 font-mono text-base text-fg-muted">
+            <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-1">
+              <li className="text-fg">Built in public</li>
+              <Sep />
+              <li><N>{liveCount}</N> tools live</li>
+              <Sep />
+              <li>The right AI picked per job</li>
+            </ul>
+            <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-1">
+              <li>Every run priced first</li>
+              <Sep />
+              <li>Quiet week = <N>$0</N></li>
+            </ul>
+          </div>
         </div>
       </div>
 
