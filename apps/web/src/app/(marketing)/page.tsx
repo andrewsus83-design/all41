@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import { AppGallery } from "@/components/marketing/app-gallery";
 import { SolutionCards } from "@/components/marketing/solution-cards";
 import { ResultsChat } from "@/components/marketing/results-chat";
+import { RotatingWord } from "@/components/marketing/rotating-word";
 import { Eyebrow, H2, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
 import { toGalleryApp } from "@/content/gallery";
 import { getPublishedApps } from "./_lib/data";
@@ -22,6 +23,8 @@ const WHY_CARDS = [
   { icon: "robot", card: "bg-violet-soft border-violet-soft", k: "Why use one AI when you can use them all?", v: "The best AI for each job, working together. Big results, small cost." },
   { icon: "coins", card: "bg-green-soft border-green-soft", k: "Only pay for what you use.", v: "No hidden cost. No wasted cost. A quiet week is $0." },
 ];
+
+const JOBS = ["Build", "Write", "Research", "Plan", "Audit", "Rank", "Reply", "Pitch"];
 
 const JOURNEY: { n: number; tone: "red" | "amber" | "green"; node: string; title: string; body: string; chips: string[] }[] = [
   { n: 1, tone: "red", node: "bg-coral-solid", title: "Say what you need", body: "Pick a tool, or just describe the job.", chips: ["SEO + GEO", "Proposal", "Research", "describe it…"] },
@@ -53,12 +56,12 @@ export default async function HomePage() {
             For anyone who&apos;s done juggling AI tools
           </p>
           <h1 className="rise-1 text-5xl md:text-7xl xl:text-8xl font-semibold leading-[1.02] tracking-tight text-balance">
-            One place. <span className="text-grad">The right AI for any job.</span>
+            One place. <span className="text-grad">The right AI to <RotatingWord words={JOBS} />.</span>
           </h1>
           <p className="rise-2 text-lg md:text-xl text-fg-muted max-w-2xl leading-relaxed text-pretty">
             The best AIs and APIs, combined — each job gets the right skill and just enough context for the sharpest
             result.
-            <span className="block mt-2 text-fg font-medium">No prompts. No subscription. No wasted <span className="num">$$</span>.</span>
+            <span className="block mt-2 text-fg font-medium">No prompts. No subscription.</span>
           </p>
           <div className="rise-3 flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/login">
