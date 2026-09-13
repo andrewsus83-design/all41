@@ -5,8 +5,6 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { LiveBriefingDemo } from "@/components/marketing/live-briefing-demo";
 import { AppCard } from "@/components/marketing/app-card";
 import { SolutionCards } from "@/components/marketing/solution-cards";
-import { HeroBlueprint } from "@/components/marketing/hero-blueprint";
-import { Sparkles } from "@/components/marketing/sparkles";
 import { Eyebrow, H2, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
 import { replacesFor } from "@/content/app-pages";
 import { getPublishedApps } from "./_lib/data";
@@ -25,11 +23,7 @@ export default async function HomePage() {
   return (
     <>
       {/* 1 · HERO — product visible above the fold (text left, live demo right) */}
-      <Section className="relative pt-20 md:pt-28 pb-16 md:pb-24 blueprint-grid">
-        <div className="hidden md:block absolute inset-y-0 left-1/2 -translate-x-1/2 w-screen -z-10 pointer-events-none overflow-hidden">
-          <HeroBlueprint />
-        </div>
-        <Sparkles />
+      <Section className="relative pt-20 md:pt-28 pb-16 md:pb-24">
         <div className="grid lg:grid-cols-[0.95fr_1.05fr] gap-12 lg:gap-10 items-center">
           {/* left — the words */}
           <div className="flex flex-col items-start text-left gap-6 max-w-xl">
