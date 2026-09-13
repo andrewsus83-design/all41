@@ -74,7 +74,7 @@ export type IconName = (typeof ICON_NAMES)[number];
 export function Icon({ name, size = 24, className, alt }: { name: IconName | string; size?: number; className?: string; alt?: string }) {
   return (
     <Image
-      src={`/icons/${name}.png`}
+      src={`/icons/${name}.webp`}
       width={size}
       height={size}
       alt={alt ?? ""}

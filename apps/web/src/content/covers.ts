@@ -1,4 +1,4 @@
-/** Slugs that have a generated cover image at /app-covers/<slug>.png. */
+/** Slugs that have a generated cover image at /app-covers/<slug>.webp. */
 export const COVER_SLUGS = new Set<string>([
   "advanced-research",
   "bid-no-bid",
@@ -24,5 +24,5 @@ export const COVER_SLUGS = new Set<string>([
 
 /** Cover image path for a slug, or null if none was generated. */
 export function coverFor(slug: string): string | null {
-  return COVER_SLUGS.has(slug) ? `/app-covers/${slug}.png` : null;
+  return COVER_SLUGS.has(slug) ? `/app-covers/${slug}.webp` : null;
 }

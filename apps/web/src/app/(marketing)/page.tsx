@@ -3,10 +3,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
-import { AppCard } from "@/components/marketing/app-card";
+import { AppGallery } from "@/components/marketing/app-gallery";
 import { SolutionCards } from "@/components/marketing/solution-cards";
 import { Eyebrow, H2, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
-import { replacesFor } from "@/content/app-pages";
+import { toGalleryApp } from "@/content/gallery";
 import { getPublishedApps } from "./_lib/data";
 
 export const metadata: Metadata = {
@@ -61,11 +61,10 @@ export default async function HomePage() {
             <p className="rise-4 reflect text-fg-muted">pay only when you use ✿</p>
           </div>
 
-          {/* right — the illustrated hero */}
+          {/* right — the illustrated hero (transparent, floats on the gradient) */}
           <div className="relative w-full max-w-xl mx-auto lg:mx-0">
-            <div className="absolute -inset-8 -z-10 glow-soft rounded-6" aria-hidden />
             <Image
-              src="/hero.png"
+              src="/hero.webp"
               alt="One place where the right AI quietly does every job — a dashboard surrounded by friendly AI helpers."
               width={1100}
               height={1100}
@@ -154,11 +153,7 @@ export default async function HomePage() {
         {apps.length === 0 ? (
           <p className="text-fg-faint text-center">No tools published yet.</p>
         ) : (
-          <div className="grid gap-5 md:grid-cols-3">
-            {apps.map((a) => (
-              <AppCard key={a.id} app={a} replaces={replacesFor(a.slug)} />
-            ))}
-          </div>
+          <AppGallery apps={apps.map(toGalleryApp)} />
         )}
         <p className="text-fg-muted max-w-2xl mx-auto text-center mt-10 leading-relaxed">
           For each job, all41 picks the right AI, gives it only what it needs, and combines the best tools behind the
