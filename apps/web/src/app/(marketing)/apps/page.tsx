@@ -19,7 +19,7 @@ export default async function AppsPage() {
   return (
     <>
       <Section className="pt-16 md:pt-24 pb-10">
-        <div className="space-y-6 max-w-3xl">
+        <div className="space-y-6 max-w-3xl mx-auto flex flex-col items-center text-center">
           <Eyebrow phase="green">Apps</Eyebrow>
           <h1 className="text-5xl md:text-6xl font-semibold leading-[1.04]">Build your app once. Pay as you go.</h1>
           <Lead>No recurring fees. No hidden fees. Each app is built to work best for its job and connected where it needs to be. You fill in the blanks in chat.</Lead>

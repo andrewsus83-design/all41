@@ -14,7 +14,7 @@ export default function FaqPage() {
   return (
     <>
       <Section className="pt-16 md:pt-24 pb-10">
-        <div className="space-y-6 max-w-3xl">
+        <div className="space-y-6 max-w-3xl mx-auto flex flex-col items-center text-center">
           <Eyebrow>Questions</Eyebrow>
           <h1 className="text-5xl md:text-6xl font-semibold leading-[1.04]">Straight answers.</h1>
           <Lead>If something is not here, the Resources page has the updates and the full list of what we use.</Lead>

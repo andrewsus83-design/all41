@@ -28,52 +28,53 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* HERO */}
-      <Section className="pt-16 md:pt-24 pb-16 md:pb-24">
-        <div className="grid gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-16 items-center">
-          <div className="space-y-8">
-            <div className="rise"><Eyebrow phase="green">One chat. Done.</Eyebrow></div>
-            <h1 className="rise-1 text-5xl md:text-6xl xl:text-7xl font-semibold leading-[1.02]">
-              Tell us the job.
-              <br />
-              We&apos;ll handle <span className="text-grad">the AI.</span>
-            </h1>
-            <div className="rise-2">
-              <Lead>
-                No prompts to learn. No tools to juggle. Describe what you need in plain words. all41 picks the right AI, does the work, and shows you the price before it runs.
-              </Lead>
-            </div>
-            <div className="rise-3 flex flex-col sm:flex-row gap-3">
-              <Link href="/login">
-                <Button phase="warm" size="lg" className="w-full sm:w-auto glow-coral sheen">Start with <N>${FREE_CREDIT_USD}</N> free</Button>
-              </Link>
-              <a href="#routing">
-                <Button phase="ghost" size="lg" className="w-full sm:w-auto">See how it picks</Button>
-              </a>
-            </div>
-            <p className="rise-4 reflect text-fg-muted">Other AI tools let you be lazy. all41 makes you sharp.</p>
+      {/* HERO — centered, cinematic */}
+      <Section className="pt-20 md:pt-28 pb-16 md:pb-24">
+        <div className="flex flex-col items-center text-center gap-8 max-w-4xl mx-auto">
+          <div className="rise"><Eyebrow phase="green">One chat. Done.</Eyebrow></div>
+          <h1 className="rise-1 text-6xl md:text-7xl xl:text-8xl font-semibold leading-[1.0] tracking-tight text-balance">
+            Tell us the job.
+            <br />
+            We&apos;ll handle <span className="text-grad">the AI.</span>
+          </h1>
+          <p className="rise-2 text-lg md:text-2xl text-fg-muted max-w-2xl leading-relaxed text-pretty">
+            No prompts to learn. No tools to juggle. Describe what you need in plain words. all41 picks the right AI, does the work, and shows you the price before it runs.
+          </p>
+          <div className="rise-3 flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/login">
+              <Button phase="warm" size="lg" className="w-full sm:w-auto glow-coral sheen">Start with <N>${FREE_CREDIT_USD}</N> free</Button>
+            </Link>
+            <a href="#routing">
+              <Button phase="ghost" size="lg" className="w-full sm:w-auto">See how it picks</Button>
+            </a>
           </div>
-          <div className="rise-2 relative">
-            <div className="absolute -inset-6 -z-10 glow-soft rounded-6" aria-hidden />
+          <p className="rise-4 reflect text-fg-muted">Other AI tools let you be lazy. all41 makes you sharp.</p>
+        </div>
+        {/* live demo, centered in a premium glass frame */}
+        <div className="rise-2 relative mx-auto mt-16 md:mt-20 w-full max-w-xl">
+          <div className="absolute -inset-10 -z-10 glow-soft rounded-6" aria-hidden />
+          <div className="grad-ring rounded-5 lift">
             <LiveBriefingDemo />
           </div>
         </div>
       </Section>
 
+      <Divider />
+
       {/* TWO AUDIENCES */}
-      <Section className="pt-0">
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card className="space-y-4 p-8">
+      <Section className="pt-8">
+        <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto">
+          <Card className="flex flex-col items-center text-center space-y-4 p-8 glass grad-ring lift">
             <Eyebrow phase="amber">New to AI?</Eyebrow>
             <CardTitle className="text-2xl">You don&apos;t have to learn it.</CardTitle>
-            <p className="text-fg-muted leading-relaxed">
+            <p className="text-fg-muted leading-relaxed max-w-sm">
               Say what you need the way you would to a colleague. No prompts to master, no AI to choose, no settings, no keys. You get the result and the price.
             </p>
           </Card>
-          <Card className="space-y-4 p-8">
+          <Card className="flex flex-col items-center text-center space-y-4 p-8 glass grad-ring lift">
             <Eyebrow phase="amber">Tired of juggling tools?</Eyebrow>
             <CardTitle className="text-2xl">One place. One balance.</CardTitle>
-            <p className="text-fg-muted leading-relaxed">
+            <p className="text-fg-muted leading-relaxed max-w-sm">
               No subscriptions to babysit, no seats you forgot about. Every task is priced before it runs, and you only pay for what actually ran.
             </p>
           </Card>
@@ -84,41 +85,37 @@ export default async function HomePage() {
       <Section>
         <SectionHead phase="red" eyebrow="How a job moves" title="Stop & Think · Prepare · Go & Track" lead="Every job goes through the same three lights. It takes about twenty seconds and it is why the results are good." />
         <div className="grid gap-6 md:grid-cols-3">
-          <Card className="space-y-4 border-red/30">
-            <Badge tone="red">Stop &amp; Think</Badge>
-            <CardTitle className="text-2xl">What, and why.</CardTitle>
-            <CardHint className="leading-relaxed">Two short questions: what do you need, and what will you decide with it. Clear in, clear out.</CardHint>
-          </Card>
-          <Card className="space-y-4 border-amber/30">
-            <Badge tone="amber">Prepare</Badge>
-            <CardTitle className="text-2xl">Set the conditions.</CardTitle>
-            <CardHint className="leading-relaxed">How fresh, what tone, what shape. Tap a few options. all41 pulls in your own files and notes where they help.</CardHint>
-          </Card>
-          <Card className="space-y-4 border-green/30">
-            <Badge tone="green">Go &amp; Track</Badge>
-            <CardTitle className="text-2xl">Run it. Keep it.</CardTitle>
-            <CardHint className="leading-relaxed">See the price, run it, get the result. Run it once, on a schedule, or save it as an app you tap next time.</CardHint>
-          </Card>
+          {[
+            { tone: "red" as const, label: "Stop & Think", title: "What, and why.", body: "Two short questions: what do you need, and what will you decide with it. Clear in, clear out." },
+            { tone: "amber" as const, label: "Prepare", title: "Set the conditions.", body: "How fresh, what tone, what shape. Tap a few options. all41 pulls in your own files and notes where they help." },
+            { tone: "green" as const, label: "Go & Track", title: "Run it. Keep it.", body: "See the price, run it, get the result. Run it once, on a schedule, or save it as an app you tap next time." },
+          ].map((c) => (
+            <Card key={c.label} className="flex flex-col items-center text-center space-y-4 lift">
+              <Badge tone={c.tone}>{c.label}</Badge>
+              <CardTitle className="text-2xl">{c.title}</CardTitle>
+              <CardHint className="leading-relaxed">{c.body}</CardHint>
+            </Card>
+          ))}
         </div>
-        <p className="reflect text-fg-muted mt-12">Other AI tools let you be lazy. all41 makes you sharp.</p>
+        <p className="reflect text-fg-muted mt-12 text-center">Other AI tools let you be lazy. all41 makes you sharp.</p>
       </Section>
 
       {/* SPRAWL */}
       <Section>
         <SectionHead phase="amber" eyebrow="One chat replaces the stack" title="Stop paying for eight things you open twice a month." lead="A typical solo stack, at list price. You use a slice of each. all41 charges per task instead, so the bill follows the work." />
-        <div className="grid gap-8 lg:grid-cols-[1fr_auto] items-start">
+        <div className="grid gap-8 lg:grid-cols-[1fr_auto] items-start max-w-4xl mx-auto">
           <ul className="grid sm:grid-cols-2 gap-2">
             {SPRAWL_TOOLS.map((t) => (
-              <li key={t.id} className="squircle flex items-center justify-between rounded-2 border border-line bg-bg-elev px-4 py-3">
+              <li key={t.id} className="flex items-center justify-between rounded-full border border-line bg-bg-elev px-4 py-3">
                 <span>{t.name}</span>
                 <span className="num text-fg-muted">${t.monthlyUsd}<span className="text-fg-faint">/mo</span></span>
               </li>
             ))}
           </ul>
-          <Card className="space-y-6 lg:w-80 border-green/30">
+          <Card className="text-center space-y-6 lg:w-80 glass grad-ring">
             <div className="space-y-1">
               <p className="text-xs uppercase tracking-[0.18em] text-fg-faint">Those eight, per month</p>
-              <p className="num text-4xl">${SPRAWL_TOTAL_USD}</p>
+              <p className="num text-5xl text-grad">${SPRAWL_TOTAL_USD}</p>
               <p className="text-xs text-fg-faint">List prices, illustrative.</p>
             </div>
             <div className="h-px bg-line" />
@@ -129,7 +126,7 @@ export default async function HomePage() {
                 Typically <Money usd={TASK_PRICE_USD.light} /> – <Money usd={TASK_PRICE_USD.heavy} /> per task
               </p>
             </div>
-            <TextLink href="/pricing">Work out your number</TextLink>
+            <div className="flex justify-center"><TextLink href="/pricing">Work out your number</TextLink></div>
           </Card>
         </div>
       </Section>
@@ -138,7 +135,7 @@ export default async function HomePage() {
       <Section>
         <SectionHead phase="green" eyebrow="Apps" title="Ready-made jobs. Fill in the blanks." lead="Pick one, answer three or four questions in chat, and it runs — once or on a schedule. Nothing to build." />
         {apps.length === 0 ? (
-          <p className="text-fg-faint">No apps published yet.</p>
+          <p className="text-fg-faint text-center">No apps published yet.</p>
         ) : (
           <div className="grid gap-5 md:grid-cols-3">
             {apps.map((a) => (
@@ -146,7 +143,7 @@ export default async function HomePage() {
             ))}
           </div>
         )}
-        <div className="mt-8">
+        <div className="mt-8 text-center">
           <TextLink href="/apps">All apps, and what is coming</TextLink>
         </div>
       </Section>
@@ -154,7 +151,7 @@ export default async function HomePage() {
       {/* ROUTING */}
       <Section id="routing">
         <SectionHead phase="green" eyebrow="Picks the right AI for the job" title="We test the AIs every day so you don't have to." lead="The best AI for research is not the best one for writing, and it changes. Each kind of job goes to whichever did best in today's test. You never choose." />
-        <div className="squircle rounded-4 border border-line bg-bg-elev overflow-hidden">
+        <div className="max-w-3xl mx-auto rounded-5 border border-line bg-bg-elev glass overflow-hidden">
           <table className="w-full text-left text-sm">
             <thead className="text-xs uppercase tracking-wider text-fg-faint">
               <tr className="border-b border-line">
@@ -190,89 +187,76 @@ export default async function HomePage() {
         </div>
       </Section>
 
-      {/* GRAPH */}
+      {/* GRAPH — centered */}
       <Section>
-        <div className="grid gap-12 lg:grid-cols-2 items-center">
-          <div className="space-y-6">
-            <Eyebrow phase="amber">Your own files and notes</Eyebrow>
-            <H2>Answers from your world, with sources.</H2>
-            <Lead>
-              Files you add, results you have run, and notes you keep get linked together. When you ask something, all41 pulls in what is connected and shows where each claim came from. For important jobs it checks the answer against the sources a second time.
-            </Lead>
-            <ul className="space-y-2 text-fg-muted">
-              <li>· Add a file once, it helps every later job.</li>
-              <li>· Every answer says what it used.</li>
-              <li>· Your data is used for your questions only.</li>
-            </ul>
-          </div>
-          <div className="squircle rounded-5 border border-line bg-bg-elev p-6">
-            <GraphIllustration className="w-full h-auto" />
-            <p className="text-xs text-fg-faint mt-2 text-center">Solid lines: links you made. Dashed: links all41 found.</p>
-          </div>
+        <SectionHead phase="amber" eyebrow="Your own files and notes" title="Answers from your world, with sources." lead="Files you add, results you have run, and notes you keep get linked together. When you ask something, all41 pulls in what is connected and shows where each claim came from. For important jobs it checks the answer against the sources a second time." />
+        <div className="max-w-2xl mx-auto rounded-5 border border-line bg-bg-elev glass grad-ring p-6">
+          <GraphIllustration className="w-full h-auto" />
+          <p className="text-xs text-fg-faint mt-2 text-center">Solid lines: links you made. Dashed: links all41 found.</p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-fg-muted mt-8 text-sm">
+          <span>· Add a file once, it helps every later job.</span>
+          <span>· Every answer says what it used.</span>
+          <span>· Your data is used for your questions only.</span>
         </div>
       </Section>
 
-      {/* MONEY */}
+      {/* MONEY — centered */}
       <Section>
-        <div className="grid gap-12 lg:grid-cols-2 items-center">
-          <div className="space-y-6">
-            <Eyebrow phase="green">Every cent tracked</Eyebrow>
-            <H2>You see the price. Then it runs.</H2>
-            <Lead>
-              Your balance is checked before anything starts. The cost is written down before the result comes back. Plain dollars, never points. Credits last <N>12</N> months.
-            </Lead>
+        <SectionHead phase="green" eyebrow="Every cent tracked" title="You see the price. Then it runs." lead={<>Your balance is checked before anything starts. The cost is written down before the result comes back. Plain dollars, never points. Credits last <N>12</N> months.</>} />
+        <Card className="max-w-md mx-auto space-y-4 font-mono text-sm glass grad-ring">
+          <p className="text-xs uppercase tracking-[0.18em] text-fg-faint font-sans text-center">Example task line · illustrative</p>
+          <div className="space-y-2 num">
+            <Row k="task" v="compare pricing · Jasper vs Pro" />
+            <Row k="balance before" v="$2.0000" />
+            <Row k="priced at" v="$0.0312" />
+            <Row k="charged" v="$0.0298" green />
+            <Row k="balance after" v="$1.9702" />
           </div>
-          <Card className="space-y-4 font-mono text-sm">
-            <p className="text-xs uppercase tracking-[0.18em] text-fg-faint font-sans">Example task line · illustrative</p>
-            <div className="space-y-2 num">
-              <Row k="task" v="compare pricing · Jasper vs Pro" />
-              <Row k="balance before" v="$2.0000" />
-              <Row k="priced at" v="$0.0312" />
-              <Row k="charged" v="$0.0298" green />
-              <Row k="balance after" v="$1.9702" />
-            </div>
-          </Card>
-        </div>
+        </Card>
       </Section>
 
       {/* PRICING TEASER */}
       <Section>
-        <div className="squircle rounded-6 border border-line bg-bg-elev p-8 md:p-14 grid gap-10 md:grid-cols-[1fr_auto] items-center">
-          <div className="space-y-4">
-            <Eyebrow phase="green">Pricing</Eyebrow>
-            <H2>Top up. Pay per task. That&apos;s it.</H2>
-            <p className="text-fg-muted text-lg">
-              <N>${FREE_CREDIT_USD}</N> free to start · no subscription · most tasks <Money usd={TASK_PRICE_USD.light} />–<Money usd={TASK_PRICE_USD.heavy} />
-            </p>
-          </div>
-          <Link href="/pricing"><Button phase="ghost" size="lg">See pricing</Button></Link>
+        <div className="rounded-6 glass grad-ring glow-soft p-10 md:p-16 flex flex-col items-center text-center gap-5 max-w-3xl mx-auto">
+          <Eyebrow phase="green">Pricing</Eyebrow>
+          <H2>Top up. Pay per task. That&apos;s it.</H2>
+          <p className="text-fg-muted text-lg">
+            <N>${FREE_CREDIT_USD}</N> free to start · no subscription · most tasks <Money usd={TASK_PRICE_USD.light} />–<Money usd={TASK_PRICE_USD.heavy} />
+          </p>
+          <Link href="/pricing"><Button phase="soft" size="lg">See pricing</Button></Link>
         </div>
       </Section>
 
       {/* FAQ TEASER */}
       <Section>
         <SectionHead eyebrow="Questions" title="Straight answers." />
-        <dl className="grid gap-x-12 gap-y-8 md:grid-cols-2">
+        <dl className="grid gap-x-12 gap-y-8 md:grid-cols-2 max-w-4xl mx-auto text-center md:text-left">
           {FAQ.filter((f) => HOME_FAQ_IDS.includes(f.id)).map((f) => (
             <div key={f.id} className="space-y-2">
-              <dt className="font-title text-lg font-medium">{f.q}</dt>
+              <dt className="font-title text-lg font-semibold text-fg">{f.q}</dt>
               <dd className="text-fg-muted leading-relaxed">{f.a}</dd>
             </div>
           ))}
         </dl>
-        <div className="mt-10"><TextLink href="/faq">All questions</TextLink></div>
+        <div className="mt-10 text-center"><TextLink href="/faq">All questions</TextLink></div>
       </Section>
 
       {/* FINAL CTA */}
       <Section className="pb-28">
-        <div className="text-center space-y-6 max-w-2xl mx-auto">
-          <H2 className="mx-auto">Describe one job. See what comes back.</H2>
+        <div className="relative rounded-6 glass grad-ring p-12 md:p-20 text-center space-y-6 max-w-3xl mx-auto overflow-hidden">
+          <div className="absolute inset-0 -z-10 grad-soft opacity-60" aria-hidden />
+          <H2 className="text-4xl md:text-6xl">Describe one job. See what comes back.</H2>
           <p className="text-fg-muted text-lg">No card. No setup. <N>${FREE_CREDIT_USD}</N> to spend on real work.</p>
-          <Link href="/login" className="inline-block"><Button phase="green" size="lg">Start with <N>${FREE_CREDIT_USD}</N> free</Button></Link>
+          <Link href="/login" className="inline-block"><Button phase="warm" size="lg" className="glow-coral sheen">Start with <N>${FREE_CREDIT_USD}</N> free</Button></Link>
         </div>
       </Section>
     </>
   );
+}
+
+function Divider() {
+  return <div className="mx-auto max-w-6xl px-6"><div className="h-px bg-gradient-to-r from-transparent via-line-strong to-transparent" /></div>;
 }
 
 function Row({ k, v, green }: { k: string; v: string; green?: boolean }) {

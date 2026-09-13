@@ -78,7 +78,7 @@ export default async function BenchmarkPage() {
   return (
     <>
       <Section className="pt-16 md:pt-24 pb-10">
-        <div className="space-y-6 max-w-3xl">
+        <div className="space-y-6 max-w-3xl mx-auto flex flex-col items-center text-center">
           <Eyebrow phase="green">Benchmark · Quality Layer 3</Eyebrow>
           <h1 className="text-5xl md:text-6xl font-semibold leading-[1.04]">Proof, not claims.</h1>
           <Lead>Skill and context can&apos;t fake the result — here&apos;s what independent judges say. We run the same job three ways, have it judged blind by independent AI, and publish the scores as-is.</Lead>

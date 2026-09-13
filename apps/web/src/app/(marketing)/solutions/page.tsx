@@ -32,7 +32,7 @@ export default async function SolutionsPage() {
   return (
     <>
       <Section className="pt-16 md:pt-24 pb-10">
-        <div className="space-y-6 max-w-3xl">
+        <div className="space-y-6 max-w-3xl mx-auto flex flex-col items-center text-center">
           <Eyebrow phase="red">Why we built this</Eyebrow>
           <h1 className="text-5xl md:text-6xl font-semibold leading-[1.04]">We were paying for plumbing.</h1>
           <Lead>A short story about how one nice app turned into a dozen subscriptions, and what we did about it.</Lead>

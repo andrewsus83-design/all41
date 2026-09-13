@@ -70,7 +70,7 @@ export default async function ResourcesPage() {
   return (
     <>
       <Section className="pt-16 md:pt-24 pb-10">
-        <div className="space-y-6 max-w-3xl">
+        <div className="space-y-6 max-w-3xl mx-auto flex flex-col items-center text-center">
           <Eyebrow>Resources</Eyebrow>
           <h1 className="text-5xl md:text-6xl font-semibold leading-[1.04]">What is behind it, in the open.</h1>
           <Lead>The AI services behind each app, today&apos;s test results, and what we have shipped. No secrets, no jargon.</Lead>

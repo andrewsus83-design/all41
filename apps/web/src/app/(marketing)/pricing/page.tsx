@@ -15,7 +15,7 @@ export default function PricingPage() {
   return (
     <>
       <Section className="pt-16 md:pt-24 pb-12">
-        <div className="space-y-8 max-w-3xl">
+        <div className="space-y-8 max-w-3xl mx-auto flex flex-col items-center text-center">
           <Eyebrow phase="green">Pricing</Eyebrow>
           <h1 className="text-5xl md:text-7xl font-semibold leading-[1.02]">Top up. Pay per task. That&apos;s it.</h1>
           <ul className="grid sm:grid-cols-2 gap-x-10 gap-y-3 text-lg text-fg-muted">
