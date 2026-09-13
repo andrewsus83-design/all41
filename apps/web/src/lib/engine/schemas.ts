@@ -208,6 +208,50 @@ export const OUTPUT_SCHEMAS = {
       },
     },
   },
+  website_report: {
+    name: "website_report",
+    schema: {
+      type: "object", additionalProperties: false,
+      required: ["live_url", "status", "pages", "style", "seo_geo_baseline", "conversion_notes", "checkout_linked", "render_note", "flags", "sources", "confidence"],
+      properties: {
+        live_url: { type: "string" },
+        status: { type: "string", enum: ["live", "deploy_pending", "failed"] },
+        subdomain: { type: "string" },
+        pages: {
+          type: "array",
+          items: {
+            type: "object", additionalProperties: false,
+            required: ["type", "slug", "headline", "value_prop", "proof", "cta"],
+            properties: {
+              type: { type: "string" },
+              slug: { type: "string" },
+              headline: { type: "string" },
+              subhead: { type: "string" },
+              value_prop: { type: "string" },
+              proof: { type: "array", items: { type: "string" } },
+              cta: { type: "string" },
+              cta_href: { type: "string" },
+              has_nav: { type: "boolean" },
+            },
+          },
+        },
+        style: {
+          type: "object", additionalProperties: false, required: ["palette", "typography", "tone"],
+          properties: { palette: { type: "array", items: { type: "string" } }, typography: { type: "string" }, tone: { type: "string" }, layout: { type: "string" } },
+        },
+        seo_geo_baseline: {
+          type: "object", additionalProperties: false, required: ["summary", "schema_present", "geo_notes"],
+          properties: { summary: { type: "string" }, schema_present: { type: "boolean" }, geo_notes: { type: "array", items: { type: "string" } } },
+        },
+        conversion_notes: { type: "array", items: { type: "string" } },
+        checkout_linked: { type: "boolean" },
+        render_note: { type: "string" },
+        flags: { type: "array", items: { type: "string" } },
+        sources: { type: "array", items: source },
+        confidence: { type: "number" },
+      },
+    },
+  },
   verification: {
     name: "verification",
     schema: {

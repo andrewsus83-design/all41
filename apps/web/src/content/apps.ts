@@ -79,6 +79,7 @@ export const SCHEMA_WORDS: Record<OutputSchemaKey, string> = {
   seo_report: "two health scores, top-5 quick wins, technical/keyword/competitor/GEO/social findings, sources cited",
   proposal_report: "a compliance matrix, an executive summary, consultant-grade sections, win themes, flags and sources",
   clip_report: "ready-to-post vertical clips, each with a virality score, hook type, caption and why it was chosen — plus the moments that were dropped",
+  website_report: "a live, conversion-optimized website — pages with a benefit-led headline, value prop, proof and one CTA, the style, an SEO/GEO baseline, and what to check",
 };
 
 /** Roadmap apps from Master Plan §11 — not available yet. */

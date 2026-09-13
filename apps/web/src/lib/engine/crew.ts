@@ -745,6 +745,193 @@ const clipRunner: Runner = async (ctx, step, _depth, runId) => {
   return { output: report, schema: "clip_report", modelsUsed: [...models], agents: trail, verification, isMock: assemblerMock || trail.some((t) => t.isMock), billedUsd: billed };
 };
 
+// ---------- Web Builder crew (App #4 — conversion web design, docs App#4 build package) ----------
+// Brand Interviewer, Design Extractor (crawls refs live via Firecrawl → abstract style, never copies),
+// Copywriter, Page Builder, SEO/GEO Optimizer, Verifier run live (LLM). The Deployer is the hosting boundary:
+// publishing to Vercel at <brand>.all41.app (wildcard subdomain + SSL, all41's account) wires in as an adapter;
+// offline / until connected → a ready-to-deploy build marked deploy_pending with its planned URL.
+const METHOD_WEB = {
+  interviewer: `You are a friendly onboarding guide building a structured brand profile from a small business's guided-setup answers. Turn what they gave you (what they do, who it's for, products, style feel, reference sites) into a clean profile: a one-line positioning, the target customer, the primary GOAL the site should drive (what the CTA is for), the brand voice in 2–3 adjectives, and the product/service list. Fill sensible gaps from any known brand context; never invent facts about the business.`,
+  extractor: `You are a design-taste interpreter. From the fetched reference sites the user LIKES, extract ONLY the abstract STYLE LANGUAGE that should INSPIRE an original design: the dominant palette (hex or plain color names), the typographic feel (e.g. "geometric sans, generous sizes"), the visual tone (minimal / bold / warm / editorial), and the layout patterns (e.g. "full-bleed hero, alternating image-text rows"). NEVER copy a reference's exact layout, its unique components, its wording, or its assets (logos/images) — extract the vibe, not the page. Frame everything as "inspired by", and merge with the user's chosen preset.`,
+  copywriter: `You are a conversion copywriter. For each page, encode the method: (1) ONE benefit-led HEADLINE naming WHO it's for and WHAT outcome they get, in one specific sentence — "unlock your potential" and other fluff are banned; name the real outcome. (2) A VALUE PROP under 30 words — why choose this, benefits not features. (3) 3–5 concrete, specific PROOF points (quantified only where the brand gave you real numbers; never fabricate stats or testimonials). (4) ONE primary CTA in action words calibrated to the business ("Get a free quote", "Start free", "Book a call"). Write in the brand's voice. One CTA per page — no competing actions.`,
+  builder: `You are a clean front-end builder. Assemble each page to the HIGH-CONVERTING structure with mobile-first discipline: above the fold = headline + subhead + ONE primary CTA (reachable without scrolling on mobile); then value proposition → proof / social proof → features-as-benefits → the SAME CTA repeated near the end → minimal footer. Set has_nav=false on conversion/landing pages — a distracting nav menu lowers conversion ~10–15%; a multi-page brochure page (About/Contact/Blog) may carry light nav. Use the all41 design-system tokens in the extracted style. Output the page STRUCTURE (not raw code): per page its type, slug, headline, subhead, value_prop, proof[], cta, cta_href (the user's checkout when given, else #contact), has_nav.`,
+  seogeo: `You are an SEO/GEO specialist baking optimization in AT BUILD (App #1's logic, condensed). Specify the schema.org types to emit (Organization + Product/Service + FAQ), a clean heading hierarchy, and GEO citability levers (self-contained answer sentences, a Q&A/FAQ block, entity clarity) so AI answer engines can cite the site. Give a one-line SEO/GEO baseline summary and the specific GEO notes. Ground it in the brand + pages provided; never invent metrics.`,
+  verifier: `You are a QA reviewer confirming the built site is sound before it ships: every page has a benefit-led headline and exactly ONE primary CTA; the CTA points to the user's checkout when one was given (set checkout_ok); conversion pages have no distracting nav; the structure is mobile-first with the CTA above the fold; content is accurate to the brand profile (no invented claims). List concrete flags for anything that fails — a site that fails these does not ship as "done".`,
+};
+
+const WEB_SCHEMAS = {
+  interviewer: { name: "brand_profile", schema: { type: "object", additionalProperties: false, required: ["positioning", "target_customer", "goal", "voice", "products", "notes"], properties: {
+    positioning: { type: "string" }, target_customer: { type: "string" }, goal: { type: "string" },
+    voice: { type: "array", items: { type: "string" } }, products: { type: "array", items: { type: "string" } }, notes: { type: "string" } } } },
+  extractor: { name: "style_tokens", schema: { type: "object", additionalProperties: false, required: ["palette", "typography", "tone", "layout", "notes"], properties: {
+    palette: { type: "array", items: { type: "string" } }, typography: { type: "string" }, tone: { type: "string" }, layout: { type: "string" }, notes: { type: "string" } } } },
+  copywriter: { name: "page_copy", schema: { type: "object", additionalProperties: false, required: ["pages", "notes"], properties: {
+    pages: { type: "array", items: { type: "object", additionalProperties: false, required: ["type", "headline", "value_prop", "proof", "cta"], properties: {
+      type: { type: "string" }, headline: { type: "string" }, subhead: { type: "string" }, value_prop: { type: "string" }, proof: { type: "array", items: { type: "string" } }, cta: { type: "string" } } } },
+    notes: { type: "string" } } } },
+  builder: { name: "page_build", schema: { type: "object", additionalProperties: false, required: ["pages", "notes"], properties: {
+    pages: { type: "array", items: { type: "object", additionalProperties: false, required: ["type", "slug", "headline", "value_prop", "proof", "cta", "has_nav"], properties: {
+      type: { type: "string" }, slug: { type: "string" }, headline: { type: "string" }, subhead: { type: "string" }, value_prop: { type: "string" }, proof: { type: "array", items: { type: "string" } }, cta: { type: "string" }, cta_href: { type: "string" }, has_nav: { type: "boolean" } } } },
+    notes: { type: "string" } } } },
+  seogeo: { name: "seo_bake", schema: { type: "object", additionalProperties: false, required: ["summary", "geo_notes", "notes"], properties: {
+    summary: { type: "string" }, geo_notes: { type: "array", items: { type: "string" } }, notes: { type: "string" } } } },
+  verifier: { name: "site_qa", schema: { type: "object", additionalProperties: false, required: ["flags", "checkout_ok", "notes"], properties: {
+    flags: { type: "array", items: { type: "string" } }, checkout_ok: { type: "boolean" }, notes: { type: "string" } } } },
+} as const;
+
+type WebPageJson = { type?: string; slug?: string; headline?: string; subhead?: string; value_prop?: string; proof?: string[]; cta?: string; cta_href?: string; has_nav?: boolean };
+
+const WEB_RENDER_NOTE = "Copy, style, page structure and the SEO/GEO baseline are produced live by the crew. Hosting is the boundary: all41 serves every site from one Vercel Pro multi-tenant renderer at <brand>.all41.app (a single wildcard *.all41.app domain on Vercel nameservers, automatic per-subdomain SSL, tenant resolved by hostname — no per-site provisioning). Until that renderer + wildcard DNS are connected, the site is delivered as a ready-to-deploy build marked deploy_pending, with its planned URL. (Model verified against Vercel's Platforms docs, Sept 2026.)";
+
+function slugify(name: string) {
+  const s = (name || "site").toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/[\s_]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+  return s || "site";
+}
+/** Vercel hosting boundary — real deploy (all41 account, *.all41.app wildcard subdomain + SSL) wires in here. */
+function deploySite(slug: string) {
+  return { subdomain: `${slug}.all41.app`, live_url: `https://${slug}.all41.app`, vercel_deployment_id: "", status: "deploy_pending" as const };
+}
+
+function mockWebsiteReport(brand: string, checkoutUrl: string, preset: string) {
+  const slug = slugify(brand || "your-brand");
+  const cta = checkoutUrl ? "Start now" : "Get a free quote";
+  const href = checkoutUrl || "#contact";
+  return {
+    live_url: `https://${slug}.all41.app`, status: "deploy_pending" as const, subdomain: `${slug}.all41.app`,
+    pages: [
+      { type: "Home", slug: "/", headline: `${brand || "Your brand"} — the outcome your customer actually wants, done for them`, subhead: "Benefit-led, specific, written to convert.", value_prop: "One clear promise in under 30 words — why a visitor chooses you over the tab they came from.", proof: ["A concrete, quantified result you've delivered", "A named client or use case", "The specific guarantee or turnaround you offer"], cta, cta_href: href, has_nav: false },
+      { type: "About", slug: "/about", headline: `Why ${brand || "we"} exist`, subhead: "The short, honest story.", value_prop: "Who you help and the belief behind the work.", proof: ["Years or projects behind you", "A credential that matters"], cta, cta_href: href, has_nav: true },
+    ],
+    style: { palette: ["#1e1c1a", "#ff6b5e", "#f6f1e9"], typography: `${preset || "Clean"} — a readable sans with generous sizing`, tone: (preset || "clean").toLowerCase(), layout: "full-bleed hero, single-column mobile-first, repeated CTA" },
+    seo_geo_baseline: { summary: "Schema, meta and a Q&A block baked in at build — ready to be cited by AI answer engines.", schema_present: true, geo_notes: ["Self-contained answer sentence in the hero", "FAQ block with 3 real questions", "Organization + Product schema"] },
+    conversion_notes: ["Single primary CTA, repeated near the hero and the end", "No nav on the landing page (keeps the visitor on one path)", "CTA above the fold on mobile", "Proof placed after the value prop, before the final CTA"],
+    checkout_linked: !!checkoutUrl,
+    render_note: WEB_RENDER_NOTE,
+    flags: [
+      "Demo run on placeholder data. Add your brand details and connect an AI key in /admin for a live build.",
+      checkoutUrl ? "CTA points to your checkout." : "No checkout link given — the CTA points to a contact section; add your buy link to drive real conversions.",
+      "Publishing to brand.all41.app is pending the Vercel hosting connection (see the note below).",
+    ],
+    sources: [{ ref: "B1", quote: brand ? `Brand: ${brand}` : "Placeholder — add your brand for a real build." }],
+    confidence: 0.4,
+  };
+}
+
+const webBuilderRunner: Runner = async (ctx, step, _depth, runId) => {
+  const { config, tools } = ctx;
+  const brand = pick(config, "brand_name", "business", "name") || "the brand";
+  const whatTheyDo = pick(config, "what_they_do", "what");
+  const audience = pick(config, "audience", "who_for");
+  const pagesWanted = pick(config, "pages") || "Home";
+  const productsRaw = pick(config, "products");
+  const refUrls = (pick(config, "reference_urls", "references") || "").split(",").map((s) => s.trim()).filter(Boolean).slice(0, 3);
+  const preset = pick(config, "style_preset", "style") || "Clean";
+  const checkoutUrl = pick(config, "checkout_url", "checkout");
+  const slug = slugify(brand);
+  const brandCtx = (ctx.groundingCtx || "").slice(0, 2000);
+
+  const trail: CrewAgentTrail[] = [];
+  const models = new Set<string>();
+  let billed = 0;
+  const soFar = () => billed;
+  const rec = (id: string, name: string, r: { model: string; billedUsd: number; findings: number; isMock: boolean }) => {
+    trail.push({ id, name, model: r.model, billedUsd: r.billedUsd, findings: r.findings, status: "ok", isMock: r.isMock }); models.add(r.model); billed += r.billedUsd;
+  };
+
+  // 1. Brand Interviewer (LLM)
+  const interview = await agentCall(ctx, runId, { id: "interviewer", name: "Brand Interviewer", taskType: "summarize", system: METHOD_WEB.interviewer,
+    context: `GUIDED SETUP:\nBUSINESS: ${brand}\nWHAT THEY DO: ${whatTheyDo}\nAUDIENCE: ${audience}\nPAGES: ${pagesWanted}\nPRODUCTS: ${productsRaw || "(none listed)"}\nSTYLE FEEL: ${preset}\nCHECKOUT: ${checkoutUrl || "(none)"}\nKNOWN BRAND CONTEXT:\n${brandCtx || "(new brand)"}`,
+    schema: WEB_SCHEMAS.interviewer, label: "Understanding your brand" }, soFar);
+  rec("interviewer", "Brand Interviewer", interview);
+
+  // 2. Design Extractor — crawl refs live (Firecrawl), then abstract the style (inspire, never copy)
+  ctx.onEvent?.({ step: "crew.agent", id: "extractor", name: "Design Extractor", label: "Reading the styles you like", phase: "running", billedSoFar: soFar() });
+  const refCrawls = await Promise.all(refUrls.map((u) => tools.crawl(guessUrl(u))));
+  for (const c of refCrawls) billed += c.billedUsd;
+  const refText = refCrawls.map((c, i) => `[REF${i + 1}] ${c.url}:\n${c.markdown.slice(0, 3000)}`).join("\n\n") || "(no reference sites given — use the chosen preset only)";
+  const extractor = await agentCall(ctx, runId, { id: "extractor", name: "Design Extractor", taskType: "reasoning", system: METHOD_WEB.extractor,
+    context: `CHOSEN PRESET: ${preset}\nREFERENCE SITES (inspiration only — abstract the style, never copy):\n${refText}`,
+    schema: WEB_SCHEMAS.extractor, label: "Reading the styles you like" }, soFar);
+  rec("extractor", "Design Extractor", extractor);
+
+  // 3. Copywriter (LLM) — conversion copy per page
+  const copywriter = await agentCall(ctx, runId, { id: "copywriter", name: "Copywriter", taskType: "content", system: METHOD_WEB.copywriter,
+    context: `BRAND PROFILE:\n${JSON.stringify(interview.json).slice(0, 3000)}\nPAGES: ${pagesWanted}\nPRODUCTS: ${productsRaw || "(none)"}\nGOAL / CTA TARGET: ${checkoutUrl ? "drive to checkout: " + checkoutUrl : "capture a lead (no checkout given)"}`,
+    schema: WEB_SCHEMAS.copywriter, label: "Writing copy that converts" }, soFar);
+  rec("copywriter", "Copywriter", copywriter);
+
+  // 4. Page Builder (LLM) — assemble to the converting structure, mobile-first, no-nav on landing
+  const builder = await agentCall(ctx, runId, { id: "builder", name: "Page Builder", taskType: "reasoning", system: METHOD_WEB.builder,
+    context: `STYLE TOKENS:\n${JSON.stringify(extractor.json).slice(0, 1500)}\nPAGE COPY:\n${JSON.stringify(copywriter.json).slice(0, 5000)}\nPAGES REQUESTED: ${pagesWanted}\nCHECKOUT URL (for cta_href): ${checkoutUrl || "(none — use #contact)"}`,
+    schema: WEB_SCHEMAS.builder, label: "Building the pages" }, soFar);
+  rec("builder", "Page Builder", builder);
+
+  // 5. SEO/GEO Optimizer (LLM) — bake schema/meta/GEO in
+  const seogeo = await agentCall(ctx, runId, { id: "seo_geo", name: "SEO/GEO Optimizer", taskType: "reasoning", system: METHOD_WEB.seogeo,
+    context: `BRAND: ${brand} — ${whatTheyDo}\nAUDIENCE: ${audience}\nPAGES:\n${JSON.stringify(builder.json.pages ?? builder.json).slice(0, 4000)}`,
+    schema: WEB_SCHEMAS.seogeo, label: "Baking in SEO & AI-search" }, soFar);
+  rec("seo_geo", "SEO/GEO Optimizer", seogeo);
+
+  // 6. Deployer (adapter — Vercel boundary; mock → deploy_pending + planned URL)
+  ctx.onEvent?.({ step: "crew.agent", id: "deployer", name: "Deployer", label: "Publishing your site", phase: "running", billedSoFar: soFar() });
+  const deploy = deploySite(slug);
+  await logCrewStep(ctx, runId, "deployer", { slug }, { subdomain: deploy.subdomain, status: deploy.status }, "adapter:vercel", 0);
+  trail.push({ id: "deployer", name: "Deployer", model: "adapter:vercel", billedUsd: 0, findings: 1, status: "ok", isMock: true });
+  ctx.onEvent?.({ step: "crew.agent", id: "deployer", name: "Deployer", label: "Publishing your site", phase: "done", billedSoFar: soFar(), isMock: true, findings: 1 });
+
+  // 7. Verifier (LLM QA) — blocks "done" on failure (surfaced as flags)
+  const built = (builder.json.pages as WebPageJson[]) ?? [];
+  const qa = await agentCall(ctx, runId, { id: "verifier", name: "Verifier", taskType: "reasoning", system: METHOD_WEB.verifier,
+    context: `BRAND PROFILE:\n${JSON.stringify(interview.json).slice(0, 2000)}\nCHECKOUT URL: ${checkoutUrl || "(none given)"}\nBUILT PAGES:\n${JSON.stringify(built).slice(0, 5000)}`,
+    schema: WEB_SCHEMAS.verifier, label: "Checking the site works" }, soFar);
+  rec("verifier", "Verifier", qa);
+
+  // 8. Assemble website_report. Mock → a realistic demo.
+  const { isMock: assemblerMock } = await routeTask(step.task_type);
+  let report: unknown;
+  if (assemblerMock) {
+    report = mockWebsiteReport(brand, checkoutUrl, preset);
+  } else {
+    const st = extractor.json as { palette?: unknown; typography?: unknown; tone?: unknown; layout?: unknown };
+    const sg = seogeo.json as { summary?: unknown; geo_notes?: unknown };
+    const pages = built.map((p) => ({
+      type: String(p.type ?? "Page"), slug: String(p.slug ?? "/"), headline: String(p.headline ?? ""),
+      subhead: String(p.subhead ?? ""), value_prop: String(p.value_prop ?? ""),
+      proof: Array.isArray(p.proof) ? (p.proof as string[]).map(String) : [], cta: String(p.cta ?? "Get started"),
+      cta_href: String(p.cta_href ?? checkoutUrl ?? "#contact"), has_nav: Boolean(p.has_nav),
+    }));
+    const flags = ((qa.json.flags as string[]) ?? []).slice(0, 8);
+    flags.push("Publishing to brand.all41.app is pending the Vercel hosting connection (see the note below).");
+    if (!checkoutUrl) flags.push("No checkout link given — the CTA points to a contact section; add your buy link to drive real conversions.");
+    report = {
+      live_url: deploy.live_url, status: deploy.status, subdomain: deploy.subdomain, pages,
+      style: { palette: Array.isArray(st.palette) ? (st.palette as string[]).map(String) : [], typography: String(st.typography ?? preset), tone: String(st.tone ?? preset.toLowerCase()), layout: String(st.layout ?? "") },
+      seo_geo_baseline: { summary: String(sg.summary ?? "SEO/GEO baseline baked in at build."), schema_present: true, geo_notes: Array.isArray(sg.geo_notes) ? (sg.geo_notes as string[]).map(String) : [] },
+      conversion_notes: ["One primary CTA, repeated near the hero and the end", "No distracting nav on conversion pages", "Mobile-first with the CTA above the fold", "Proof placed after the value prop, before the final CTA"],
+      checkout_linked: !!checkoutUrl, render_note: WEB_RENDER_NOTE, flags: flags.slice(0, 10),
+      sources: [{ ref: "B1", quote: `Brand profile for ${brand}.` }, ...refUrls.map((u, i) => ({ ref: `REF${i + 1}`, quote: `Style inspiration: ${u}` }))],
+      confidence: pages.length ? 0.7 : 0.4,
+    };
+  }
+
+  // Verifier gate — content accurate to the brand; no invented claims shipped as the user's live site.
+  let verification: Verification | undefined;
+  try {
+    verification = await verifyOutput({ userId: ctx.userId, taskId: ctx.taskId, output: report, context: `BRAND: ${brand} — ${whatTheyDo}\nAUDIENCE: ${audience}\nPRODUCTS: ${productsRaw}` });
+    billed += verification.billedUsd ?? 0;
+    if (verification.model) models.add(verification.model);
+    if (verification.verdict !== "supported" && report && typeof report === "object") {
+      const r = report as { flags?: string[] };
+      r.flags = [...(r.flags ?? []), ...verification.conflicts.map((c) => `Check this on the site: ${c}`), ...verification.unsupported_claims.map((c) => `Unsupported claim: ${c}`)].slice(0, 14);
+    }
+    ctx.onEvent?.({ step: "crew.gate", verdict: verification.verdict, conflicts: verification.conflicts.length });
+  } catch {
+    ctx.onEvent?.({ step: "crew.gate", verdict: "skipped", conflicts: 0 });
+  }
+
+  return { output: report, schema: "website_report", modelsUsed: [...models], agents: trail, verification, isMock: assemblerMock || trail.some((t) => t.isMock), billedUsd: billed };
+};
+
 type CrewDef = {
   label: string; describe: string[]; agents: string[]; run: Runner;
   stepsTable: string;
@@ -854,6 +1041,46 @@ export const CREWS: Record<string, CrewDef> = {
       }).eq("id", runId);
     },
     failRun: async (runId) => { await adminClient().from("clip_runs").update({ status: "failed" }).eq("id", runId); },
+  },
+  web_builder: {
+    label: "Web Builder",
+    describe: [
+      "Turns your answers into a clear brand profile",
+      "Reads the styles you like and captures the vibe — never copies",
+      "Writes conversion copy — one benefit-led headline, one CTA",
+      "Builds mobile-first pages to the high-converting structure",
+      "Bakes in SEO + AI-search, then publishes and checks it works",
+    ],
+    agents: ["Brand Interviewer", "Design Extractor", "Copywriter", "Page Builder", "SEO/GEO Optimizer", "Deployer", "Verifier"],
+    run: webBuilderRunner,
+    stepsTable: "website_build_steps",
+    createRun: async (ctx) => {
+      const refs = (pick(ctx.config, "reference_urls", "references") || "").split(",").map((s) => s.trim()).filter(Boolean);
+      const brand = pick(ctx.config, "brand_name", "business") || "site";
+      const { data } = await adminClient().from("websites").insert({
+        user_id: ctx.userId, account_id: ctx.userId, task_id: ctx.taskId,
+        brand_name: pick(ctx.config, "brand_name", "business") || null,
+        what_they_do: pick(ctx.config, "what_they_do") || null,
+        audience: pick(ctx.config, "audience") || null,
+        reference_urls: refs,
+        checkout_url: pick(ctx.config, "checkout_url") || null,
+        subdomain: `${slugify(brand)}.all41.app`,
+        status: "building",
+      }).select("id").single();
+      return data?.id as string | undefined;
+    },
+    finishRun: async (runId, out, taskId) => {
+      const db = adminClient();
+      const rep = out.output as { pages?: unknown; style?: unknown; subdomain?: string; status?: string } | null;
+      const { data: usage } = await db.from("api_usage_log").select("cost_usd").eq("task_id", taskId);
+      await db.from("websites").update({
+        status: rep?.status === "live" ? "live" : rep?.status === "failed" ? "failed" : "deploy_pending",
+        pages: (rep?.pages ?? null) as unknown as Json, style: (rep?.style ?? null) as unknown as Json,
+        subdomain: rep?.subdomain ?? null,
+        build_cost: (usage ?? []).reduce((n, r) => n + Number(r.cost_usd), 0),
+      }).eq("id", runId);
+    },
+    failRun: async (runId) => { await adminClient().from("websites").update({ status: "failed" }).eq("id", runId); },
   },
 };
 

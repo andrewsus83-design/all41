@@ -877,6 +877,171 @@ export type Database = {
           },
         ]
       }
+      websites: {
+        Row: {
+          account_id: string | null
+          audience: string | null
+          brand_name: string | null
+          build_cost: number
+          checkout_url: string | null
+          created_at: string
+          id: string
+          pages: Json | null
+          products: Json | null
+          reference_urls: string[]
+          status: string
+          style: Json | null
+          subdomain: string | null
+          task_id: string | null
+          user_id: string
+          vercel_deployment_id: string | null
+          what_they_do: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          audience?: string | null
+          brand_name?: string | null
+          build_cost?: number
+          checkout_url?: string | null
+          created_at?: string
+          id?: string
+          pages?: Json | null
+          products?: Json | null
+          reference_urls?: string[]
+          status?: string
+          style?: Json | null
+          subdomain?: string | null
+          task_id?: string | null
+          user_id: string
+          vercel_deployment_id?: string | null
+          what_they_do?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          audience?: string | null
+          brand_name?: string | null
+          build_cost?: number
+          checkout_url?: string | null
+          created_at?: string
+          id?: string
+          pages?: Json | null
+          products?: Json | null
+          reference_urls?: string[]
+          status?: string
+          style?: Json | null
+          subdomain?: string | null
+          task_id?: string | null
+          user_id?: string
+          vercel_deployment_id?: string | null
+          what_they_do?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "websites_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_build_steps: {
+        Row: {
+          agent: string
+          cost_usd: number
+          created_at: string
+          id: string
+          input: Json | null
+          model_used: string | null
+          output: Json | null
+          run_id: string
+          status: string
+          tokens_in: number
+          tokens_out: number
+          user_id: string
+        }
+        Insert: {
+          agent: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          run_id: string
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          user_id: string
+        }
+        Update: {
+          agent?: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          run_id?: string
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_build_steps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_care_runs: {
+        Row: {
+          cost_usd: number
+          created_at: string
+          id: string
+          input: Json | null
+          output: Json | null
+          run_type: string | null
+          status: string
+          user_id: string
+          website_id: string
+        }
+        Insert: {
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          output?: Json | null
+          run_type?: string | null
+          status?: string
+          user_id: string
+          website_id: string
+        }
+        Update: {
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          output?: Json | null
+          run_type?: string | null
+          status?: string
+          user_id?: string
+          website_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_care_runs_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposal_runs: {
         Row: {
           bidder_id: string | null

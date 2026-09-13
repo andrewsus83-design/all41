@@ -3,6 +3,7 @@ import { Card, CardHint, CardTitle } from "@/components/ui/card";
 import { SeoReport } from "@/components/apps/seo-report";
 import { ProposalReport } from "@/components/apps/proposal-report";
 import { ClipReport } from "@/components/apps/clip-report";
+import { WebsiteReport } from "@/components/apps/website-report";
 
 type Source = { ref: string; quote: string };
 type AnyOutput = Record<string, unknown> & { title?: string; sources?: Source[]; confidence?: number };
@@ -52,8 +53,12 @@ export function ResultView({ output, schema, isMock, modelsUsed, verification }:
     return <ProposalReport report={output} isMock={isMock} verification={verification} />;
   }
   // Clip Video gets its own renderer (score dials, per-clip cards, honest drops, render note).
-  if (schema === "clip_report" || "render_note" in o) {
+  if (schema === "clip_report" || "clips" in o) {
     return <ClipReport report={output} isMock={isMock} verification={verification} />;
+  }
+  // Web Builder gets its own renderer (live URL, per-page structure, style, SEO/GEO, flags).
+  if (schema === "website_report" || "live_url" in o) {
+    return <WebsiteReport report={output} isMock={isMock} verification={verification} />;
   }
   const sources = Array.isArray(o.sources) ? o.sources : [];
   return (
