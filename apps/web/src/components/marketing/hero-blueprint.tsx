@@ -21,15 +21,17 @@ function Frame({ x, y, w, h, color, delay }: { x: number; y: number; w: number; 
   const d = roundedRect(x, y, w, h, 12);
   return (
     <>
-      <path d={d} fill="none" stroke={LINE} strokeWidth={1.25} />
+      {/* faint base outline */}
+      <path d={d} fill="none" stroke={LINE} strokeWidth={1.5} />
+      {/* a bright light streak that traces the SAME outline (path + pathLength → Safari-safe) */}
+      <path
+        d={d} pathLength={100} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" className="trace"
+        style={{ animationDelay: `-${delay}s`, filter: `drop-shadow(0 0 6px ${color})` }}
+      />
       <Node x={x} y={y} />
       <Node x={x + w} y={y} />
       <Node x={x} y={y + h} />
       <Node x={x + w} y={y + h} />
-      {/* a single glowing light that runs exactly along the outline */}
-      <circle r={3.5} fill={color} style={{ filter: `drop-shadow(0 0 7px ${color})` }}>
-        <animateMotion dur="6s" begin={`-${delay}s`} repeatCount="indefinite" path={d} />
-      </circle>
     </>
   );
 }
