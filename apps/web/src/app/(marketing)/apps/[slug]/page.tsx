@@ -6,15 +6,33 @@ import { Card, CardHint, CardTitle } from "@/components/ui/card";
 import { Money } from "@/components/ui/money";
 import { Badge } from "@/components/ui/badge";
 import { Pipeline } from "@/components/marketing/pipeline";
+import { JsonLd } from "@/components/marketing/json-ld";
 import { Eyebrow, Lead, N, Section } from "@/components/marketing/primitives";
 import { APP_META, SCHEMA_WORDS, type SampleOutput } from "@/content/apps";
 import { getLeaders, getPublishedApp, lastLlmSchema, pipelineChips, scheduleOptions } from "../../_lib/data";
+
+const SITE_URL = "https://all41.app";
+
+/** Clean price for a title: "3", "0.60", "0.0050" — no trailing ".00". */
+function priceLabel(n: number): string {
+  if (n >= 1) return n.toFixed(2).replace(/\.00$/, "");
+  if (n >= 0.01) return n.toFixed(2);
+  return n.toFixed(4);
+}
 
 export async function generateMetadata(props: PageProps<"/apps/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
   const app = await getPublishedApp(slug);
   if (!app) return { title: "App not found" };
-  return { title: `${app.name} · Apps`, description: app.description ?? undefined };
+  const meta = APP_META[app.slug];
+  const cost = priceLabel(app.est_credit_cost);
+  const title = meta
+    ? `${app.name} — instead of ${meta.replaces}. ~$${cost} per run, no subscription.`
+    : `${app.name} — ~$${cost} per run, no subscription.`;
+  const description = app.description
+    ? `${app.description} Pay only when you use — the price is shown before every run.`
+    : `A ready-made job you set up in chat. Pay only when you use — no subscription.`;
+  return { title: { absolute: title }, description };
 }
 
 export default async function AppDetailPage(props: PageProps<"/apps/[slug]">) {
@@ -25,8 +43,32 @@ export default async function AppDetailPage(props: PageProps<"/apps/[slug]">) {
   const schema = lastLlmSchema(app.steps);
   const cadence = scheduleOptions(app.questions);
 
+  const softwareSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: `all41 ${app.name}`,
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    description: app.description ?? `${app.name} — a ready-made job you set up in chat, priced per run.`,
+    offers: {
+      "@type": "Offer",
+      price: app.est_credit_cost.toFixed(2),
+      priceCurrency: "USD",
+      description: `Pay-per-use, ~$${priceLabel(app.est_credit_cost)} per run.`,
+    },
+  };
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Apps", item: `${SITE_URL}/apps` },
+      { "@type": "ListItem", position: 2, name: app.name, item: `${SITE_URL}/apps/${app.slug}` },
+    ],
+  };
+
   return (
     <>
+      <JsonLd data={[softwareSchema, breadcrumbSchema]} />
       <Section className="pt-12 md:pt-20 pb-8">
         <Link href="/apps" className="text-sm text-fg-muted hover:text-fg">← All apps</Link>
         <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_1fr] items-start">
@@ -41,7 +83,7 @@ export default async function AppDetailPage(props: PageProps<"/apps/[slug]">) {
             <Lead>{app.description}</Lead>
             <div className="flex flex-wrap items-center gap-4">
               <Link href={`/my-apps/${app.slug}`}><Button phase="green" size="lg">Set it up in <N>20</N> seconds</Button></Link>
-              <p className="text-fg-muted">≈ <Money usd={app.est_credit_cost} /> per run{meta ? <span className="text-fg-faint"> · vs {meta.replaces}</span> : null}</p>
+              <p className="text-fg-muted">≈ <Money usd={app.est_credit_cost} /> per run{meta ? <span className="text-fg-faint"> · instead of {meta.replaces}</span> : null}</p>
             </div>
           </div>
           <Card className="space-y-5">

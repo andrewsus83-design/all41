@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/cn";
 import type { FaqItem } from "@/content/faq";
 
@@ -25,7 +26,17 @@ export function FaqAccordion({ items }: { items: FaqItem[] }) {
               </button>
             </h3>
             <div id={`faq-panel-${it.id}`} role="region" aria-labelledby={`faq-${it.id}`} hidden={!isOpen} className="pb-6 -mt-2">
-              <p className="text-fg-muted leading-relaxed max-w-3xl">{it.a}</p>
+              <p className="text-fg-muted leading-relaxed max-w-3xl">
+                {it.a}
+                {it.id === "benchmark" ? (
+                  <>
+                    {" "}
+                    <Link href="/benchmark" className="text-fg underline underline-offset-4 hover:no-underline whitespace-nowrap">
+                      See the benchmark →
+                    </Link>
+                  </>
+                ) : null}
+              </p>
             </div>
           </div>
         );

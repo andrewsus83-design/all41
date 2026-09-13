@@ -1,79 +1,59 @@
 export type FaqItem = { id: string; q: string; a: string };
 
+/**
+ * Homepage stays lean; the depth + SEO/GEO value lives here (Master §8).
+ * Self-contained answers, plain words, concrete numbers — the citation goldmine for AI answers.
+ * The "Are you sure it's good?" answer is followed by a "See the benchmark →" link on the FAQ page.
+ */
 export const FAQ: FaqItem[] = [
   {
     id: "learn",
     q: "Do I need to know anything about AI?",
-    a: "No. Describe the job in plain words, like you would to a colleague. No prompts to learn, no settings, nothing to pick. If you can write a sentence, you can use all41.",
-  },
-  {
-    id: "models",
-    q: "Which AI does the work?",
-    a: "The well-known ones, used directly. We test them every day on each kind of job and send yours to the one doing best. You never choose. The full list is on the Resources page.",
-  },
-  {
-    id: "why-change",
-    q: "Why might the AI change from day to day?",
-    a: "Because the best one for a job changes. We test every day so you don't have to. You always get today's best pick for research, writing, summaries and so on.",
+    a: "No. Say what you need in plain words, like a colleague. No prompts, no settings.",
   },
   {
     id: "api-keys",
-    q: "Do I need API keys or accounts with AI companies?",
-    a: "Never. That part is ours. You do not sign up anywhere else, paste keys, or manage limits. You describe the job.",
+    q: "Do I need API keys?",
+    a: "Never. That part is ours.",
   },
   {
-    id: "data",
-    q: "Where is my data?",
-    a: "In your own account, and only there. Nobody else's tasks can see it. Files you add go into a private folder that only you can reach, and they are used only to answer your own questions.",
+    id: "accuracy",
+    q: "Why do AI answers get things wrong — how is this different?",
+    a: "Ordinary AI guesses to sound confident. all41 answers from your files + the live web, shows sources, and double-checks important jobs before you see them.",
+  },
+  {
+    id: "models",
+    q: "Which AI does it use? Is it the best?",
+    a: "It changes daily — that's the point. We test the models every day and send each job to whichever won today.",
   },
   {
     id: "cost",
-    q: "What does a task cost?",
-    a: "You see the price before you run it. Most tasks land between $0.05 and $0.25. An app that searches, reads pages and writes a report costs more than a single question, because it does more work.",
+    q: "Why cheaper than my subscriptions?",
+    a: "You pay for work, not tools you forgot you're paying for. A few dollars a task, shown before it runs. No monthly fee.",
   },
   {
-    id: "app",
-    q: "What is an app here?",
-    a: "A ready-made job — say, watching a competitor's pricing — with a few blanks left for you. You fill them in by answering three or four questions in chat. Nothing to build, nothing to install.",
+    id: "memory",
+    q: "Does it remember my past work?",
+    a: "Yes — files and past jobs stay connected, so each job starts smart. Tired of re-explaining to AI? You won't here.",
   },
   {
-    id: "grounded",
-    q: "Does it use my own files and notes?",
-    a: "Yes. Answers are built from what you have added — files, earlier results, notes — and every claim shows where it came from. For important jobs we run a second check against the sources and flag anything that does not line up.",
+    id: "how",
+    q: "How do you use \"all\" the AIs and keep it cheap?",
+    a: "For each job we pick the specialist AI, give it only the context it needs, and combine the right tools behind the scenes. Better results, no dozen subscriptions.",
   },
   {
     id: "expire",
     q: "Do credits expire?",
-    a: "After 12 months. There is no monthly reset. Use it slowly or quickly; nothing is lost in between.",
+    a: "After 12 months. No monthly reset.",
   },
   {
-    id: "refunds",
-    q: "Refunds?",
-    a: "Unused top-up credit can be refunded on request. Credit spent on finished tasks cannot, because the AI cost was already paid. Failed runs are not charged.",
+    id: "benchmark",
+    q: "Are you sure it's good?",
+    a: "Every month we run the same job three ways — all41, regular AI, a professional — and let independent judges score them blind. We publish the results.",
   },
   {
-    id: "team",
-    q: "Can my team use it?",
-    a: "Not yet. Shared workspaces with a shared balance are coming. Today each account is one person.",
-  },
-  {
-    id: "developers",
-    q: "Is it for developers?",
-    a: "No. It is for people who run things — founders, consultants, agency owners, freelancers. Nothing to code, nothing to configure.",
-  },
-  {
-    id: "free",
-    q: "What is the $2 free credit?",
-    a: "Once per verified email, you get $2 to run real tasks. Part of it is used in your first run so you see the whole loop. No card needed.",
-  },
-  {
-    id: "schedule",
-    q: "Can I have things run on a schedule?",
-    a: "Yes. Any app can run once, daily, weekly or monthly, and send the result to chat, email or your dashboard. It is one answer in the setup chat.",
-  },
-  {
-    id: "money",
-    q: "How do you make money?",
-    a: "A fixed mark-up on the real AI cost, plus a small platform fee. Both are disclosed. The price you see before a run is the price you pay. If AI prices drop, ours drop.",
+    id: "privacy",
+    q: "Is my data private?",
+    a: "Your data answers your questions only.",
   },
 ];

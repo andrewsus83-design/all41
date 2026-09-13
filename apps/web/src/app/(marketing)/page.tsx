@@ -5,6 +5,7 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { LiveBriefingDemo } from "@/components/marketing/live-briefing-demo";
 import { AppCard } from "@/components/marketing/app-card";
 import { HeroBlueprint } from "@/components/marketing/hero-blueprint";
+import { Sparkles } from "@/components/marketing/sparkles";
 import { Eyebrow, H2, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
 import { APP_META } from "@/content/apps";
 import { getPublishedApps } from "./_lib/data";
@@ -21,9 +22,10 @@ export default async function HomePage() {
     <>
       {/* 1 · HERO */}
       <Section className="relative pt-24 md:pt-32 pb-16 md:pb-20 blueprint-grid">
-        <div className="hidden md:block absolute inset-0 -z-10 pointer-events-none">
-          <HeroBlueprint className="w-full h-full opacity-90" />
+        <div className="hidden md:block absolute inset-y-0 left-1/2 -translate-x-1/2 w-screen -z-10 pointer-events-none">
+          <HeroBlueprint className="w-full h-full" />
         </div>
+        <Sparkles />
         <div className="flex flex-col items-center text-center gap-7 max-w-4xl mx-auto">
           <div className="rise">
             <Link href="/apps/seo-geo-optimizer" className="inline-flex items-center gap-2 rounded-full border border-line bg-bg-elev/70 backdrop-blur pl-1.5 pr-4 py-1.5 text-sm shadow-soft hover:shadow-lift transition">

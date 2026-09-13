@@ -21,8 +21,8 @@ export default async function AppsPage() {
       <Section className="pt-16 md:pt-24 pb-10">
         <div className="space-y-6 max-w-3xl mx-auto flex flex-col items-center text-center">
           <Eyebrow phase="green">Apps</Eyebrow>
-          <h1 className="text-5xl md:text-6xl font-semibold leading-[1.04]">Build your app once. Pay as you go.</h1>
-          <Lead>No recurring fees. No hidden fees. Each app is built to work best for its job and connected where it needs to be. You fill in the blanks in chat.</Lead>
+          <h1 className="text-5xl md:text-6xl font-semibold leading-[1.04]">Ready-made tools. Just answer a few questions.</h1>
+          <Lead>For each job, all41 picks the right AI, gives it only what it needs, and combines the best tools behind the scenes — sharper results, no dozen subscriptions, nothing to learn.</Lead>
         </div>
       </Section>
 
@@ -59,7 +59,7 @@ export default async function AppsPage() {
                   <N>{a.questions.length}</N> questions — {a.questions.map((q) => q.question.replace(/\?$/, "").toLowerCase()).join(", ")}
                 </Expect>
                 <Expect k="Cost">
-                  ≈ <Money usd={a.est_credit_cost} /> per run{meta ? <span className="text-fg-faint"> · vs {meta.replaces}</span> : null}
+                  ≈ <Money usd={a.est_credit_cost} /> per run{meta ? <span className="text-fg-faint"> · instead of {meta.replaces}</span> : null}
                 </Expect>
               </div>
             </Card>

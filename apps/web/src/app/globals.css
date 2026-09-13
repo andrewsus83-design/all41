@@ -320,3 +320,21 @@ h2 {
   -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 78%, transparent);
   mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 78%, transparent);
 }
+
+/* ---- tracing light running around the blueprint frames (cinematic) ---- */
+@keyframes trace-run { to { stroke-dashoffset: -100; } }
+.trace {
+  stroke-dasharray: 16 84;      /* one lit segment, long gap — normalized via pathLength="100" */
+  stroke-dashoffset: 0;
+  stroke-linecap: round;
+  animation: trace-run 5.5s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) { .trace { animation: none; opacity: 0; } }
+
+/* ---- sparkle accents (a few, palette-colored, gentle twinkle) ---- */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.75) rotate(0deg); }
+  50%      { opacity: 1; transform: scale(1.08) rotate(12deg); }
+}
+.twinkle { animation: twinkle 4.5s ease-in-out infinite; transform-origin: center; }
+@media (prefers-reduced-motion: reduce) { .twinkle { animation: none; opacity: 0.7; } }
