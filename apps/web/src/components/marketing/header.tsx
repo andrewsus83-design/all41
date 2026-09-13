@@ -51,7 +51,7 @@ export async function MarketingHeader() {
                   fill="none"
                   strokeWidth={2.5}
                   className="dash-run"
-                  style={{ stroke: "var(--coral-solid)", filter: "drop-shadow(0 0 4px var(--coral-solid))" }}
+                  style={{ stroke: "#f4642a", filter: "drop-shadow(0 0 4px #f4642a)" }}
                 />
               </svg>
               <span className="relative">{signedIn ? "My Apps" : "Sign in"}</span>
