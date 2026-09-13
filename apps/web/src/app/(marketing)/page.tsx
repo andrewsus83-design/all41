@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 import { AppGallery } from "@/components/marketing/app-gallery";
 import { SolutionCards } from "@/components/marketing/solution-cards";
 import { ResultsChat } from "@/components/marketing/results-chat";
-import { Eyebrow, H2, Lead, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
+import { Eyebrow, H2, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
 import { toGalleryApp } from "@/content/gallery";
 import { getPublishedApps } from "./_lib/data";
 
@@ -39,7 +39,14 @@ export default async function HomePage() {
       {/* 1 · HERO — words left, illustrated hero right; light gradient wash + cinematic shine */}
       <Section className="relative pt-10 md:pt-14 pb-16 md:pb-24">
         <div className="absolute -top-36 bottom-0 left-1/2 -translate-x-1/2 w-screen -z-10 overflow-hidden hero-aura" aria-hidden />
-        <div className="flex flex-col items-center text-center gap-6 max-w-7xl mx-auto">
+        {/* overwhelmed-by-tools illustration, small in the bottom-right */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/overwhelm.webp"
+          alt="Someone overwhelmed by too many AI tools and subscriptions"
+          className="hidden lg:block absolute bottom-0 right-0 xl:right-4 h-[210px] xl:h-[240px] w-auto opacity-90 pointer-events-none select-none"
+        />
+        <div className="relative z-10 flex flex-col items-center text-center gap-6 max-w-5xl mx-auto">
           <Link
             href="/apps/seo-geo-optimizer"
             className="rise inline-flex items-center gap-2 rounded-full border border-line bg-bg-elev/70 backdrop-blur pl-1.5 pr-4 py-1.5 text-sm shadow-soft hover:shadow-lift transition"
@@ -102,35 +109,6 @@ export default async function HomePage() {
           </div>
         </div>
       </div>
-
-      {/* 2b · SOUND FAMILIAR — overwhelmed by too many tools (split illustration, left + right) */}
-      <Section className="relative overflow-hidden py-16 md:py-24">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/overwhelm-left.webp"
-          alt=""
-          aria-hidden
-          className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 h-[440px] xl:h-[520px] w-auto pointer-events-none select-none"
-          style={{ WebkitMaskImage: "linear-gradient(to right, #000 50%, transparent 94%)", maskImage: "linear-gradient(to right, #000 50%, transparent 94%)" }}
-        />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/overwhelm-right.webp"
-          alt=""
-          aria-hidden
-          className="hidden lg:block absolute right-0 top-1/2 -translate-y-1/2 h-[440px] xl:h-[520px] w-auto pointer-events-none select-none"
-          style={{ WebkitMaskImage: "linear-gradient(to left, #000 50%, transparent 94%)", maskImage: "linear-gradient(to left, #000 50%, transparent 94%)" }}
-        />
-        <div className="relative max-w-xl mx-auto text-center flex flex-col items-center gap-5">
-          <Eyebrow phase="red">Sound familiar?</Eyebrow>
-          <H2>Too many tools. Too many logins. Too many bills.</H2>
-          <Lead>
-            A new AI app every week. A dozen subscriptions. Prompts to learn — and you&apos;re still doing the work
-            yourself.
-          </Lead>
-          <p className="reflect text-fg text-xl">all41 ends the juggling.</p>
-        </div>
-      </Section>
 
       {/* 3 · IMAGE + WHY CARDS — illustration left, three colourful cards right */}
       <Section>
