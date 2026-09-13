@@ -153,6 +153,11 @@ h2 {
 }
 @keyframes hero-shine { 0%, 12% { transform: translateX(-130%); } 88%, 100% { transform: translateX(130%); } }
 @media (prefers-reduced-motion: reduce) { .hero-aura::after { animation: none; opacity: 0; } }
+
+/* marching-dash outline (used on the nav Sign-in pill on hover) */
+@keyframes dash-march { to { stroke-dashoffset: -20; } }
+.dash-run { stroke-dasharray: 5 5; animation: dash-march 0.5s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .dash-run { animation: none; } }
 .grad-mesh {
   background-color: var(--bg);
   background-image:

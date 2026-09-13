@@ -34,8 +34,20 @@ export async function MarketingHeader() {
             ))}
           </nav>
           <div className="flex-1 flex items-center justify-end gap-1.5">
-            <Link href={signedIn ? "/my-apps" : "/login"} className="hidden lg:inline-flex items-center whitespace-nowrap rounded-full px-3 py-2 text-sm text-white/85 hover:text-white hover:bg-white/15 transition">
-              {signedIn ? "My Apps" : "Sign in"}
+            <Link
+              href={signedIn ? "/my-apps" : "/login"}
+              className="group relative hidden lg:inline-flex items-center whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition"
+            >
+              <span className="pointer-events-none absolute inset-0 rounded-full border border-white/45 transition group-hover:border-transparent" aria-hidden />
+              <svg
+                className="pointer-events-none absolute inset-0 h-full w-full opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                viewBox="0 0 100 40"
+                preserveAspectRatio="none"
+                aria-hidden
+              >
+                <rect x="1" y="1" width="98" height="38" rx="19" fill="none" stroke="white" strokeWidth="1.5" vectorEffect="non-scaling-stroke" className="dash-run" />
+              </svg>
+              <span className="relative">{signedIn ? "My Apps" : "Sign in"}</span>
             </Link>
             <Link href={signedIn ? "/build" : "/login"} className="hidden lg:block">
               <Button phase="warm" size="sm" className="glow-coral">Get Started</Button>
