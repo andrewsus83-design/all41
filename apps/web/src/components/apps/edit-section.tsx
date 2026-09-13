@@ -41,7 +41,7 @@ export function EditSection({ detail }: { detail: InstanceDetail }) {
             {q.type === "choice" && (
               <div className="flex flex-wrap gap-2">
                 {(q.options ?? []).map((o) => (
-                  <button key={o} type="button" onClick={() => setAnswers({ ...answers, [q.key]: o })} className={cn("squircle h-10 px-4 rounded-2 border text-sm font-title font-medium transition", String(answers[q.key]).toLowerCase() === o.toLowerCase() ? "bg-amber text-black border-transparent" : "border-line-strong bg-bg-elev hover:bg-bg-elev-2")}>{o}</button>
+                  <button key={o} type="button" onClick={() => setAnswers({ ...answers, [q.key]: o })} className={cn("squircle h-10 px-4 rounded-2 border text-sm font-title font-medium transition", String(answers[q.key]).toLowerCase() === o.toLowerCase() ? "bg-amber-soft text-amber border-transparent" : "border-line-strong bg-bg-elev hover:bg-bg-elev-2")}>{o}</button>
                 ))}
               </div>
             )}
@@ -50,7 +50,7 @@ export function EditSection({ detail }: { detail: InstanceDetail }) {
                 {(q.options ?? []).map((o) => {
                   const cur = Array.isArray(answers[q.key]) ? (answers[q.key] as string[]) : [];
                   const on = cur.includes(o);
-                  return <button key={o} type="button" onClick={() => setAnswers({ ...answers, [q.key]: on ? cur.filter((x) => x !== o) : [...cur, o] })} className={cn("squircle h-10 px-4 rounded-2 border text-sm font-title font-medium transition", on ? "bg-amber text-black border-transparent" : "border-line-strong bg-bg-elev hover:bg-bg-elev-2")}>{o}</button>;
+                  return <button key={o} type="button" onClick={() => setAnswers({ ...answers, [q.key]: on ? cur.filter((x) => x !== o) : [...cur, o] })} className={cn("squircle h-10 px-4 rounded-2 border text-sm font-title font-medium transition", on ? "bg-amber-soft text-amber border-transparent" : "border-line-strong bg-bg-elev hover:bg-bg-elev-2")}>{o}</button>;
                 })}
               </div>
             )}

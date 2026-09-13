@@ -22,7 +22,7 @@ function Row({ item, today, showOverdue }: { item: DayItem; today: string; showO
         type="button"
         aria-label={item.done ? "Mark not done" : "Mark done"}
         onClick={() => start(() => toggleTodo(item.id))}
-        className={cn("size-6 shrink-0 rounded-full border-2 grid place-items-center transition", item.done ? "bg-green border-green text-black" : "border-line-strong hover:border-fg")}
+        className={cn("size-6 shrink-0 rounded-full border-2 grid place-items-center transition", item.done ? "bg-green border-green text-white" : "border-line-strong hover:border-fg")}
       >
         {item.done && <span className="text-xs leading-none">✓</span>}
       </button>

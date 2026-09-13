@@ -1,65 +1,79 @@
 @import "tailwindcss";
 
 /* ===========================================================
-   all41 design system · Master Plan §16
-   Traffic-light cycle: Red (Stop & Think) · Amber (Prepare) · Green (Go & Track)
-   Fonts: Space Grotesk (title) · DM Sans (body) · JetBrains Mono (data) · Instrument Serif italic (reflective)
-   Corners: Apple continuous 8→12→16→22→28→36 · Spacing: 8px grid
-   Dark mode default. When in doubt: bigger, more space, fewer elements.
+   all41 design system — Unified v7 (warm · calm · guided · clear · friendly)
+   "AI made easy." Warm cream surfaces, soft gradients, rounded pills, gentle shadows.
+   Fonts: Inter (display+body+UI) · Kalam (handwriting accent) · Space Mono (numbers only)
+   Signals carry soft (bg) + deep (text) variants — never full-saturation text on cream.
    =========================================================== */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* surfaces */
-  --bg: #0b0c0f;
-  --bg-elev: #121317;
-  --bg-elev-2: #1a1b21;
-  --line: rgba(255, 255, 255, 0.08);
-  --line-strong: rgba(255, 255, 255, 0.14);
+  /* surfaces (warm) */
+  --bg: #fdfbf7;          /* page background — warm white */
+  --bg-elev: #ffffff;     /* cards / surface */
+  --bg-elev-2: #f6f1e9;   /* raised / hover / soft buttons */
+  --sunken: #f0ebe0;      /* wells / input backgrounds */
 
-  /* text */
-  --fg: #f4f4f5;
-  --fg-muted: #a1a1aa;
-  --fg-faint: #63636b;
+  /* borders */
+  --line: #ece6da;
+  --line-strong: #ddd4c4;
 
-  /* phases */
-  --red: #ff4d4f;
-  --red-soft: rgba(255, 77, 79, 0.14);
-  --amber: #ffb020;
-  --amber-soft: rgba(255, 176, 32, 0.14);
-  --green: #2fd27d;
-  --green-soft: rgba(47, 210, 125, 0.14);
+  /* text (WCAG AA on warm white) */
+  --fg: #1e1c1a;          /* headings / primary (~16:1) */
+  --body: #4a453e;        /* body text (~9:1) — never pure black on cream */
+  --fg-muted: #6e6a62;    /* secondary (~5.5:1) */
+  --fg-faint: #9a9488;    /* captions / placeholders */
 
-  /* radius scale (Apple continuous) */
+  /* signals — token resolves to the DEEP variant so `text-*`/`bg-*` stay legible on cream;
+     the `-soft` token is the pale badge/background variant. */
+  --coral: #d8402f;   --coral-soft: #ffedea;   --coral-solid: #ff6b5e;
+  --amber: #a96a00;   --amber-soft: #fff3d9;   --amber-solid: #ffb020;
+  --green: #0e7a4b;   --green-soft: #e2f6ec;   --green-solid: #2fbe7e;
+  --violet: #5341c4;  --violet-soft: #eee9ff;  --violet-solid: #7c6aef;
+  --sky: #1e7fc4;     --sky-soft: #e4f2fe;     --sky-solid: #3ba8f5;
+
+  /* back-compat: `red` == coral (primary accent / attention / destructive) */
+  --red: #d8402f;     --red-soft: #ffedea;
+
+  /* radius scale */
   --r-1: 8px;
   --r-2: 12px;
   --r-3: 16px;
-  --r-4: 22px;
-  --r-5: 28px;
-  --r-6: 36px;
+  --r-4: 20px;
+  --r-5: 26px;
+  --r-6: 34px;
+
+  /* warm-tinted shadows (never harsh black) */
+  --shadow-sm: 0 2px 8px rgba(30, 28, 26, 0.05);
+  --shadow-md: 0 10px 28px rgba(30, 28, 26, 0.10);
 }
 
 @theme inline {
   --color-bg: var(--bg);
   --color-bg-elev: var(--bg-elev);
   --color-bg-elev-2: var(--bg-elev-2);
+  --color-sunken: var(--sunken);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-fg: var(--fg);
+  --color-body: var(--body);
   --color-fg-muted: var(--fg-muted);
   --color-fg-faint: var(--fg-faint);
-  --color-red: var(--red);
-  --color-red-soft: var(--red-soft);
-  --color-amber: var(--amber);
-  --color-amber-soft: var(--amber-soft);
-  --color-green: var(--green);
-  --color-green-soft: var(--green-soft);
 
-  --font-title: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", monospace;
-  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --color-coral: var(--coral);   --color-coral-soft: var(--coral-soft);   --color-coral-solid: var(--coral-solid);
+  --color-amber: var(--amber);   --color-amber-soft: var(--amber-soft);   --color-amber-solid: var(--amber-solid);
+  --color-green: var(--green);   --color-green-soft: var(--green-soft);   --color-green-solid: var(--green-solid);
+  --color-violet: var(--violet); --color-violet-soft: var(--violet-soft); --color-violet-solid: var(--violet-solid);
+  --color-sky: var(--sky);       --color-sky-soft: var(--sky-soft);       --color-sky-solid: var(--sky-solid);
+  --color-red: var(--red);       --color-red-soft: var(--red-soft);
+
+  /* Inter for display + body + UI; Space Mono for numbers; Kalam for the handwriting accent. */
+  --font-title: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, "SF Mono", monospace;
+  --font-serif: var(--font-kalam), ui-serif, Georgia, serif;
 
   --radius-1: var(--r-1);
   --radius-2: var(--r-2);
@@ -68,65 +82,91 @@
   --radius-5: var(--r-5);
   --radius-6: var(--r-6);
 
-  --spacing: 4px; /* 8px grid via multiples of 2 */
+  --spacing: 4px;
 }
 
 html,
 body {
   background: var(--bg);
-  color: var(--fg);
+  color: var(--body);
   font-family: var(--font-sans);
   font-size: 16px;
-  line-height: 1.55;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
+/* Color only on real heading elements — NOT on .font-title (used on buttons/labels that set their own color). */
+h1,
+h2,
+h3 {
+  color: var(--fg);
+}
 h1,
 h2,
 h3,
 .font-title {
   font-family: var(--font-title);
   letter-spacing: -0.02em;
+  font-weight: 700;
+}
+h1,
+h2 {
+  font-weight: 800;
 }
 
-/* Numbers always in JetBrains Mono (Ground Rule 7) */
+/* Numbers always in Space Mono */
 .num,
 .font-mono {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
-/* Reflective questions */
+/* Reflective / accent lines — Kalam handwriting, warm amber, large & sparing */
 .reflect {
   font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 1.35rem;
-  line-height: 1.3;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 1.35;
+  color: var(--amber);
 }
 
-/* Apple continuous corners where supported (Chrome 139+ / Safari 26+) */
-.squircle {
-  corner-shape: superellipse(1.6);
+/* ---- gradients (garnish: hero backdrops, the ONE primary CTA, accent bands) ---- */
+.grad-sunrise { background-image: linear-gradient(135deg, #ffb020, #ff6b5e); }
+.grad-warm    { background-image: linear-gradient(135deg, #ff8a6b, #ff6b5e); }
+.grad-fresh   { background-image: linear-gradient(135deg, #2fbe7e, #3ba8f5); }
+.grad-dusk    { background-image: linear-gradient(135deg, #7c6aef, #3ba8f5); }
+.grad-soft    { background-image: linear-gradient(135deg, #fff3d9, #ffedea); }
+.grad-ink     { background-image: linear-gradient(135deg, #2a2724, #1e1c1a); }
+.grad-mesh {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(60% 60% at 15% 10%, rgba(255, 107, 94, 0.10), transparent 60%),
+    radial-gradient(50% 50% at 90% 15%, rgba(124, 106, 239, 0.10), transparent 60%),
+    radial-gradient(55% 55% at 80% 95%, rgba(47, 190, 126, 0.10), transparent 60%);
 }
+
+/* warm elevation helpers */
+.shadow-soft { box-shadow: var(--shadow-sm); }
+.shadow-lift { box-shadow: var(--shadow-md); }
+
+/* Everything rounded — soft continuous corners where supported */
+.squircle { corner-shape: superellipse(1.6); }
 
 ::selection {
   background: var(--amber-soft);
 }
 
-/* thin scrollbars */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;
 }
 
 @keyframes pulse-soft {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.45;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
 .pulse-soft {
   animation: pulse-soft 1.6s ease-in-out infinite;

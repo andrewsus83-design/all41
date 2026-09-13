@@ -1,11 +1,12 @@
 import { cn } from "@/lib/cn";
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 
+/** v7 — inputs sit on the sunken well, warm border, coral focus. ≥16px to avoid iOS zoom. */
 const base =
-  "w-full bg-bg-elev border border-line rounded-2 px-4 text-fg placeholder:text-fg-faint outline-none transition focus:border-amber focus:ring-2 focus:ring-amber/20";
+  "w-full bg-sunken border border-line-strong rounded-2 px-4 text-fg placeholder:text-fg-faint outline-none transition focus:border-coral-solid focus:ring-2 focus:ring-coral-solid/20";
 
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn(base, "h-12", className)} {...props} />;
+  return <input className={cn(base, "h-11", className)} {...props} />;
 }
 
 export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {

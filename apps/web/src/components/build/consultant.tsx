@@ -36,7 +36,7 @@ function AskCard({ q, n, total, initial, onCommit }: { q: ConfigQuestion; n: num
       {q.type === "choice" && (
         <div className="flex flex-wrap gap-2">
           {(q.options ?? []).map((o) => (
-            <button key={o} type="button" onClick={() => onCommit(o)} className={cn("squircle h-12 px-6 rounded-2 border font-title font-medium transition", initial === o ? "bg-amber text-black border-transparent" : "border-line-strong bg-bg-elev hover:bg-amber hover:text-black hover:border-transparent")}>{o}</button>
+            <button key={o} type="button" onClick={() => onCommit(o)} className={cn("squircle h-12 px-6 rounded-2 border font-title font-medium transition", initial === o ? "bg-amber-soft text-amber border-transparent" : "border-line-strong bg-bg-elev hover:bg-amber-soft hover:text-amber hover:border-transparent")}>{o}</button>
           ))}
         </div>
       )}
@@ -45,7 +45,7 @@ function AskCard({ q, n, total, initial, onCommit }: { q: ConfigQuestion; n: num
           <div className="flex flex-wrap gap-2">
             {(q.options ?? []).map((o) => {
               const on = multi.includes(o);
-              return <button key={o} type="button" onClick={() => setMulti(on ? multi.filter((x) => x !== o) : [...multi, o])} className={cn("squircle h-12 px-6 rounded-2 border font-title font-medium transition", on ? "bg-amber text-black border-transparent" : "border-line-strong bg-bg-elev hover:bg-bg-elev-2")}>{o}</button>;
+              return <button key={o} type="button" onClick={() => setMulti(on ? multi.filter((x) => x !== o) : [...multi, o])} className={cn("squircle h-12 px-6 rounded-2 border font-title font-medium transition", on ? "bg-amber-soft text-amber border-transparent" : "border-line-strong bg-bg-elev hover:bg-bg-elev-2")}>{o}</button>;
             })}
           </div>
           <Button phase="amber" disabled={multi.length === 0} onClick={() => onCommit(multi)}>Next</Button>

@@ -61,7 +61,7 @@ function InlinePick({ q, value, onChange }: { q: ConfigQuestion; value: string |
           {(q.options ?? []).map((o) => {
             const on = multi ? arr.includes(o) : value === o;
             return (
-              <button key={o} type="button" onClick={() => { if (multi) onChange(on ? arr.filter((x) => x !== o) : [...arr, o]); else { onChange(o); setOpen(false); } }} className={cn("flex w-full items-center gap-2 text-left px-3 py-2 rounded-2 text-sm font-title transition whitespace-nowrap", on ? "bg-amber text-black" : "hover:bg-bg-elev-2")}>
+              <button key={o} type="button" onClick={() => { if (multi) onChange(on ? arr.filter((x) => x !== o) : [...arr, o]); else { onChange(o); setOpen(false); } }} className={cn("flex w-full items-center gap-2 text-left px-3 py-2 rounded-2 text-sm font-title transition whitespace-nowrap", on ? "bg-amber-soft text-amber" : "hover:bg-bg-elev-2")}>
                 {multi && <span className={cn("size-3.5 rounded-sm border", on ? "bg-black border-black" : "border-line-strong")} />}
                 {o}
               </button>
@@ -148,7 +148,7 @@ export function BriefEditor({ app, initial, onSubmit, busy }: { app: CatalogApp;
                     {(q.options ?? []).map((o) => {
                       const cur = answers[q.key];
                       const on = q.type === "multi" ? Array.isArray(cur) && cur.includes(o) : cur === o;
-                      return <button key={o} type="button" onClick={() => set(q.key, q.type === "multi" ? (on ? (cur as string[]).filter((x) => x !== o) : [...((cur as string[]) ?? []), o]) : o)} className={cn("squircle h-10 px-4 rounded-2 border text-sm font-title font-medium transition", on ? "bg-amber text-black border-transparent" : "border-line-strong bg-bg-elev hover:bg-bg-elev-2")}>{o}</button>;
+                      return <button key={o} type="button" onClick={() => set(q.key, q.type === "multi" ? (on ? (cur as string[]).filter((x) => x !== o) : [...((cur as string[]) ?? []), o]) : o)} className={cn("squircle h-10 px-4 rounded-2 border text-sm font-title font-medium transition", on ? "bg-amber-soft text-amber border-transparent" : "border-line-strong bg-bg-elev hover:bg-bg-elev-2")}>{o}</button>;
                     })}
                   </div>
                 )}

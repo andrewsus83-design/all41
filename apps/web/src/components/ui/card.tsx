@@ -1,17 +1,18 @@
 import { cn } from "@/lib/cn";
 import type { HTMLAttributes } from "react";
 
+/** v7 — cards: white surface, soft warm shadow, generous radius. */
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("squircle bg-bg-elev border border-line rounded-4 p-6", className)}
+      className={cn("bg-bg-elev border border-line rounded-5 p-6 shadow-soft", className)}
       {...props}
     />
   );
 }
 
 export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn("font-title text-lg font-medium", className)} {...props} />;
+  return <h3 className={cn("font-title text-lg font-bold", className)} {...props} />;
 }
 
 export function CardHint({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {

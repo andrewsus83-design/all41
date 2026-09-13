@@ -166,7 +166,7 @@ export function SheetGrid({ sheet, rows: serverRows, folders, currentFolder }: {
         <Button size="sm" phase="ghost" onClick={() => setAddingCol((v) => !v)}>Add column</Button>
         <Button size="sm" phase="ghost" onClick={() => setImportOpen((v) => !v)}>Import CSV</Button>
         <Button size="sm" phase="ghost" onClick={doExport} disabled={!rows.length}>Export CSV</Button>
-        <Link href={`/ai?sheet=${sheet.id}`} className="squircle inline-flex items-center h-9 px-4 rounded-1 text-sm font-title font-medium bg-green text-black hover:brightness-110">Send to AI</Link>
+        <Link href={`/ai?sheet=${sheet.id}`} className="squircle inline-flex items-center h-9 px-4 rounded-1 text-sm font-title font-medium bg-green text-white hover:brightness-110">Send to AI</Link>
         <span className="ml-auto text-xs text-fg-faint"><span className="num">{rows.length}</span> rows · <span className="num">{cols.length}</span> columns</span>
       </div>
 
