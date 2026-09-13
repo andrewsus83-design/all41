@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { getPublishedApps } from "./(marketing)/_lib/data";
 
 const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3400";
-const PAGES = ["/", "/solutions", "/apps", "/pricing", "/faq", "/benchmark", "/resources", "/privacy", "/terms"];
+const PAGES = ["/", "/solutions", "/apps", "/pricing", "/news", "/faq", "/benchmark", "/resources", "/privacy", "/terms"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const lastModified = new Date("2026-09-12");

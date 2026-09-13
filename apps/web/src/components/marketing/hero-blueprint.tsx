@@ -22,14 +22,14 @@ function Frame({ x, y, w, h, color, delay }: { x: number; y: number; w: number; 
   return (
     <>
       <path d={d} fill="none" stroke={LINE} strokeWidth={1.25} />
-      <path
-        d={d} pathLength={100} fill="none" stroke={color} strokeWidth={2.5} className="trace"
-        style={{ animationDelay: `${delay}s`, filter: `drop-shadow(0 0 6px ${color})` }}
-      />
       <Node x={x} y={y} />
       <Node x={x + w} y={y} />
       <Node x={x} y={y + h} />
       <Node x={x + w} y={y + h} />
+      {/* a single glowing light that runs exactly along the outline */}
+      <circle r={3.5} fill={color} style={{ filter: `drop-shadow(0 0 7px ${color})` }}>
+        <animateMotion dur="6s" begin={`-${delay}s`} repeatCount="indefinite" path={d} />
+      </circle>
     </>
   );
 }
