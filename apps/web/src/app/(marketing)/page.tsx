@@ -39,14 +39,8 @@ export default async function HomePage() {
       {/* 1 · HERO — words left, illustrated hero right; light gradient wash + cinematic shine */}
       <Section className="relative pt-10 md:pt-14 pb-16 md:pb-24">
         <div className="absolute -top-36 bottom-0 left-1/2 -translate-x-1/2 w-screen -z-10 overflow-hidden hero-aura" aria-hidden />
-        {/* overwhelmed-by-tools illustration, small in the bottom-right */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/overwhelm.webp"
-          alt="Someone overwhelmed by too many AI tools and subscriptions"
-          className="hidden lg:block absolute bottom-0 right-0 xl:right-4 h-[210px] xl:h-[240px] w-auto opacity-90 pointer-events-none select-none"
-        />
-        <div className="relative z-10 flex flex-col items-center text-center gap-6 max-w-5xl mx-auto">
+        <div className="relative z-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-10 lg:gap-12 items-center">
+          <div className="flex flex-col items-start text-left gap-6 max-w-xl">
           <Link
             href="/apps/seo-geo-optimizer"
             className="rise inline-flex items-center gap-2 rounded-full border border-line bg-bg-elev/70 backdrop-blur pl-1.5 pr-4 py-1.5 text-sm shadow-soft hover:shadow-lift transition"
@@ -59,9 +53,9 @@ export default async function HomePage() {
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber" aria-hidden />
             For anyone who&apos;s done juggling AI tools
           </p>
-          <h1 className="rise-1 font-semibold leading-[1.12] tracking-tight">
-            <span className="block text-7xl md:text-8xl xl:text-[7rem]">One place.</span>
-            <span className="block mt-1 text-5xl md:text-6xl xl:text-[4rem]">
+          <h1 className="rise-1 font-semibold leading-[1.1] tracking-tight">
+            <span className="block text-6xl md:text-7xl xl:text-[5rem]">One place.</span>
+            <span className="block mt-1 text-4xl md:text-5xl">
               <span className="text-grad">The right AI for any </span>
               <span className="relative inline-block px-[0.55em] py-[0.16em] align-baseline">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -76,7 +70,7 @@ export default async function HomePage() {
             <span className="block">so you can focus on what matters.</span>
             <span className="block mt-2 text-fg font-medium">No Prompts · No Subscription · Pay When You Use</span>
           </p>
-          <div className="rise-3 flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="rise-3 flex flex-col sm:flex-row gap-3 justify-start">
             <Link href="/login">
               <Button phase="warm" size="lg" className="w-full sm:w-auto glow-coral sheen">
                 Start free — <N>$2</N>, no card
@@ -87,6 +81,15 @@ export default async function HomePage() {
             </a>
           </div>
           <p className="rise-4 reflect text-fg-muted text-lg">AI, made easy ✿</p>
+          </div>
+          <div className="rise-2 relative w-full max-w-md mx-auto lg:mx-0 lg:justify-self-end">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/overwhelm.webp"
+              alt="Someone overwhelmed by too many AI tools and subscriptions"
+              className="w-full h-auto select-none"
+            />
+          </div>
         </div>
       </Section>
 
