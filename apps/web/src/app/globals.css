@@ -179,60 +179,53 @@ h2 {
    glow, fine grain, entrance motion, sheen, lift. Reusable everywhere.
    =========================================================== */
 
-/* Storefront canvas: a warm-tinted, cinematic dark surface. Reuses the v7 tokens/fonts;
-   the signed-in app (no `.premium`) stays warm/light. This is where "expensive" lives. */
+/* Storefront canvas: LIGHT cream, but cinematic. The v7 tokens/fonts are unchanged;
+   the effects (warm mesh wash, drifting aurora, vignette, frosted glass, glow, grain)
+   make it feel expensive on a bright canvas. The signed-in app (no `.premium`) is plain warm. */
 .premium {
-  --bg: #0a0a0e;
-  --bg-elev: #121219;
-  --bg-elev-2: #1a1a23;
-  --sunken: #0e0e14;
-  --line: rgba(255, 255, 255, 0.09);
-  --line-strong: rgba(255, 255, 255, 0.16);
-
-  --fg: #f8f6f1;
-  --body: #b9b5ac;
-  --fg-muted: #8f8a80;
-  --fg-faint: #66625b;
-
-  /* bright signal text on dark; -soft stays a translucent glow; -solid keeps the vivid brand hue */
-  --coral: #ff8175;   --coral-soft: rgba(255, 107, 94, 0.16);   --coral-solid: #ff6b5e;
-  --amber: #ffc866;   --amber-soft: rgba(255, 176, 32, 0.16);   --amber-solid: #ffb020;
-  --green: #3ee0a6;   --green-soft: rgba(47, 190, 126, 0.16);   --green-solid: #2fbe7e;
-  --violet: #b6a4ff;  --violet-soft: rgba(124, 106, 239, 0.18); --violet-solid: #7c6aef;
-  --sky: #74c0f8;     --sky-soft: rgba(59, 168, 245, 0.16);     --sky-solid: #3ba8f5;
-  --red: #ff8175;     --red-soft: rgba(255, 107, 94, 0.16);
-
-  color: var(--body);
-  background: var(--bg);
   position: relative;
   isolation: isolate;
 }
 
-/* frosted glass, dark-canvas variant */
-.premium .glass {
-  background: rgba(255, 255, 255, 0.045);
-  backdrop-filter: blur(20px) saturate(1.3);
-  -webkit-backdrop-filter: blur(20px) saturate(1.3);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+/* a soft warm mesh wash across the whole storefront (fixed, behind everything) */
+.premium::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(65% 50% at 50% -6%, rgba(255, 176, 32, 0.12), transparent 60%),
+    radial-gradient(46% 40% at 6% 10%, rgba(255, 107, 94, 0.13), transparent 62%),
+    radial-gradient(46% 42% at 96% 6%, rgba(124, 106, 239, 0.13), transparent 62%),
+    radial-gradient(52% 46% at 86% 94%, rgba(47, 190, 126, 0.10), transparent 62%),
+    radial-gradient(46% 40% at 8% 96%, rgba(59, 168, 245, 0.10), transparent 62%);
 }
-.premium .glow-soft { box-shadow: 0 30px 90px rgba(124, 106, 239, 0.22); }
-.premium .grad-soft { background-image: linear-gradient(135deg, rgba(255, 176, 32, 0.12), rgba(255, 107, 94, 0.12)); }
 
-/* ---- aurora backdrop (slow drifting warm mesh, soft on cream) ---- */
+/* cinematic vignette — subtly focuses the center of the frame */
+.premium::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: radial-gradient(125% 95% at 50% 28%, transparent 52%, rgba(60, 46, 30, 0.06) 100%);
+}
+
+/* ---- aurora (drifting warm glow, visible on cream) ---- */
 .aurora {
   position: absolute;
-  inset: -30% -15% auto -15%;
-  height: 120vh;
+  inset: -25% -15% auto -15%;
+  height: 115vh;
   z-index: -1;
   pointer-events: none;
-  filter: blur(70px);
-  opacity: 0.85;
+  filter: blur(66px);
+  opacity: 0.6;
   background:
-    radial-gradient(38% 46% at 16% 16%, rgba(255, 107, 94, 0.40), transparent 62%),
-    radial-gradient(36% 42% at 82% 12%, rgba(124, 106, 239, 0.40), transparent 62%),
-    radial-gradient(42% 48% at 60% 84%, rgba(47, 190, 126, 0.26), transparent 62%),
-    radial-gradient(32% 40% at 92% 60%, rgba(255, 176, 32, 0.26), transparent 62%);
+    radial-gradient(38% 46% at 18% 16%, rgba(255, 107, 94, 0.36), transparent 60%),
+    radial-gradient(36% 42% at 80% 12%, rgba(124, 106, 239, 0.30), transparent 60%),
+    radial-gradient(42% 48% at 62% 84%, rgba(47, 190, 126, 0.20), transparent 62%),
+    radial-gradient(32% 40% at 92% 58%, rgba(255, 176, 32, 0.28), transparent 62%);
   animation: aurora-drift 26s ease-in-out infinite alternate;
 }
 @keyframes aurora-drift {
@@ -240,26 +233,26 @@ h2 {
   to   { transform: translate3d(3%, 2.5%, 0) scale(1.1); }
 }
 
-/* ---- fine grain (kills flatness → reads expensive) ---- */
+/* ---- fine grain (kills flatness → reads expensive), subtle on cream ---- */
 .grain::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 60;
   pointer-events: none;
-  opacity: 0.05;
-  mix-blend-mode: overlay;
+  opacity: 0.03;
+  mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 140px 140px;
 }
 
 /* ---- frosted glass (light) — premium card on cream ---- */
 .glass {
-  background: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(20px) saturate(1.25);
-  -webkit-backdrop-filter: blur(20px) saturate(1.25);
-  border: 1px solid rgba(255, 255, 255, 0.75);
-  box-shadow: 0 28px 70px rgba(30, 28, 26, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.58);
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 30px 80px rgba(60, 46, 30, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 /* ---- gradient ring border (premium card outline) ---- */
@@ -281,7 +274,7 @@ h2 {
 .glow-coral  { box-shadow: 0 18px 50px rgba(255, 107, 94, 0.30); }
 .glow-violet { box-shadow: 0 18px 50px rgba(124, 106, 239, 0.28); }
 .glow-green  { box-shadow: 0 18px 50px rgba(47, 190, 126, 0.26); }
-.glow-soft   { box-shadow: 0 24px 60px rgba(30, 28, 26, 0.14); }
+.glow-soft   { box-shadow: 0 34px 90px rgba(255, 140, 90, 0.22); }
 
 /* ---- entrance motion (on load) ---- */
 @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
