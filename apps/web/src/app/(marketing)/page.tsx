@@ -77,7 +77,7 @@ export default async function HomePage() {
         <div className="w-full lg:w-[80%] max-w-[1280px] mx-auto px-6 py-5">
           <div className="flex flex-col items-center gap-y-2 font-mono text-base text-fg-muted">
             <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-1">
-              <li className="text-fg">Built in public</li>
+              <li>Built in public</li>
               <Sep />
               <li><N>{liveCount}</N> tools live</li>
               <Sep />

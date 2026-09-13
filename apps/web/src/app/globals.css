@@ -143,16 +143,8 @@ h2 {
 /* single-colour orange gradient for the floating nav pill */
 .grad-nav     { background-image: linear-gradient(120deg, #ff8a34 0%, #f4642a 55%, #e85312 100%); }
 
-/* hero: soft light gradient wash + a slow cinematic shine sweep (same idea as the button sheen) */
+/* hero: soft light gradient wash (no shine) */
 .hero-aura { background: linear-gradient(120deg, #ffe3d0 0%, #fdecc9 45%, #e6ddfb 100%); }
-.hero-aura::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.6) 50%, transparent 60%);
-  transform: translateX(-130%);
-  animation: hero-shine 8s ease-in-out infinite;
-}
-@keyframes hero-shine { 0%, 12% { transform: translateX(-130%); } 88%, 100% { transform: translateX(130%); } }
-@media (prefers-reduced-motion: reduce) { .hero-aura::after { animation: none; opacity: 0; } }
 
 /* marching-dash outline (used on the nav Sign-in pill on hover) */
 @keyframes dash-march { to { stroke-dashoffset: -20; } }
