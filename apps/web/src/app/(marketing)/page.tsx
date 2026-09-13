@@ -55,8 +55,10 @@ export default async function HomePage() {
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber" aria-hidden />
             For anyone who&apos;s done juggling AI tools
           </p>
-          <h1 className="rise-1 text-5xl md:text-7xl xl:text-8xl font-semibold leading-[1.02] tracking-tight text-balance">
-            One place. <span className="text-grad">The right AI to <RotatingWord words={JOBS} />.</span>
+          <h1 className="rise-1 text-5xl md:text-7xl xl:text-8xl font-semibold leading-[1.04] tracking-tight text-balance">
+            One place.
+            <br />
+            <span className="text-grad">The right AI to <RotatingWord words={JOBS} className="text-grad" />.</span>
           </h1>
           <p className="rise-2 text-lg md:text-xl text-fg-muted max-w-2xl leading-relaxed text-pretty">
             The best AIs and APIs, combined — each job gets the right skill and just enough context for the sharpest
