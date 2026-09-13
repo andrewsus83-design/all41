@@ -39,7 +39,7 @@ export default async function HomePage() {
       {/* 1 · HERO — words left, illustrated hero right; light gradient wash + cinematic shine */}
       <Section className="relative pt-10 md:pt-14 pb-16 md:pb-24">
         <div className="absolute -top-36 bottom-0 left-1/2 -translate-x-1/2 w-screen -z-10 overflow-hidden hero-aura" aria-hidden />
-        <div className="flex flex-col items-center text-center gap-6 max-w-4xl mx-auto">
+        <div className="flex flex-col items-center text-center gap-6 max-w-5xl mx-auto">
           <Link
             href="/apps/seo-geo-optimizer"
             className="rise inline-flex items-center gap-2 rounded-full border border-line bg-bg-elev/70 backdrop-blur pl-1.5 pr-4 py-1.5 text-sm shadow-soft hover:shadow-lift transition"
@@ -52,15 +52,18 @@ export default async function HomePage() {
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber" aria-hidden />
             For anyone who&apos;s done juggling AI tools
           </p>
-          <h1 className="rise-1 text-5xl md:text-6xl xl:text-7xl font-semibold leading-[1.06] tracking-tight text-balance">
+          <h1 className="rise-1 text-6xl md:text-7xl xl:text-[4.75rem] font-semibold leading-[1.06] tracking-tight">
             One place.
             <br />
-            <span className="text-grad">The right AI for any </span>
-            <span className="italic inline-block align-middle rounded-2 bg-bg-elev border border-line shadow-soft px-2.5 md:px-3.5 text-grad">job</span>
-            <span className="text-grad">.</span>
+            <span className="lg:whitespace-nowrap">
+              <span className="text-grad">The right AI for any </span>
+              <span className="italic inline-block align-middle rounded-2 bg-bg-elev border border-line shadow-soft px-2.5 md:px-3.5 text-grad">job</span>
+              <span className="text-grad">.</span>
+            </span>
           </h1>
           <p className="rise-2 text-lg md:text-xl text-fg-muted max-w-2xl leading-relaxed text-pretty">
-            We pick the right AI for the job and do the work — so you can focus on what matters.
+            We pick the right AI for the job and do the work —
+            <span className="block">so you can focus on what matters.</span>
             <span className="block mt-2 text-fg font-medium">No prompts. No subscription.</span>
           </p>
           <div className="rise-3 flex flex-col sm:flex-row gap-3 justify-center">

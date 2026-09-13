@@ -40,7 +40,7 @@ export async function MarketingHeader() {
             >
               <span className="pointer-events-none absolute inset-0 rounded-full border border-line-strong transition group-hover:border-transparent" aria-hidden />
               <svg
-                className="pointer-events-none absolute inset-0 h-full w-full opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                className="pointer-events-none absolute inset-0 h-full w-full"
                 viewBox="0 0 100 40"
                 preserveAspectRatio="none"
                 aria-hidden
@@ -50,7 +50,7 @@ export async function MarketingHeader() {
                   pathLength={100}
                   fill="none"
                   strokeWidth={2.5}
-                  className="dash-run"
+                  className="draw-outline"
                   style={{ stroke: "#f4642a", filter: "drop-shadow(0 0 4px #f4642a)" }}
                 />
               </svg>
