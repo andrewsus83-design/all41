@@ -39,8 +39,8 @@ export default async function HomePage() {
       {/* 1 · HERO — words left, illustrated hero right; light gradient wash + cinematic shine */}
       <Section className="relative pt-10 md:pt-14 pb-16 md:pb-24">
         <div className="absolute -top-36 bottom-0 left-1/2 -translate-x-1/2 w-screen -z-10 overflow-hidden hero-aura" aria-hidden />
-        <div className="relative z-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-10 lg:gap-12 items-center">
-          <div className="flex flex-col items-start text-left gap-6 max-w-xl">
+        <div className="relative z-10 grid lg:grid-cols-[1.25fr_0.75fr] gap-6 lg:gap-8 items-center">
+          <div className="flex flex-col items-start text-left gap-6 max-w-2xl">
           <Link
             href="/apps/seo-geo-optimizer"
             className="rise inline-flex items-center gap-2 rounded-full border border-line bg-bg-elev/70 backdrop-blur pl-1.5 pr-4 py-1.5 text-sm shadow-soft hover:shadow-lift transition"
@@ -55,7 +55,7 @@ export default async function HomePage() {
           </p>
           <h1 className="rise-1 font-semibold leading-[1.1] tracking-tight">
             <span className="block text-6xl md:text-7xl xl:text-[5rem]">One place.</span>
-            <span className="block mt-1 text-4xl md:text-5xl">
+            <span className="block mt-1 text-4xl md:text-5xl lg:whitespace-nowrap">
               <span className="text-grad">The right AI for any </span>
               <span className="relative inline-block px-[0.55em] py-[0.16em] align-baseline">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
