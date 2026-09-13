@@ -56,7 +56,7 @@ export default async function HomePage() {
             One place.
             <br />
             <span className="text-grad">The right AI for any </span>
-            <span className="italic inline-block align-middle rounded-2 bg-bg-elev-2 border border-line px-2 md:px-3 text-grad">job</span>
+            <span className="italic inline-block align-middle rounded-2 bg-bg-elev border border-line shadow-soft px-2.5 md:px-3.5 text-grad">job</span>
             <span className="text-grad">.</span>
           </h1>
           <p className="rise-2 text-lg md:text-xl text-fg-muted max-w-2xl leading-relaxed text-pretty">
