@@ -82,6 +82,52 @@ export const OUTPUT_SCHEMAS = {
       },
     },
   },
+  seo_report: {
+    name: "seo_geo_report",
+    schema: {
+      type: "object", additionalProperties: false,
+      required: ["health_score", "quick_wins", "technical", "keywords_content", "competitors", "geo", "social", "sources", "flags", "confidence"],
+      properties: {
+        health_score: {
+          type: "object", additionalProperties: false, required: ["seo", "geo", "change_since_last"],
+          properties: { seo: { type: "number" }, geo: { type: "number" }, change_since_last: { type: "string" } },
+        },
+        quick_wins: {
+          type: "array",
+          items: { type: "object", additionalProperties: false, required: ["action", "why", "expected_impact"],
+            properties: { action: { type: "string" }, why: { type: "string" }, expected_impact: { type: "string" } } },
+        },
+        technical: {
+          type: "array",
+          items: { type: "object", additionalProperties: false, required: ["issue", "severity", "fix"],
+            properties: { issue: { type: "string" }, severity: { type: "string", enum: ["error", "warning", "notice"] }, fix: { type: "string" }, affected_pages: { type: "array", items: { type: "string" } } } },
+        },
+        keywords_content: {
+          type: "array",
+          items: { type: "object", additionalProperties: false, required: ["keyword", "intent", "recommendation"],
+            properties: { keyword: { type: "string" }, intent: { type: "string" }, recommendation: { type: "string" } } },
+        },
+        competitors: {
+          type: "array",
+          items: { type: "object", additionalProperties: false, required: ["competitor", "gap", "how_to_close"],
+            properties: { competitor: { type: "string" }, gap: { type: "string" }, how_to_close: { type: "string" } } },
+        },
+        geo: {
+          type: "array",
+          items: { type: "object", additionalProperties: false, required: ["factor", "status", "fix"],
+            properties: { factor: { type: "string" }, status: { type: "string" }, fix: { type: "string" } } },
+        },
+        social: {
+          type: "array",
+          items: { type: "object", additionalProperties: false, required: ["platform", "recommendation"],
+            properties: { platform: { type: "string" }, recommendation: { type: "string" } } },
+        },
+        sources: { type: "array", items: source },
+        flags: { type: "array", items: { type: "string" } },
+        confidence: { type: "number" },
+      },
+    },
+  },
   verification: {
     name: "verification",
     schema: {

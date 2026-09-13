@@ -22,12 +22,12 @@ export const env = {
 /** LLM + tool providers — direct first-party keys only (no aggregators). */
 export type Provider =
   | "anthropic" | "openai" | "google" | "groq" | "perplexity" | "deepseek" | "xai" | "mistral"
-  | "firecrawl" | "serpapi";
+  | "firecrawl" | "serpapi" | "dataforseo";
 
 const KEY_ENV: Record<Provider, string> = {
   anthropic: "ANTHROPIC_API_KEY", openai: "OPENAI_API_KEY", google: "GOOGLE_API_KEY", groq: "GROQ_API_KEY",
   perplexity: "PERPLEXITY_API_KEY", deepseek: "DEEPSEEK_API_KEY", xai: "XAI_API_KEY", mistral: "MISTRAL_API_KEY",
-  firecrawl: "FIRECRAWL_API_KEY", serpapi: "SERPAPI_API_KEY",
+  firecrawl: "FIRECRAWL_API_KEY", serpapi: "SERPAPI_API_KEY", dataforseo: "DATAFORSEO_API_KEY",
 };
 
 export function providerKeyName(provider: Provider) { return KEY_ENV[provider]; }

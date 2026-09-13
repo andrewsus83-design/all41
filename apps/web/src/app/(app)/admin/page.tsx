@@ -19,10 +19,10 @@ export default async function AdminPage() {
   ]);
 
   const keys = SECRET_NAMES.map((name) => ({ name, source: secretSource(name), masked: mask(getSecret(name)) }));
-  const providers = [...LLM_PROVIDERS, "firecrawl", "serpapi"].map((p) => {
+  const providers = [...LLM_PROVIDERS, "firecrawl", "serpapi", "dataforseo"].map((p) => {
     const spec = PROVIDERS[p as keyof typeof PROVIDERS];
     const keyName = `${p.toUpperCase()}_API_KEY`;
-    return { id: p, label: spec?.label ?? p, keyName, keysUrl: spec?.keysUrl ?? (p === "firecrawl" ? "https://www.firecrawl.dev/app/api-keys" : "https://serpapi.com/manage-api-key"), suggested: spec?.suggested ?? [], source: secretSource(keyName), masked: mask(getSecret(keyName)) };
+    return { id: p, label: spec?.label ?? p, keyName, keysUrl: spec?.keysUrl ?? (p === "firecrawl" ? "https://www.firecrawl.dev/app/api-keys" : p === "dataforseo" ? "https://app.dataforseo.com/api-access" : "https://serpapi.com/manage-api-key"), suggested: spec?.suggested ?? [], source: secretSource(keyName), masked: mask(getSecret(keyName)) };
   });
 
   const data: AdminData = {

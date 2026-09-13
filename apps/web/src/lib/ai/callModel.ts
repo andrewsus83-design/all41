@@ -148,7 +148,7 @@ export function safeJson(text: string): unknown {
 
 /** /admin "test" helper: verify a key by listing models (or a 1-token call for providers without a list endpoint). */
 export async function testProviderKey(provider: string, key: string): Promise<{ ok: boolean; detail: string; models?: string[] }> {
-  if (!isLlmProvider(provider) && provider !== "firecrawl" && provider !== "serpapi") return { ok: false, detail: "unknown provider" };
+  if (!isLlmProvider(provider) && provider !== "firecrawl" && provider !== "serpapi" && provider !== "dataforseo") return { ok: false, detail: "unknown provider" };
   try {
     if (provider === "anthropic") {
       const client = new Anthropic({ apiKey: key });
@@ -164,6 +164,16 @@ export async function testProviderKey(provider: string, key: string): Promise<{ 
     if (provider === "serpapi") {
       const r = await fetch(`https://serpapi.com/account.json?api_key=${encodeURIComponent(key)}`);
       return r.ok ? { ok: true, detail: "account ok" } : { ok: false, detail: `${r.status}` };
+    }
+    if (provider === "dataforseo") {
+      const [login, password] = key.split(":");
+      if (!password) return { ok: false, detail: "expected login:password" };
+      const auth = Buffer.from(`${login}:${password}`).toString("base64");
+      const r = await fetch("https://api.dataforseo.com/v3/appendix/user_data", { headers: { Authorization: `Basic ${auth}` } });
+      if (!r.ok) return { ok: false, detail: `${r.status}` };
+      const d = await r.json();
+      const bal = d?.tasks?.[0]?.result?.[0]?.money?.balance;
+      return { ok: true, detail: bal != null ? `account ok · $${bal} balance` : "account ok" };
     }
     if (provider === "firecrawl") {
       const r = await fetch("https://api.firecrawl.dev/v1/team/credit-usage", { headers: { Authorization: `Bearer ${key}` } });

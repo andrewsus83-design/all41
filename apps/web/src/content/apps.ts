@@ -76,6 +76,7 @@ export const SCHEMA_WORDS: Record<OutputSchemaKey, string> = {
   content_pack: "one native draft per platform with a hook, body and CTA, sources cited",
   answer: "a direct answer, key points, a next action, sources cited",
   verification: "a verdict with conflicts and unsupported claims listed",
+  seo_report: "two health scores, top-5 quick wins, technical/keyword/competitor/GEO/social findings, sources cited",
 };
 
 /** Roadmap apps from Master Plan §11 — not available yet. */

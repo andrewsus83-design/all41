@@ -606,6 +606,7 @@ export type Database = {
       }
       mini_apps: {
         Row: {
+          autonomy_level: number
           brief_template: string | null
           category: string | null
           config_schema: Json
@@ -623,6 +624,7 @@ export type Database = {
           workflow_def: Json
         }
         Insert: {
+          autonomy_level?: number
           brief_template?: string | null
           category?: string | null
           config_schema?: Json
@@ -640,6 +642,7 @@ export type Database = {
           workflow_def?: Json
         }
         Update: {
+          autonomy_level?: number
           brief_template?: string | null
           category?: string | null
           config_schema?: Json
@@ -732,6 +735,115 @@ export type Database = {
           weight?: number
         }
         Relationships: []
+      }
+      seo_run_steps: {
+        Row: {
+          agent: string
+          cost_usd: number
+          created_at: string
+          id: string
+          input: Json | null
+          model_used: string | null
+          output: Json | null
+          run_id: string
+          status: string
+          tokens_in: number
+          tokens_out: number
+          user_id: string
+        }
+        Insert: {
+          agent: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          run_id: string
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          user_id: string
+        }
+        Update: {
+          agent?: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          run_id?: string
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_run_steps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "seo_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seo_runs: {
+        Row: {
+          competitor_urls: string[]
+          created_at: string
+          goal: string | null
+          health_score_geo: number | null
+          health_score_seo: number | null
+          id: string
+          report: Json | null
+          selected_products: Json | null
+          site_url: string | null
+          status: string
+          task_id: string | null
+          total_cost: number
+          user_id: string
+        }
+        Insert: {
+          competitor_urls?: string[]
+          created_at?: string
+          goal?: string | null
+          health_score_geo?: number | null
+          health_score_seo?: number | null
+          id?: string
+          report?: Json | null
+          selected_products?: Json | null
+          site_url?: string | null
+          status?: string
+          task_id?: string | null
+          total_cost?: number
+          user_id: string
+        }
+        Update: {
+          competitor_urls?: string[]
+          created_at?: string
+          goal?: string | null
+          health_score_geo?: number | null
+          health_score_seo?: number | null
+          id?: string
+          report?: Json | null
+          selected_products?: Json | null
+          site_url?: string | null
+          status?: string
+          task_id?: string | null
+          total_cost?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_runs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stripe_events: {
         Row: {

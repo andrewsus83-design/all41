@@ -9,6 +9,7 @@ import { createTask } from "./run";
 import { OUTPUT_SCHEMAS, type OutputSchemaKey } from "./schemas";
 import { fetchGrounding, groundingToContext, ingestToGraph } from "./grounding";
 import { runAgentStep, resolveAgentLimits, type AgentEvent, type AgentStep, type AgentStepResult } from "./agent";
+import { runCrew, CREWS, type CrewStep, type CrewStepResult, type CrewEvent, type CrewTools } from "./crew";
 import type { Verification } from "./verify";
 import type { Json } from "@/lib/supabase/database.types";
 
@@ -22,10 +23,11 @@ export type PipelineStep = {
   /** Optional condition of the form "key=Value" against the instance config. The step is skipped when it doesn't match. */
   when?: string;
 };
-/** Level 1/2 steps run in order; a Level-3 `agent` step decides its own steps inside a hard cap and ceiling (engine/agent.ts). */
-export type WorkflowStep = PipelineStep | AgentStep;
+/** Level 1/2 steps run in order; a Level-3 `agent` step decides its own steps inside a hard cap and ceiling (engine/agent.ts);
+ *  a `crew` step runs a team of specialist agents (professional-grade apps — engine/crew.ts). */
+export type WorkflowStep = PipelineStep | AgentStep | CrewStep;
 export type WorkflowDef = { steps: WorkflowStep[] };
-export type { AgentStep };
+export type { AgentStep, CrewStep };
 
 /** docs/APP_AUTONOMY_GUIDE.md — 1 fixed pipeline · 2 branching workflow · 3 bounded agent. */
 export type AutonomyLevel = 1 | 2 | 3;
@@ -35,7 +37,8 @@ export type StepOutput =
   | { id: string; kind: "search"; query: string; results: SearchResult[]; isMock: boolean; billedUsd: number }
   | { id: string; kind: "crawl"; url: string; markdown: string; isMock: boolean; billedUsd: number }
   | { id: string; kind: "llm"; model: string; output: unknown; schema: OutputSchemaKey | null; isMock: boolean; billedUsd: number }
-  | AgentStepResult;
+  | AgentStepResult
+  | CrewStepResult;
 
 export type AppRunResult = { taskId: string; result: unknown; billedUsd: number };
 
@@ -48,6 +51,7 @@ export type RunEvent =
   | { step: "data"; sources: number; chars: number }
   | { step: "step"; id: string; kind: WorkflowStep["kind"]; label: string; phase: "running" | "done" | "skipped"; billedUsd: number; billedSoFar: number; isMock?: boolean }
   | AgentEvent
+  | CrewEvent
   | { step: "done"; taskId: string; billedUsd: number; balance: number }
   | { step: "blocked"; message: string; balance: number; needed: number }
   | { step: "error"; message: string };
@@ -61,7 +65,7 @@ export type StepDescription = {
 /** The autonomy level a workflow runs at — derived from its shape (mirrors the migration rule). */
 export function autonomyLevel(def: WorkflowDef | null | undefined): AutonomyLevel {
   const steps = def?.steps ?? [];
-  if (steps.some((s) => s.kind === "agent")) return 3;
+  if (steps.some((s) => s.kind === "agent" || s.kind === "crew")) return 3;
   if (steps.some((s) => s.when) || steps.filter((s) => s.kind === "llm").length >= 2) return 2;
   return 1;
 }
@@ -138,12 +142,21 @@ export function describeWorkflow(def: WorkflowDef | null | undefined, config?: C
   const steps = def?.steps ?? [];
   const llmCount = steps.filter((s) => s.kind === "llm").length;
   let llmSeen = 0;
-  return steps.map((s) => {
+  const out: StepDescription[] = [];
+  for (const s of steps) {
+    if (s.kind === "crew") {
+      const def2 = CREWS[s.crew_id];
+      const lines = def2?.describe ?? ["Runs a team of specialists", "Double-checks the result"];
+      const active = config ? stepApplies(s, config) : true;
+      lines.forEach((label, i) => out.push({ id: `${s.id}.${i}`, kind: "crew", label, when: s.when ?? null, active, verify: true }));
+      continue;
+    }
     let label: string;
     if (s.kind === "agent") {
       const { maxSteps, ceilingUsd, verify } = resolveAgentLimits(s, config ?? {});
       label = `Works through it step by step (up to ${maxSteps} steps, never more than $${ceilingUsd.toFixed(2)})${verify ? ", then double-checks the result" : ""}`;
-      return { id: s.id, kind: s.kind, label, when: s.when ?? null, active: config ? stepApplies(s, config) : true, maxSteps, ceilingUsd, verify };
+      out.push({ id: s.id, kind: s.kind, label, when: s.when ?? null, active: config ? stepApplies(s, config) : true, maxSteps, ceilingUsd, verify });
+      continue;
     }
     if (s.kind === "search") label = "Looks up fresh information";
     else if (s.kind === "crawl") label = "Reads the pages it found";
@@ -156,8 +169,9 @@ export function describeWorkflow(def: WorkflowDef | null | undefined, config?: C
       else if (s.schema === "content_pack") label = "Writes the drafts";
       else label = "Writes the result";
     }
-    return { id: s.id, kind: s.kind, label, when: s.when ?? null, active: config ? stepApplies(s, config) : true };
-  });
+    out.push({ id: s.id, kind: s.kind, label, when: s.when ?? null, active: config ? stepApplies(s, config) : true });
+  }
+  return out;
 }
 
 /** TODO(email): wire a provider (Resend) — until then the run is visible in My Apps and we log the intent. */
@@ -343,6 +357,73 @@ async function runCrawl(userId: string, taskId: string, step: PipelineStep, conf
   return { id: step.id, kind: "crawl", url, markdown: r.markdown, isMock: r.isMock, billedUsd: r.billedUsd };
 }
 
+/** DataForSEO — SEO data (SERP, keywords, backlinks) via one licensed provider. Basic-auth "login:password" in DATAFORSEO_KEY. Mock when unset. */
+async function dataForSeo(userId: string, taskId: string, kind: "serp" | "keywords" | "backlinks", input: string): Promise<{ data: unknown; text: string; isMock: boolean; billedUsd: number }> {
+  await primeSecrets();
+  const key = getProviderKey("dataforseo");
+  const r = await metered({
+    userId, taskId, provider: "dataforseo", model: kind, callKind: "search", estimatedBilledUsd: key ? 0.004 : 0,
+    call: async () => {
+      const t0 = Date.now();
+      if (!key) {
+        const text = kind === "serp"
+          ? `[mock] SERP for “${input.slice(0, 60)}”: 10 organic results, an AI Overview citing 2 competitors, a featured snippet, 4 People-Also-Ask questions, 3 ads. Connect DATAFORSEO_KEY for live SERP + keyword + backlink data.`
+          : kind === "keywords"
+            ? `[mock] Keywords for “${input.slice(0, 60)}”: ~8 related terms with volume 20–2,400/mo and KD 18–61. Connect DATAFORSEO_KEY for real volumes and difficulty.`
+            : `[mock] Backlinks: DR 22, 140 referring domains, mostly dofollow. Connect DATAFORSEO_KEY for the real profile.`;
+        return { result: { data: null, text }, usage: { apiCredits: 1 }, latencyMs: Date.now() - t0, costUsd: 0 };
+      }
+      const [login, password] = key.split(":");
+      const auth = Buffer.from(`${login}:${password ?? ""}`).toString("base64");
+      const endpoint = kind === "serp"
+        ? "https://api.dataforseo.com/v3/serp/google/organic/live/regular"
+        : kind === "keywords"
+          ? "https://api.dataforseo.com/v3/dataforseo_labs/google/keyword_ideas/live"
+          : "https://api.dataforseo.com/v3/backlinks/summary/live";
+      const body = kind === "backlinks" ? [{ target: input }] : [{ keyword: input, language_code: "en", location_code: 2840, depth: 20 }];
+      const res = await fetch(endpoint, { method: "POST", headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(30000) });
+      if (!res.ok) throw new Error(`DATAFORSEO_${res.status}`);
+      const data = await res.json();
+      return { result: { data, text: JSON.stringify(data?.tasks?.[0]?.result ?? data).slice(0, 6000) }, usage: { apiCredits: 1 }, latencyMs: Date.now() - t0, costUsd: 0.004 };
+    },
+  });
+  return { data: r.result.data, text: r.result.text, isMock: !key, billedUsd: r.billedUsd };
+}
+
+/** Google PageSpeed Insights — free Core Web Vitals. Metered at $0. */
+async function pageSpeed(userId: string, taskId: string, url: string): Promise<{ data: unknown; text: string; isMock: boolean; billedUsd: number }> {
+  await primeSecrets();
+  const key = getProviderKey("google");
+  const r = await metered({
+    userId, taskId, provider: "google", model: "pagespeed", callKind: "search", estimatedBilledUsd: 0,
+    call: async () => {
+      const t0 = Date.now();
+      try {
+        const u = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile${key ? `&key=${key}` : ""}`;
+        const res = await fetch(u, { signal: AbortSignal.timeout(30000) });
+        if (!res.ok) throw new Error(String(res.status));
+        const data = await res.json();
+        const audits = data?.lighthouseResult?.audits ?? {};
+        const text = `PageSpeed (mobile): LCP ${audits["largest-contentful-paint"]?.displayValue ?? "?"}, CLS ${audits["cumulative-layout-shift"]?.displayValue ?? "?"}, TBT ${audits["total-blocking-time"]?.displayValue ?? "?"}, performance score ${Math.round((data?.lighthouseResult?.categories?.performance?.score ?? 0) * 100)}.`;
+        return { result: { data, text }, usage: { apiCredits: 1 }, latencyMs: Date.now() - t0, costUsd: 0 };
+      } catch {
+        return { result: { data: null, text: "[mock] PageSpeed (mobile): LCP 3.1s, CLS 0.05, performance score 62. (live PSI unavailable)" }, usage: { apiCredits: 1 }, latencyMs: Date.now() - t0, costUsd: 0 };
+      }
+    },
+  });
+  return { data: r.result.data, text: r.result.text, isMock: !r.result.data, billedUsd: r.billedUsd };
+}
+
+/** The crew's tool belt — the same metered helpers, so every specialist's fetch is logged. */
+function crewTools(userId: string, taskId: string): CrewTools {
+  return {
+    search: (q: string) => searchWeb(userId, taskId, q),
+    crawl: (url: string) => crawlPage(userId, taskId, url),
+    dataforseo: (kind, input) => dataForSeo(userId, taskId, kind, input),
+    pagespeed: (url: string) => pageSpeed(userId, taskId, url),
+  };
+}
+
 function priorToContext(prior: StepOutput[]) {
   const parts: string[] = [];
   for (const p of prior) {
@@ -351,7 +432,8 @@ function priorToContext(prior: StepOutput[]) {
     } else if (p.kind === "crawl") {
       parts.push(`[C1] CRAWLED ${p.url}:\n${p.markdown.slice(0, 8000)}`);
     } else {
-      parts.push(`PRIOR STEP ${p.id} (${p.model}):\n${JSON.stringify(p.output).slice(0, 6000)}`);
+      const model = p.kind === "llm" ? p.model : p.modelsUsed.join(", ");
+      parts.push(`PRIOR STEP ${p.id} (${model}):\n${JSON.stringify(p.output).slice(0, 6000)}`);
     }
   }
   return parts.join("\n\n") || "(no prior steps)";
@@ -423,6 +505,15 @@ export async function estimateInstanceCost(instance: { config: Json | Config | n
     if (!stepApplies(step, config)) continue;
     let billed = 0;
     if (step.kind === "agent") { billed = resolveAgentLimits(step, config).ceilingUsd; label = "up to"; }
+    else if (step.kind === "crew") {
+      const { modelId } = await routeTask(step.task_type);
+      const { provider, model } = splitModelId(modelId);
+      const one = (await estimateCost(provider, model, 8000, 1000)).billedUsd;
+      const crawlE = getProviderKey("firecrawl") ? (await estimateCost("firecrawl", "scrape", 0, 0)).billedUsd : 0;
+      const dfE = getProviderKey("dataforseo") ? 0.004 : 0;
+      const searchE = getProviderKey("serpapi") ? (await estimateCost("serpapi", "search", 0, 0)).billedUsd : 0;
+      billed = one * 7 + crawlE * 3 + dfE + searchE;
+    }
     else if (step.kind === "search") billed = getProviderKey("serpapi") ? (await estimateCost("serpapi", "search", 0, 0)).billedUsd : 0;
     else if (step.kind === "crawl") billed = getProviderKey("firecrawl") ? (await estimateCost("firecrawl", "scrape", 0, 0)).billedUsd : 0;
     else {
@@ -480,7 +571,7 @@ export async function runAppInstance(instanceId: string, opts: { preview?: boole
     execute: { confirmed: true, use_context: true },
     track: inst.schedule === "once" ? ("once" as const) : ("save_app" as const),
   };
-  const lastLlm = [...steps].reverse().find((s) => s.kind === "llm" || s.kind === "agent");
+  const lastLlm = [...steps].reverse().find((s) => s.kind === "llm" || s.kind === "agent" || s.kind === "crew");
   const { taskId, briefing: stored } = await createTask(userId, briefing, { appInstanceId: instanceId, taskType: lastLlm?.task_type ?? "research" });
   await db.from("tasks").update({ status: "running", briefing: { ...stored, ...(preview ? { preview: true } : {}) } as unknown as Json }).eq("id", taskId);
   emit({ step: "start", taskId, preview });
@@ -510,20 +601,23 @@ export async function runAppInstance(instanceId: string, opts: { preview?: boole
       else if (step.kind === "agent") {
         // Level 3 — bounded agent: pre-flight on the ceiling, metered plan→act→observe loop, write-up, verification.
         out = await runAgentStep({ userId, taskId, config, userData: userData.text, tools: await agentTools(userId, taskId), onEvent: (e) => emit(e) }, step);
+      } else if (step.kind === "crew") {
+        // Professional tier — a team of specialist agents, each metered, with a Verifier gate (engine/crew.ts).
+        out = await runCrew({ userId, taskId, config, userData: userData.text, groundingCtx, tools: crewTools(userId, taskId), onEvent: (e) => emit(e) }, step);
       } else throw new Error(`UNKNOWN_STEP_KIND ${String((step as { kind: string }).kind)}`);
       if (out.kind === "llm") modelsUsed.push(out.model);
-      if (out.kind === "agent") for (const m of out.modelsUsed) if (!modelsUsed.includes(m)) modelsUsed.push(m);
+      if (out.kind === "agent" || out.kind === "crew") for (const m of out.modelsUsed) if (!modelsUsed.includes(m)) modelsUsed.push(m);
       billedUsd += out.billedUsd;
       outputs.push(out);
       emit({ step: "step", id: step.id, kind: step.kind, label, phase: "done", billedUsd: out.billedUsd, billedSoFar: billedUsd, isMock: out.isMock });
     }
     const last = outputs[outputs.length - 1];
-    const finalOutput = last?.kind === "llm" || last?.kind === "agent" ? last.output : last?.kind === "search" ? { title: `Search: ${last.query}`, results: last.results } : last?.kind === "crawl" ? { title: last.url, markdown: last.markdown } : null;
+    const finalOutput = last?.kind === "llm" || last?.kind === "agent" || last?.kind === "crew" ? last.output : last?.kind === "search" ? { title: `Search: ${last.query}`, results: last.results } : last?.kind === "crawl" ? { title: last.url, markdown: last.markdown } : null;
     const isMock = outputs.some((o) => o.isMock);
-    const verification: Verification | undefined = last?.kind === "agent" ? last.verification : undefined;
+    const verification: Verification | undefined = last?.kind === "agent" || last?.kind === "crew" ? last.verification : undefined;
     const result = {
       output: finalOutput,
-      schema: last?.kind === "llm" || last?.kind === "agent" ? (last.schema ?? "answer") : "answer",
+      schema: last?.kind === "llm" || last?.kind === "agent" || last?.kind === "crew" ? (last.schema ?? "answer") : "answer",
       taskType: lastLlm?.task_type ?? "research",
       modelsUsed,
       grounding: { chunks: grounding.chunks.length, tokens: grounding.tokenCount, engine: grounding.engine },
@@ -531,9 +625,10 @@ export async function runAppInstance(instanceId: string, opts: { preview?: boole
       // same optional field as engine/run.ts TaskResult — surfaced, never passed silently
       ...(verification ? { verification } : {}),
       ...(last?.kind === "agent" ? { agent: last.agent } : {}),
+      ...(last?.kind === "crew" ? { crew: { crew_id: last.crew_id, agents: last.agents, seoRunId: last.seoRunId } } : {}),
       isMock,
       preview,
-      steps: outputs.map((o) => (o.kind === "crawl" ? { ...o, markdown: o.markdown.slice(0, 2000) } : o)),
+      steps: outputs.map((o) => (o.kind === "crawl" ? { ...o, markdown: o.markdown.slice(0, 2000) } : o.kind === "crew" ? { id: o.id, kind: o.kind, crew_id: o.crew_id, agents: o.agents, billedUsd: o.billedUsd, isMock: o.isMock } : o)),
       app: { slug: app.slug, name: app.name },
     };
 
