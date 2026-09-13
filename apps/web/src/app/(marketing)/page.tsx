@@ -7,7 +7,6 @@ import { cn } from "@/lib/cn";
 import { AppGallery } from "@/components/marketing/app-gallery";
 import { SolutionCards } from "@/components/marketing/solution-cards";
 import { ResultsChat } from "@/components/marketing/results-chat";
-import { RotatingWord } from "@/components/marketing/rotating-word";
 import { Eyebrow, H2, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
 import { toGalleryApp } from "@/content/gallery";
 import { getPublishedApps } from "./_lib/data";
@@ -23,8 +22,6 @@ const WHY_CARDS = [
   { icon: "robot", card: "bg-violet-soft border-violet-soft", k: "Why use one AI when you can use them all?", v: "The best AI for each job, working together. Big results, small cost." },
   { icon: "coins", card: "bg-green-soft border-green-soft", k: "Only pay for what you use.", v: "No hidden cost. No wasted cost. A quiet week is $0." },
 ];
-
-const JOBS = ["Build", "Write", "Research", "Plan", "Audit", "Rank", "Reply", "Pitch"];
 
 const JOURNEY: { n: number; tone: "red" | "amber" | "green"; node: string; title: string; body: string; chips: string[] }[] = [
   { n: 1, tone: "red", node: "bg-coral-solid", title: "Say what you need", body: "Pick a tool, or just describe the job.", chips: ["SEO + GEO", "Proposal", "Research", "describe it…"] },
@@ -42,7 +39,7 @@ export default async function HomePage() {
       {/* 1 · HERO — words left, illustrated hero right; light gradient wash + cinematic shine */}
       <Section className="relative pt-10 md:pt-14 pb-16 md:pb-24">
         <div className="absolute -top-36 bottom-0 left-1/2 -translate-x-1/2 w-screen -z-10 overflow-hidden hero-aura" aria-hidden />
-        <div className="flex flex-col items-center text-center gap-6 max-w-3xl mx-auto">
+        <div className="flex flex-col items-center text-center gap-6 max-w-4xl mx-auto">
           <Link
             href="/apps/seo-geo-optimizer"
             className="rise inline-flex items-center gap-2 rounded-full border border-line bg-bg-elev/70 backdrop-blur pl-1.5 pr-4 py-1.5 text-sm shadow-soft hover:shadow-lift transition"
@@ -55,14 +52,15 @@ export default async function HomePage() {
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber" aria-hidden />
             For anyone who&apos;s done juggling AI tools
           </p>
-          <h1 className="rise-1 text-5xl md:text-7xl xl:text-8xl font-semibold leading-[1.04] tracking-tight text-balance">
+          <h1 className="rise-1 text-5xl md:text-6xl xl:text-7xl font-semibold leading-[1.06] tracking-tight text-balance">
             One place.
             <br />
-            <span className="text-grad">The right AI to <RotatingWord words={JOBS} className="text-grad" />.</span>
+            <span className="text-grad">The right AI for any </span>
+            <span className="italic inline-block align-middle rounded-2 bg-bg-elev-2 border border-line px-2 md:px-3 text-grad">job</span>
+            <span className="text-grad">.</span>
           </h1>
           <p className="rise-2 text-lg md:text-xl text-fg-muted max-w-2xl leading-relaxed text-pretty">
-            We pick and combine the right AI models, tools and skills to bring the sharpest result — so you can focus on
-            your job.
+            We pick the right AI for the job and do the work — so you can focus on what matters.
             <span className="block mt-2 text-fg font-medium">No prompts. No subscription.</span>
           </p>
           <div className="rise-3 flex flex-col sm:flex-row gap-3 justify-center">
