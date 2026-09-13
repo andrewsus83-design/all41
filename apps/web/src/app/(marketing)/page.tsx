@@ -52,7 +52,7 @@ export default async function HomePage() {
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber" aria-hidden />
             For anyone who&apos;s done juggling AI tools
           </p>
-          <h1 className="rise-1 text-6xl md:text-7xl xl:text-[5.25rem] font-semibold leading-[1.08] tracking-tight">
+          <h1 className="rise-1 text-6xl md:text-7xl xl:text-[5.25rem] font-semibold leading-[1.18] tracking-tight">
             One place.
             <br />
             <span className="lg:whitespace-nowrap">
@@ -60,7 +60,7 @@ export default async function HomePage() {
               <span
               className="rounded-2 bg-bg-elev border border-line-strong"
               style={{
-                padding: "0.04em 0.3em",
+                padding: "0.1em 0.42em",
                 boxShadow: "0 8px 22px rgba(30,28,26,0.16)",
                 WebkitBoxDecorationBreak: "clone",
                 boxDecorationBreak: "clone",
