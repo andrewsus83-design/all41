@@ -43,19 +43,19 @@ export default async function HomePage() {
           <div className="flex flex-col items-start text-left gap-6 max-w-2xl">
           <Link
             href="/apps/seo-geo-optimizer"
-            className="rise inline-flex items-center gap-2 rounded-full border border-line bg-bg-elev/70 backdrop-blur pl-1.5 pr-4 py-1.5 text-sm shadow-soft hover:shadow-lift transition"
+            className="rise inline-flex items-center gap-2 rounded-full border border-line bg-bg-elev/70 backdrop-blur pl-1.5 pr-4 py-1.5 text-base shadow-soft hover:shadow-lift transition"
           >
             <span className="rounded-full bg-coral-solid text-white text-xs font-semibold px-2.5 py-1">New</span>
             <span className="text-fg">SEO + GEO Optimizer is live</span>
             <span className="text-fg-muted" aria-hidden>→</span>
           </Link>
-          <p className="rise-1 flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-fg-muted font-semibold">
+          <p className="rise-1 flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-fg-muted font-semibold">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber" aria-hidden />
             For anyone who&apos;s done juggling AI tools
           </p>
           <h1 className="rise-1 font-semibold leading-[1.1] tracking-tight">
-            <span className="block text-6xl md:text-7xl xl:text-[5rem]">One place.</span>
-            <span className="block mt-1 text-4xl md:text-5xl lg:whitespace-nowrap">
+            <span className="block text-[4rem] md:text-[5rem] xl:text-[5.5rem]">One place.</span>
+            <span className="block mt-1 text-[2.6rem] md:text-[3.3rem] lg:whitespace-nowrap">
               <span className="text-grad">The right AI for any </span>
               <span className="relative inline-block px-[0.55em] py-[0.16em] align-baseline">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -65,7 +65,7 @@ export default async function HomePage() {
               <span className="text-grad">.</span>
             </span>
           </h1>
-          <p className="rise-2 text-lg md:text-xl text-fg-muted max-w-2xl leading-relaxed text-pretty">
+          <p className="rise-2 text-xl md:text-2xl text-fg-muted max-w-2xl leading-relaxed text-pretty">
             We pick the right AI for the job and do the work —
             <span className="block">so you can focus on what matters.</span>
             <span className="block mt-2 text-fg font-medium">No Prompts · No Subscription · Pay When You Use</span>
@@ -80,7 +80,7 @@ export default async function HomePage() {
               <Button phase="ghost" size="lg" className="w-full sm:w-auto">See how it works ↓</Button>
             </a>
           </div>
-          <p className="rise-4 reflect text-fg-muted text-lg">AI, made easy ✿</p>
+          <p className="rise-4 reflect text-fg-muted text-xl">AI, made easy ✿</p>
           </div>
           <div className="rise-2 relative flex justify-center lg:justify-end">
             {/* eslint-disable-next-line @next/next/no-img-element */}
