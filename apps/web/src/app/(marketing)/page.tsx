@@ -82,12 +82,12 @@ export default async function HomePage() {
           </div>
           <p className="rise-4 reflect text-fg-muted text-lg">AI, made easy ✿</p>
           </div>
-          <div className="rise-2 relative w-full max-w-md mx-auto lg:mx-0 lg:justify-self-end">
+          <div className="rise-2 relative flex justify-center lg:justify-end">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/overwhelm.webp"
               alt="Someone overwhelmed by too many AI tools and subscriptions"
-              className="w-full h-auto select-none"
+              className="h-[420px] md:h-[560px] xl:h-[700px] w-auto max-w-none select-none"
             />
           </div>
         </div>
