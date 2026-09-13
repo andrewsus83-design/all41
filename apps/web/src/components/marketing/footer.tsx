@@ -43,7 +43,8 @@ export function MarketingFooter() {
     <footer className="border-t border-line mt-auto">
       <div className="w-full max-w-6xl mx-auto px-6 py-14 grid gap-10 lg:grid-cols-[1.6fr_1fr_1fr_1fr_0.8fr]">
         <div className="space-y-4">
-          <p className="font-title text-2xl font-semibold">all41</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="all41" className="h-10 w-auto" />
           <p className="text-fg-muted max-w-xs">The AI does the work. You keep the result.</p>
           <div className="space-y-2 pt-2">
             <p className="text-xs uppercase tracking-[0.18em] text-fg-faint">Build-in-public updates</p>

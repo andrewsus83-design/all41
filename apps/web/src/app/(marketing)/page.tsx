@@ -52,10 +52,9 @@ export default async function HomePage() {
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber" aria-hidden />
             For anyone who&apos;s done juggling AI tools
           </p>
-          <h1 className="rise-1 text-6xl md:text-7xl xl:text-[5.25rem] font-semibold leading-[1.18] tracking-tight">
-            One place.
-            <br />
-            <span className="lg:whitespace-nowrap">
+          <h1 className="rise-1 font-semibold leading-[1.12] tracking-tight">
+            <span className="block text-7xl md:text-8xl xl:text-[7rem]">One place.</span>
+            <span className="lg:whitespace-nowrap block mt-1 text-5xl md:text-6xl xl:text-[4.5rem]">
               <span className="text-grad">The right AI for any </span>
               <span
               className="rounded-2 bg-bg-elev border border-line-strong"

@@ -22,8 +22,9 @@ export async function MarketingHeader() {
         {/* floating cream pill — logo left, menu centered, CTA right */}
         <div className="relative bg-bg-elev-2 border border-line text-fg rounded-full shadow-lift flex items-center gap-3 h-14 md:h-16 pl-5 md:pl-7 pr-8">
           <div className="flex-1 flex justify-start">
-            <Link href="/" className="font-title text-xl md:text-2xl font-bold tracking-tight text-fg shrink-0">
-              all41
+            <Link href="/" className="shrink-0" aria-label="all41 home">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.svg" alt="all41" className="h-8 md:h-9 w-auto" />
             </Link>
           </div>
           <nav className="hidden lg:flex items-center gap-0.5 shrink-0" aria-label="Primary">
