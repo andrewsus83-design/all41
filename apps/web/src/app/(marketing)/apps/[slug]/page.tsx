@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Pipeline } from "@/components/marketing/pipeline";
 import { JsonLd } from "@/components/marketing/json-ld";
 import { Eyebrow, Lead, N, Section } from "@/components/marketing/primitives";
+import { FaqAccordion } from "@/components/marketing/faq-accordion";
 import { APP_META, SCHEMA_WORDS, type SampleOutput } from "@/content/apps";
+import { APP_PAGE, replacesFor, faqItems } from "@/content/app-pages";
 import { getLeaders, getPublishedApp, lastLlmSchema, pipelineChips, scheduleOptions } from "../../_lib/data";
 
 const SITE_URL = "https://all41.app";
@@ -24,10 +26,10 @@ export async function generateMetadata(props: PageProps<"/apps/[slug]">): Promis
   const { slug } = await props.params;
   const app = await getPublishedApp(slug);
   if (!app) return { title: "App not found" };
-  const meta = APP_META[app.slug];
+  const replaces = replacesFor(app.slug);
   const cost = priceLabel(app.est_credit_cost);
-  const title = meta
-    ? `${app.name} — instead of ${meta.replaces}. ~$${cost} per run, no subscription.`
+  const title = replaces
+    ? `${app.name} — instead of ${replaces}. ~$${cost} per run, no subscription.`
     : `${app.name} — ~$${cost} per run, no subscription.`;
   const description = app.description
     ? `${app.description} Pay only when you use — the price is shown before every run.`
@@ -40,6 +42,9 @@ export default async function AppDetailPage(props: PageProps<"/apps/[slug]">) {
   const [app, leaders] = await Promise.all([getPublishedApp(slug), getLeaders()]);
   if (!app) notFound();
   const meta = APP_META[app.slug];
+  const page = APP_PAGE[app.slug];
+  const replaces = replacesFor(app.slug);
+  const faqs = faqItems(app.slug);
   const schema = lastLlmSchema(app.steps);
   const cadence = scheduleOptions(app.questions);
 
@@ -65,10 +70,17 @@ export default async function AppDetailPage(props: PageProps<"/apps/[slug]">) {
       { "@type": "ListItem", position: 2, name: app.name, item: `${SITE_URL}/apps/${app.slug}` },
     ],
   };
+  const faqSchema = faqs.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+      }
+    : null;
 
   return (
     <>
-      <JsonLd data={[softwareSchema, breadcrumbSchema]} />
+      <JsonLd data={[softwareSchema, breadcrumbSchema, ...(faqSchema ? [faqSchema] : [])]} />
       <Section className="pt-12 md:pt-20 pb-8">
         <Link href="/apps" className="text-sm text-fg-muted hover:text-fg">← All apps</Link>
         <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_1fr] items-start">
@@ -83,7 +95,7 @@ export default async function AppDetailPage(props: PageProps<"/apps/[slug]">) {
             <Lead>{app.description}</Lead>
             <div className="flex flex-wrap items-center gap-4">
               <Link href={`/my-apps/${app.slug}`}><Button phase="green" size="lg">Set it up in <N>20</N> seconds</Button></Link>
-              <p className="text-fg-muted">≈ <Money usd={app.est_credit_cost} /> per run{meta ? <span className="text-fg-faint"> · instead of {meta.replaces}</span> : null}</p>
+              <p className="text-fg-muted">≈ <Money usd={app.est_credit_cost} /> per run{replaces ? <span className="text-fg-faint"> · instead of {replaces}</span> : null}</p>
             </div>
           </div>
           <Card className="space-y-5">
@@ -122,14 +134,34 @@ export default async function AppDetailPage(props: PageProps<"/apps/[slug]">) {
 
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-2xl md:text-3xl font-semibold">What a result looks like</h2>
-              <Badge tone="amber">sample</Badge>
+              <h2 className="text-2xl md:text-3xl font-semibold">{meta ? "What a result looks like" : "Who it's for"}</h2>
+              {meta ? <Badge tone="amber">sample</Badge> : null}
             </div>
-            <p className="text-fg-muted">A made-up example in the exact shape you will get. Real runs cite real sources.</p>
-            {meta ? <SampleView sample={meta.sample} /> : <Card><CardHint>No sample yet for this app.</CardHint></Card>}
+            {meta ? (
+              <>
+                <p className="text-fg-muted">A made-up example in the exact shape you will get. Real runs cite real sources.</p>
+                <SampleView sample={meta.sample} />
+              </>
+            ) : page?.useCases?.length ? (
+              <UseCases items={page.useCases} />
+            ) : (
+              <Card><CardHint>Set it up in chat — the first run is priced before it starts.</CardHint></Card>
+            )}
           </div>
         </div>
       </Section>
+
+      {faqs.length ? (
+        <Section className="pt-4">
+          <div className="max-w-3xl">
+            <Eyebrow phase="green">Questions</Eyebrow>
+            <h2 className="mt-4 mb-2 text-3xl md:text-4xl font-semibold">Good to know.</h2>
+          </div>
+          <div className="mt-6">
+            <FaqAccordion items={faqs} />
+          </div>
+        </Section>
+      ) : null}
 
       <Section className="pb-28">
         <div className="squircle rounded-6 border border-line bg-bg-elev p-8 md:p-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -214,5 +246,18 @@ function SampleView({ sample }: { sample: SampleOutput }) {
       </div>
       <Sources sources={sample.sources} />
     </Card>
+  );
+}
+
+function UseCases({ items }: { items: { who: string; job: string }[] }) {
+  return (
+    <div className="space-y-3">
+      {items.map((u) => (
+        <div key={u.who} className="squircle rounded-3 border border-line bg-bg-elev p-4 space-y-1">
+          <p className="font-title font-medium">{u.who}</p>
+          <p className="text-sm text-fg-muted leading-relaxed">{u.job}</p>
+        </div>
+      ))}
+    </div>
   );
 }

@@ -6,7 +6,8 @@ import { Money } from "@/components/ui/money";
 import { Pipeline } from "@/components/marketing/pipeline";
 import { RoadmapCard } from "@/components/marketing/app-card";
 import { Eyebrow, Lead, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
-import { APP_META, ROADMAP_APPS, SCHEMA_WORDS } from "@/content/apps";
+import { ROADMAP_APPS, SCHEMA_WORDS } from "@/content/apps";
+import { replacesFor } from "@/content/app-pages";
 import { getLeaders, getPublishedApps, lastLlmSchema, pipelineChips, scheduleOptions } from "../_lib/data";
 
 export const metadata: Metadata = {
@@ -29,7 +30,7 @@ export default async function AppsPage() {
       <Section className="pt-6 space-y-8">
         {apps.length === 0 ? <p className="text-fg-faint">No apps published yet.</p> : null}
         {apps.map((a) => {
-          const meta = APP_META[a.slug];
+          const replaces = replacesFor(a.slug);
           const schema = lastLlmSchema(a.steps);
           const cadence = scheduleOptions(a.questions);
           return (
@@ -59,7 +60,7 @@ export default async function AppsPage() {
                   <N>{a.questions.length}</N> questions — {a.questions.map((q) => q.question.replace(/\?$/, "").toLowerCase()).join(", ")}
                 </Expect>
                 <Expect k="Cost">
-                  ≈ <Money usd={a.est_credit_cost} /> per run{meta ? <span className="text-fg-faint"> · instead of {meta.replaces}</span> : null}
+                  ≈ <Money usd={a.est_credit_cost} /> per run{replaces ? <span className="text-fg-faint"> · instead of {replaces}</span> : null}
                 </Expect>
               </div>
             </Card>

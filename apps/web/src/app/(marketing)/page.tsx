@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { LiveBriefingDemo } from "@/components/marketing/live-briefing-demo";
 import { AppCard } from "@/components/marketing/app-card";
+import { SolutionCards } from "@/components/marketing/solution-cards";
 import { HeroBlueprint } from "@/components/marketing/hero-blueprint";
 import { Sparkles } from "@/components/marketing/sparkles";
 import { Eyebrow, H2, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
-import { APP_META } from "@/content/apps";
+import { replacesFor } from "@/content/app-pages";
 import { getPublishedApps } from "./_lib/data";
 
 export const metadata: Metadata = {
@@ -141,6 +142,12 @@ export default async function HomePage() {
         </p>
       </Section>
 
+      {/* 4b · WHAT YOU GET DONE — illustrated category cards */}
+      <Section>
+        <SectionHead phase="neutral" eyebrow="What you get done" title="Three kinds of work. One place." />
+        <SolutionCards />
+      </Section>
+
       {/* 5 · TOOLS — a grid of the flagship apps */}
       <Section id="apps">
         <SectionHead phase="green" eyebrow="Tools" title="Ready-made tools for real jobs." />
@@ -149,7 +156,7 @@ export default async function HomePage() {
         ) : (
           <div className="grid gap-5 md:grid-cols-3">
             {apps.map((a) => (
-              <AppCard key={a.id} app={a} replaces={APP_META[a.slug]?.replaces} />
+              <AppCard key={a.id} app={a} replaces={replacesFor(a.slug)} />
             ))}
           </div>
         )}
