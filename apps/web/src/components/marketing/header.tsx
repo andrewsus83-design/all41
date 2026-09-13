@@ -31,9 +31,12 @@ export async function MarketingHeader() {
               </Link>
             ))}
           </nav>
-          <div className="flex items-center gap-2 shrink-0">
-            <Link href={signedIn ? "/my-apps" : "/login"} className="hidden lg:block">
-              <Button phase="warm" size="sm" className="glow-coral">{signedIn ? "My Apps" : "Get Started"}</Button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Link href={signedIn ? "/my-apps" : "/login"} className="hidden lg:inline-flex items-center rounded-full px-3.5 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 transition">
+              {signedIn ? "My Apps" : "Sign in"}
+            </Link>
+            <Link href={signedIn ? "/build" : "/login"} className="hidden lg:block">
+              <Button phase="warm" size="sm" className="glow-coral">Get Started</Button>
             </Link>
             <MobileNav signedIn={signedIn} />
           </div>
