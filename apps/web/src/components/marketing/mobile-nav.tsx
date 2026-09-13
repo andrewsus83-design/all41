@@ -18,7 +18,7 @@ export function MobileNav({ signedIn }: { signedIn: boolean }) {
         aria-controls="mobile-menu"
         aria-label={open ? "Close menu" : "Open menu"}
         onClick={() => setOpen((v) => !v)}
-        className="squircle h-11 w-11 rounded-2 border border-line-strong grid place-items-center text-fg"
+        className="h-11 w-11 rounded-full border border-white/25 grid place-items-center text-white"
       >
         <span className="relative block w-5 h-3" aria-hidden>
           <span className={cn("absolute left-0 top-0 h-0.5 w-5 bg-current transition", open && "top-1.5 rotate-45")} />
@@ -36,7 +36,7 @@ export function MobileNav({ signedIn }: { signedIn: boolean }) {
         </nav>
         <div className="mt-6">
           <Link href={signedIn ? "/my-apps" : "/login"} onClick={() => setOpen(false)} className="block">
-            <Button phase="green" className="w-full">{signedIn ? "My Apps" : "Get Started"}</Button>
+            <Button phase="warm" className="w-full">{signedIn ? "My Apps" : "Get Started"}</Button>
           </Link>
         </div>
       </div>
