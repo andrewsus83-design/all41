@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
+import { coverFor } from "@/content/covers";
 import { Button } from "@/components/ui/button";
 import { Card, CardHint, CardTitle } from "@/components/ui/card";
 import { Money } from "@/components/ui/money";
@@ -45,6 +47,7 @@ export default async function AppDetailPage(props: PageProps<"/apps/[slug]">) {
   const page = APP_PAGE[app.slug];
   const replaces = replacesFor(app.slug);
   const faqs = faqItems(app.slug);
+  const cover = coverFor(app.slug);
   const schema = lastLlmSchema(app.steps);
   const cadence = scheduleOptions(app.questions);
 
@@ -86,7 +89,11 @@ export default async function AppDetailPage(props: PageProps<"/apps/[slug]">) {
         <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_1fr] items-start">
           <div className="space-y-6">
             <div className="flex items-center gap-5">
-              <span className="text-6xl" aria-hidden>{app.icon ?? "◻"}</span>
+              {cover ? (
+                <Image src={cover} alt="" width={112} height={112} className="rounded-4 border border-line shadow-soft shrink-0" />
+              ) : (
+                <span className="text-6xl" aria-hidden>{app.icon ?? "◻"}</span>
+              )}
               <div className="space-y-2">
                 <Eyebrow phase="green">App</Eyebrow>
                 <h1 className="text-4xl md:text-5xl font-semibold leading-[1.05]">{app.name}</h1>

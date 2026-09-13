@@ -140,6 +140,19 @@ h2 {
 .grad-dusk    { background-image: linear-gradient(135deg, #7c6aef, #3ba8f5); }
 .grad-soft    { background-image: linear-gradient(135deg, #fff3d9, #ffedea); }
 .grad-ink     { background-image: linear-gradient(135deg, #2a2724, #1e1c1a); }
+/* vibrant on-brand gradient for the floating nav pill (deep stops keep white text legible) */
+.grad-nav     { background-image: linear-gradient(115deg, #f2543f 0%, #b23fce 42%, #6a55e8 68%, #2a86d4 100%); }
+
+/* hero: soft light gradient wash + a slow cinematic shine sweep (same idea as the button sheen) */
+.hero-aura { background: linear-gradient(120deg, #fff1ea 0%, #fdf4e4 44%, #eee9ff 100%); }
+.hero-aura::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.6) 50%, transparent 60%);
+  transform: translateX(-130%);
+  animation: hero-shine 8s ease-in-out infinite;
+}
+@keyframes hero-shine { 0%, 12% { transform: translateX(-130%); } 88%, 100% { transform: translateX(130%); } }
+@media (prefers-reduced-motion: reduce) { .hero-aura::after { animation: none; opacity: 0; } }
 .grad-mesh {
   background-color: var(--bg);
   background-image:

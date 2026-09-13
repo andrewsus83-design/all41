@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
-import { LiveBriefingDemo } from "@/components/marketing/live-briefing-demo";
 import { AppCard } from "@/components/marketing/app-card";
 import { SolutionCards } from "@/components/marketing/solution-cards";
 import { Eyebrow, H2, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
@@ -22,9 +22,10 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* 1 · HERO — product visible above the fold (text left, live demo right) */}
-      <Section className="relative pt-20 md:pt-28 pb-16 md:pb-24">
-        <div className="grid lg:grid-cols-[0.95fr_1.05fr] gap-12 lg:gap-10 items-center">
+      {/* 1 · HERO — words left, illustrated hero right; light gradient wash + cinematic shine */}
+      <Section className="relative overflow-hidden pt-10 md:pt-14 pb-16 md:pb-24">
+        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-screen -z-10 overflow-hidden hero-aura" aria-hidden />
+        <div className="grid lg:grid-cols-[0.95fr_1.05fr] gap-10 lg:gap-8 items-start lg:items-center">
           {/* left — the words */}
           <div className="flex flex-col items-start text-left gap-6 max-w-xl">
             <Link
@@ -60,12 +61,17 @@ export default async function HomePage() {
             <p className="rise-4 reflect text-fg-muted">pay only when you use ✿</p>
           </div>
 
-          {/* right — the product, running */}
-          <div className="rise-2 relative w-full max-w-xl mx-auto lg:mx-0">
-            <div className="absolute -inset-10 -z-10 glow-soft rounded-6" aria-hidden />
-            <div className="grad-ring rounded-5 lift">
-              <LiveBriefingDemo />
-            </div>
+          {/* right — the illustrated hero */}
+          <div className="relative w-full max-w-xl mx-auto lg:mx-0">
+            <div className="absolute -inset-8 -z-10 glow-soft rounded-6" aria-hidden />
+            <Image
+              src="/hero.png"
+              alt="One place where the right AI quietly does every job — a dashboard surrounded by friendly AI helpers."
+              width={1100}
+              height={1100}
+              priority
+              className="w-full h-auto rise"
+            />
           </div>
         </div>
       </Section>

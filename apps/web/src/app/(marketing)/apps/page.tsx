@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { coverFor } from "@/content/covers";
 import { Card, CardHint, CardTitle } from "@/components/ui/card";
 import { Money } from "@/components/ui/money";
 import { Pipeline } from "@/components/marketing/pipeline";
@@ -37,7 +39,11 @@ export default async function AppsPage() {
             <Card key={a.id} className="p-7 md:p-9 grid gap-8 lg:grid-cols-[1.1fr_1fr]">
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
-                  <span className="text-5xl" aria-hidden>{a.icon ?? "◻"}</span>
+                  {coverFor(a.slug) ? (
+                    <Image src={coverFor(a.slug)!} alt="" width={96} height={96} className="rounded-3 border border-line shadow-soft shrink-0" />
+                  ) : (
+                    <span className="text-5xl" aria-hidden>{a.icon ?? "◻"}</span>
+                  )}
                   <div className="space-y-1">
                     <CardTitle className="text-2xl md:text-3xl">{a.name}</CardTitle>
                     <CardHint className="text-base">{a.description}</CardHint>
