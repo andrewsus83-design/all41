@@ -40,7 +40,7 @@ export default async function HomePage() {
       <Section className="relative pt-10 md:pt-14 pb-16 md:pb-24">
         <div className="absolute -top-36 bottom-0 left-1/2 -translate-x-1/2 w-screen -z-10 overflow-hidden hero-aura" aria-hidden />
         <div className="relative z-10 grid lg:grid-cols-[1.25fr_0.75fr] gap-6 lg:gap-8 items-center">
-          <div className="flex flex-col items-start text-left gap-6 max-w-2xl">
+          <div className="flex flex-col items-start text-left gap-6 max-w-2xl lg:-translate-x-10">
           <Link
             href="/apps/seo-geo-optimizer"
             className="rise inline-flex items-center gap-2 rounded-full border border-line bg-bg-elev/70 backdrop-blur pl-1.5 pr-4 py-1.5 text-sm shadow-soft hover:shadow-lift transition"
