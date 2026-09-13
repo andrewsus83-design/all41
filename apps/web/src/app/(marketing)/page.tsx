@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 import { AppGallery } from "@/components/marketing/app-gallery";
 import { SolutionCards } from "@/components/marketing/solution-cards";
 import { ResultsChat } from "@/components/marketing/results-chat";
-import { Eyebrow, H2, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
+import { Eyebrow, H2, Lead, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
 import { toGalleryApp } from "@/content/gallery";
 import { getPublishedApps } from "./_lib/data";
 
@@ -56,9 +56,9 @@ export default async function HomePage() {
             <span className="block text-7xl md:text-8xl xl:text-[7rem]">One place.</span>
             <span className="block mt-1 text-5xl md:text-6xl xl:text-[4rem]">
               <span className="text-grad">The right AI for any </span>
-              <span className="relative inline-block px-[0.34em] py-[0.06em] align-baseline">
+              <span className="relative inline-block px-[0.55em] py-[0.16em] align-baseline">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/scratch.svg" alt="" aria-hidden className="absolute inset-0 h-full w-full pointer-events-none select-none" />
+                <img src="/scratch.svg" alt="" aria-hidden className="absolute inset-0 h-[130%] w-full -top-[15%] pointer-events-none select-none" />
                 <span className="relative italic text-white">job</span>
               </span>
               <span className="text-grad">.</span>
@@ -102,6 +102,35 @@ export default async function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* 2b · SOUND FAMILIAR — overwhelmed by too many tools (split illustration, left + right) */}
+      <Section className="relative overflow-hidden py-16 md:py-24">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/overwhelm-left.webp"
+          alt=""
+          aria-hidden
+          className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 h-[440px] xl:h-[520px] w-auto pointer-events-none select-none"
+          style={{ WebkitMaskImage: "linear-gradient(to right, #000 50%, transparent 94%)", maskImage: "linear-gradient(to right, #000 50%, transparent 94%)" }}
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/overwhelm-right.webp"
+          alt=""
+          aria-hidden
+          className="hidden lg:block absolute right-0 top-1/2 -translate-y-1/2 h-[440px] xl:h-[520px] w-auto pointer-events-none select-none"
+          style={{ WebkitMaskImage: "linear-gradient(to left, #000 50%, transparent 94%)", maskImage: "linear-gradient(to left, #000 50%, transparent 94%)" }}
+        />
+        <div className="relative max-w-xl mx-auto text-center flex flex-col items-center gap-5">
+          <Eyebrow phase="red">Sound familiar?</Eyebrow>
+          <H2>Too many tools. Too many logins. Too many bills.</H2>
+          <Lead>
+            A new AI app every week. A dozen subscriptions. Prompts to learn — and you&apos;re still doing the work
+            yourself.
+          </Lead>
+          <p className="reflect text-fg text-xl">all41 ends the juggling.</p>
+        </div>
+      </Section>
 
       {/* 3 · IMAGE + WHY CARDS — illustration left, three colourful cards right */}
       <Section>
