@@ -61,8 +61,8 @@ export default async function HomePage() {
             <span className="text-grad">The right AI to <RotatingWord words={JOBS} className="text-grad" />.</span>
           </h1>
           <p className="rise-2 text-lg md:text-xl text-fg-muted max-w-2xl leading-relaxed text-pretty">
-            The best AIs and APIs, combined — each job gets the right skill and just enough context for the sharpest
-            result.
+            We pick and combine the right AI models, tools and skills to bring the sharpest result — so you can focus on
+            your job.
             <span className="block mt-2 text-fg font-medium">No prompts. No subscription.</span>
           </p>
           <div className="rise-3 flex flex-col sm:flex-row gap-3 justify-center">
