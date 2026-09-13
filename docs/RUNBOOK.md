@@ -19,6 +19,7 @@ Status as of 2026-09-12: **Phase 0 + Phase 1 done and live-verified; Phase 2/3/4
 | `GROQ_API_KEY` | also the graph engine's cheap AI-edge classifier | same |
 | `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` | credit top-ups. Webhook endpoint: `https://all41.app/api/stripe/webhook`, event `checkout.session.completed` | dashboard.stripe.com |
 | `SERPAPI_API_KEY` | real search step in Morning Briefing / Competitor Crawler | serpapi.com |
+| `DATAFORSEO_API_KEY` | real SEO data (SERP, keywords, backlinks) for the SEO & GEO Optimizer crew — value is `login:password` | app.dataforseo.com/api-access (paste in /admin) |
 | `FIRECRAWL_API_KEY` | real crawl step in Competitor Crawler | firecrawl.dev |
 | `INNGEST_EVENT_KEY` + `INNGEST_SIGNING_KEY` | durable background jobs (AI edges, schedules, daily ops). Until then, Vercel Cron hits `/api/cron/*` with `CRON_SECRET` | inngest.com → connect app at `https://all41.app/api/inngest` |
 | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` | 06:15 daily digest + alerts | @BotFather |
