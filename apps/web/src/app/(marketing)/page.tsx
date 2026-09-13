@@ -24,7 +24,7 @@ export default async function HomePage() {
     <>
       {/* 1 · HERO — words left, illustrated hero right; light gradient wash + cinematic shine */}
       <Section className="relative pt-10 md:pt-14 pb-16 md:pb-24">
-        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-screen -z-10 overflow-hidden hero-aura" aria-hidden />
+        <div className="absolute -top-36 bottom-0 left-1/2 -translate-x-1/2 w-screen -z-10 overflow-hidden hero-aura" aria-hidden />
         <div className="grid lg:grid-cols-[0.95fr_1.05fr] gap-10 lg:gap-8 items-start lg:items-center">
           {/* left — the words */}
           <div className="flex flex-col items-start text-left gap-6 max-w-xl">
