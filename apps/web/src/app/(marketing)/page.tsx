@@ -87,7 +87,7 @@ export default async function HomePage() {
             <img
               src="/overwhelm.webp"
               alt="Someone overwhelmed by too many AI tools and subscriptions"
-              className="h-[420px] md:h-[560px] xl:h-[700px] w-auto max-w-none select-none"
+              className="h-[380px] md:h-[500px] xl:h-[600px] w-auto max-w-none select-none"
             />
           </div>
         </div>
