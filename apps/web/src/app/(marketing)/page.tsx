@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardTitle } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/cn";
 import { AppGallery } from "@/components/marketing/app-gallery";
 import { SolutionCards } from "@/components/marketing/solution-cards";
+import { ResultsChat } from "@/components/marketing/results-chat";
 import { Eyebrow, H2, N, Section, SectionHead, TextLink } from "@/components/marketing/primitives";
 import { toGalleryApp } from "@/content/gallery";
 import { getPublishedApps } from "./_lib/data";
@@ -21,6 +21,12 @@ const WHY_CARDS = [
   { icon: "check", card: "bg-coral-soft border-coral-soft", k: "Your AI makes things up?", v: "We show the sources. And double-check." },
   { icon: "robot", card: "bg-violet-soft border-violet-soft", k: "Why use one AI when you can use them all?", v: "The best AI for each job, working together. Big results, small cost." },
   { icon: "coins", card: "bg-green-soft border-green-soft", k: "Only pay for what you use.", v: "No hidden cost. No wasted cost. A quiet week is $0." },
+];
+
+const JOURNEY: { n: number; tone: "red" | "amber" | "green"; node: string; title: string; body: string; chips: string[] }[] = [
+  { n: 1, tone: "red", node: "bg-coral-solid", title: "Say what you need", body: "Pick a tool, or just describe the job.", chips: ["SEO + GEO", "Proposal", "Research", "describe it…"] },
+  { n: 2, tone: "amber", node: "bg-amber-solid", title: "Answer a few quick things", body: "Big taps, no forms. One at a time.", chips: ["from this week", "direct tone", "as a report", "double-check it"] },
+  { n: 3, tone: "green", node: "bg-green-solid", title: "See the price, then run it", body: "A result with sources. Nothing charged until you say go.", chips: ["≈ $0.004", "today’s best AI"] },
 ];
 
 export default async function HomePage() {
@@ -68,9 +74,9 @@ export default async function HomePage() {
 
       {/* 2 · SOCIAL-PROOF STRIP — honest, build-in-public facts (no fake logos) */}
       <div className="border-y border-line bg-bg-elev/50">
-        <div className="w-full lg:w-[80%] max-w-[1280px] mx-auto px-6 py-6">
-          <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-fg-muted">
-            <li className="font-title font-bold text-lg md:text-2xl text-fg">Built in public</li>
+        <div className="w-full lg:w-[80%] max-w-[1280px] mx-auto px-6 py-5">
+          <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 font-mono text-base text-fg-muted">
+            <li className="text-fg">Built in public</li>
             <Sep />
             <li><N>{liveCount}</N> tools live</li>
             <Sep />
@@ -120,35 +126,39 @@ export default async function HomePage() {
         </div>
       </Section>
 
-      {/* 4 · HOW IT WORKS — 3 steps, product shown at each */}
+      {/* 4 · HOW IT WORKS — a journey on the left, live results on the right */}
       <Section id="how">
-        <SectionHead phase="red" eyebrow="How it works" title="Answer a few questions. Get it done." />
-        <div className="grid gap-6 md:grid-cols-3">
-          <Step n={1} phase="red" title="Say what you need" body="Pick a tool, or just describe the job.">
-            <div className="flex flex-wrap gap-2">
-              {["SEO + GEO", "Proposal", "Research", "describe it…"].map((c, i) => (
-                <span key={c} className={chip(i === 0 ? "red" : "line")}>{c}</span>
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="space-y-8">
+            <div className="space-y-3">
+              <p className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-fg-muted font-semibold">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-red" aria-hidden />
+                How it works
+              </p>
+              <h2 className="text-3xl md:text-4xl font-semibold leading-[1.1] max-w-md">Answer a few questions. Get it done.</h2>
+            </div>
+            <ol className="relative ml-4 border-l-2 border-line pl-8 space-y-9">
+              {JOURNEY.map((s) => (
+                <li key={s.n} className="relative">
+                  <span className={cn("absolute -left-12 -top-1 w-8 h-8 rounded-full grid place-items-center text-white font-title font-bold text-sm shadow-soft", s.node)}>
+                    {s.n}
+                  </span>
+                  <div className="space-y-2">
+                    <h3 className="font-title text-xl font-bold">{s.title}</h3>
+                    <p className="text-fg-muted leading-relaxed">{s.body}</p>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {s.chips.map((c) => (
+                        <span key={c} className={chip(s.tone)}>{c}</span>
+                      ))}
+                    </div>
+                  </div>
+                </li>
               ))}
-            </div>
-          </Step>
-          <Step n={2} phase="amber" title="Answer a few quick things" body="Big taps, no forms. One at a time.">
-            <div className="flex flex-wrap gap-2">
-              {["from this week", "direct tone", "as a report", "double-check it"].map((c) => (
-                <span key={c} className={chip("amber")}>{c}</span>
-              ))}
-            </div>
-          </Step>
-          <Step n={3} phase="green" title="See the price, then run it" body="A result with sources. Nothing charged until you say go.">
-            <div className="squircle rounded-2 border border-green/40 bg-green-soft px-3 py-2 text-sm flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="num text-fg">≈ $0.004</span>
-              <span className="text-fg-faint">·</span>
-              <span className="text-green">today&apos;s best AI picked</span>
-            </div>
-          </Step>
+            </ol>
+            <p className="text-fg-muted">It pulls in only what each job needs — sharper, and cheaper.</p>
+          </div>
+          <ResultsChat />
         </div>
-        <p className="text-fg-muted text-center max-w-2xl mx-auto mt-10">
-          It pulls in only what each job needs — sharper, and cheaper.
-        </p>
       </Section>
 
       {/* 4b · WHAT YOU GET DONE — illustrated category cards */}
@@ -224,28 +234,3 @@ function chip(tone: "red" | "amber" | "green" | "line") {
   return `squircle rounded-1 border px-3 py-1 text-xs font-mono ${map[tone]}`;
 }
 
-function Step({
-  n,
-  phase,
-  title,
-  body,
-  children,
-}: {
-  n: number;
-  phase: "red" | "amber" | "green";
-  title: string;
-  body: string;
-  children: React.ReactNode;
-}) {
-  const ring = { red: "text-coral", amber: "text-amber", green: "text-green" } as const;
-  return (
-    <Card className="flex flex-col gap-4 p-7 glass grad-ring lift h-full">
-      <div className="flex items-center gap-3">
-        <span className={`num text-2xl font-title font-semibold ${ring[phase]}`}>{n}</span>
-        <CardTitle className="text-xl">{title}</CardTitle>
-      </div>
-      <p className="text-fg-muted leading-relaxed">{body}</p>
-      <div className="mt-auto pt-2">{children}</div>
-    </Card>
-  );
-}

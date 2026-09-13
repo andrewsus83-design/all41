@@ -28,7 +28,7 @@ export async function MarketingHeader() {
           </div>
           <nav className="hidden lg:flex items-center gap-0.5 shrink-0" aria-label="Primary">
             {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="rounded-full px-3 py-2 text-sm text-white/85 hover:text-white hover:bg-white/15 transition">
+              <Link key={n.href} href={n.href} className="rounded-full px-3.5 py-2 text-base text-white/90 hover:text-white hover:bg-white/15 transition">
                 {n.label}
               </Link>
             ))}
@@ -36,7 +36,7 @@ export async function MarketingHeader() {
           <div className="flex-1 flex items-center justify-end gap-1.5">
             <Link
               href={signedIn ? "/my-apps" : "/login"}
-              className="group relative hidden lg:inline-flex items-center whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition"
+              className="group relative hidden lg:inline-flex items-center whitespace-nowrap rounded-full px-4 py-2 text-base font-medium text-white/90 hover:text-white transition"
             >
               <span className="pointer-events-none absolute inset-0 rounded-full border border-white/45 transition group-hover:border-transparent" aria-hidden />
               <svg
