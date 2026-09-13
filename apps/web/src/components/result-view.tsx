@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHint, CardTitle } from "@/components/ui/card";
 import { SeoReport } from "@/components/apps/seo-report";
+import { ProposalReport } from "@/components/apps/proposal-report";
 
 type Source = { ref: string; quote: string };
 type AnyOutput = Record<string, unknown> & { title?: string; sources?: Source[]; confidence?: number };
@@ -44,6 +45,10 @@ export function ResultView({ output, schema, isMock, modelsUsed, verification }:
   // The flagship SEO/GEO Optimizer gets its own rich renderer (dials, quick wins, GEO, flags).
   if (schema === "seo_report" || "health_score" in o) {
     return <SeoReport report={output} isMock={isMock} verification={verification} />;
+  }
+  // The Proposal / RFP Maker gets its own renderer (compliance meter, matrix, win themes, flags).
+  if (schema === "proposal_report" || "compliance_matrix" in o) {
+    return <ProposalReport report={output} isMock={isMock} verification={verification} />;
   }
   const sources = Array.isArray(o.sources) ? o.sources : [];
   return (

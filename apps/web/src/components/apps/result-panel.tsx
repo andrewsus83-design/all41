@@ -17,7 +17,9 @@ type TaskResult = {
 export function ResultPanel({ result, billedUsd, modelsUsed, title }: { result: TaskResult; billedUsd: number | null; modelsUsed?: string[]; title?: string }) {
   const r = (result ?? {}) as NonNullable<TaskResult>;
   const models = modelsUsed ?? r.modelsUsed ?? [];
-  const seoRunId = r.crew?.seoRunId;
+  const runId = r.crew?.seoRunId;
+  const isProposal = r.schema === "proposal_report" || (!!r.output && typeof r.output === "object" && "compliance_matrix" in (r.output as object));
+  const detailHref = runId ? (isProposal ? `/my-apps/proposal/${runId}` : `/my-apps/audit/${runId}`) : null;
   return (
     <div className="space-y-3">
       {title && <p className="text-xs uppercase tracking-wide text-fg-faint">{title}</p>}
@@ -25,7 +27,7 @@ export function ResultPanel({ result, billedUsd, modelsUsed, title }: { result: 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 text-xs text-fg-faint">
         <span>Which AI did the work: {whichAi(models)}</span>
         {billedUsd !== null && <span>Cost: <Money usd={billedUsd} /></span>}
-        {seoRunId && <Link href={`/my-apps/audit/${seoRunId}`} className="text-green hover:underline ml-auto">See the full audit →</Link>}
+        {detailHref && <Link href={detailHref} className="text-green hover:underline ml-auto">{isProposal ? "See the full proposal →" : "See the full audit →"}</Link>}
       </div>
     </div>
   );
