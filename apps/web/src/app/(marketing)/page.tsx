@@ -56,7 +56,9 @@ export default async function HomePage() {
             One place. <span className="text-grad">The right AI for any job.</span>
           </h1>
           <p className="rise-2 text-lg md:text-xl text-fg-muted max-w-2xl leading-relaxed text-pretty">
-            Tell us the job — the right AI does it. No prompts, no models to pick, no subscription.
+            The best AIs and APIs, combined — each job gets the right skill and just enough context for the sharpest
+            result.
+            <span className="block mt-2 text-fg font-medium">No prompts. No subscription. No wasted <span className="num">$$</span>.</span>
           </p>
           <div className="rise-3 flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/login">

@@ -146,9 +146,14 @@ h2 {
 /* hero: soft light gradient wash (no shine) */
 .hero-aura { background: linear-gradient(120deg, #ffe3d0 0%, #fdecc9 45%, #e6ddfb 100%); }
 
-/* marching-dash outline (used on the nav Sign-in pill on hover) */
-@keyframes dash-march { to { stroke-dashoffset: -20; } }
-.dash-run { stroke-dasharray: 5 5; animation: dash-march 0.5s linear infinite; }
+/* a single light dash that runs around the nav Sign-in pill on hover */
+@keyframes dash-run-loop { to { stroke-dashoffset: -100; } }
+.dash-run {
+  stroke-dasharray: 16 84;   /* one lit segment (16%), rest a gap — normalized via pathLength="100" */
+  stroke-dashoffset: 0;
+  stroke-linecap: round;
+  animation: dash-run-loop 1.6s linear infinite;
+}
 @media (prefers-reduced-motion: reduce) { .dash-run { animation: none; } }
 .grad-mesh {
   background-color: var(--bg);

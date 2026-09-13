@@ -45,7 +45,14 @@ export async function MarketingHeader() {
                 preserveAspectRatio="none"
                 aria-hidden
               >
-                <rect x="1" y="1" width="98" height="38" rx="19" fill="none" stroke="currentColor" strokeWidth="1.5" vectorEffect="non-scaling-stroke" className="dash-run" />
+                <path
+                  d="M20 2 H80 A18 18 0 0 1 80 38 H20 A18 18 0 0 1 20 2 Z"
+                  pathLength={100}
+                  fill="none"
+                  strokeWidth={2.5}
+                  className="dash-run"
+                  style={{ stroke: "var(--coral-solid)", filter: "drop-shadow(0 0 4px var(--coral-solid))" }}
+                />
               </svg>
               <span className="relative">{signedIn ? "My Apps" : "Sign in"}</span>
             </Link>
