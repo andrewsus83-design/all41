@@ -144,7 +144,7 @@ h2 {
 .grad-nav     { background-image: linear-gradient(120deg, #ff8a34 0%, #f4642a 55%, #e85312 100%); }
 
 /* hero: soft light gradient wash + a slow cinematic shine sweep (same idea as the button sheen) */
-.hero-aura { background: linear-gradient(120deg, #fff1ea 0%, #fdf4e4 44%, #eee9ff 100%); }
+.hero-aura { background: linear-gradient(120deg, #ffe3d0 0%, #fdecc9 45%, #e6ddfb 100%); }
 .hero-aura::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.6) 50%, transparent 60%);

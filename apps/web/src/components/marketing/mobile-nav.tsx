@@ -18,7 +18,7 @@ export function MobileNav({ signedIn }: { signedIn: boolean }) {
         aria-controls="mobile-menu"
         aria-label={open ? "Close menu" : "Open menu"}
         onClick={() => setOpen((v) => !v)}
-        className="h-11 w-11 rounded-full border border-white/25 grid place-items-center text-white"
+        className="h-11 w-11 rounded-full border border-line-strong grid place-items-center text-fg"
       >
         <span className="relative block w-5 h-3" aria-hidden>
           <span className={cn("absolute left-0 top-0 h-0.5 w-5 bg-current transition", open && "top-1.5 rotate-45")} />
