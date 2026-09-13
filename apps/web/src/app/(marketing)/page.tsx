@@ -12,56 +12,87 @@ import { getPublishedApps } from "./_lib/data";
 
 export const metadata: Metadata = {
   title: { absolute: "all41 — the AI that does the work, not another AI to learn." },
-  description: "Tell us the job — the right AI does it. No prompts, no keys, no subscription. Pay only when you use. Start free with $2.",
+  description:
+    "One place for every job. The right AI does the work — no prompts, no subscription. $2 free, pay only when you use.",
 };
 
 export default async function HomePage() {
-  const apps = (await getPublishedApps()).slice(0, 8);
+  const all = await getPublishedApps();
+  const apps = all.slice(0, 6);
+  const liveCount = all.length;
 
   return (
     <>
-      {/* 1 · HERO */}
-      <Section className="relative pt-24 md:pt-32 pb-16 md:pb-20 blueprint-grid">
+      {/* 1 · HERO — product visible above the fold (text left, live demo right) */}
+      <Section className="relative pt-20 md:pt-28 pb-16 md:pb-24 blueprint-grid">
         <div className="hidden md:block absolute inset-y-0 left-1/2 -translate-x-1/2 w-screen -z-10 pointer-events-none overflow-hidden">
           <HeroBlueprint />
         </div>
         <Sparkles />
-        <div className="flex flex-col items-center text-center gap-7 max-w-4xl mx-auto">
-          <div className="rise">
-            <Link href="/apps/seo-geo-optimizer" className="inline-flex items-center gap-2 rounded-full border border-line bg-bg-elev/70 backdrop-blur pl-1.5 pr-4 py-1.5 text-sm shadow-soft hover:shadow-lift transition">
+        <div className="grid lg:grid-cols-[0.95fr_1.05fr] gap-12 lg:gap-10 items-center">
+          {/* left — the words */}
+          <div className="flex flex-col items-start text-left gap-6 max-w-xl">
+            <Link
+              href="/apps/seo-geo-optimizer"
+              className="rise inline-flex items-center gap-2 rounded-full border border-line bg-bg-elev/70 backdrop-blur pl-1.5 pr-4 py-1.5 text-sm shadow-soft hover:shadow-lift transition"
+            >
               <span className="rounded-full bg-coral-solid text-white text-xs font-semibold px-2.5 py-1">New</span>
               <span className="text-fg">SEO + GEO Optimizer is live</span>
               <span className="text-fg-muted" aria-hidden>→</span>
             </Link>
+            <p className="rise-1 flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-fg-muted font-semibold">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber" aria-hidden />
+              For anyone who&apos;s done juggling AI tools
+            </p>
+            <h1 className="rise-1 text-5xl md:text-6xl xl:text-7xl font-semibold leading-[1.02] tracking-tight text-balance">
+              One place.
+              <br />
+              <span className="text-grad">The right AI for any job.</span>
+            </h1>
+            <p className="rise-2 text-lg md:text-xl text-fg-muted leading-relaxed text-pretty">
+              Tell us the job — the right AI does it. No prompts, no models to pick, no subscription.
+            </p>
+            <div className="rise-3 flex flex-col sm:flex-row gap-3">
+              <Link href="/login">
+                <Button phase="warm" size="lg" className="w-full sm:w-auto glow-coral sheen">
+                  Start free — <N>$2</N>, no card
+                </Button>
+              </Link>
+              <a href="#how">
+                <Button phase="ghost" size="lg" className="w-full sm:w-auto">See how it works ↓</Button>
+              </a>
+            </div>
+            <p className="rise-4 reflect text-fg-muted">pay only when you use ✿</p>
           </div>
-          <h1 className="rise-1 text-6xl md:text-7xl xl:text-8xl font-semibold leading-[1.0] tracking-tight text-balance">
-            Tell us the job.
-            <br />
-            <span className="text-grad">Get it done.</span>
-          </h1>
-          <p className="rise-2 text-lg md:text-2xl text-fg-muted max-w-2xl leading-relaxed text-pretty">
-            The right AI for the work — no learning, no juggling, no subscription. Pay only when you use.
-          </p>
-          <div className="rise-3 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/login">
-              <Button phase="warm" size="lg" className="w-full sm:w-auto glow-coral sheen">Start free — <N>$2</N>, no card</Button>
-            </Link>
-            <a href="#apps">
-              <Button phase="ghost" size="lg" className="w-full sm:w-auto">See what it does ↓</Button>
-            </a>
-          </div>
-          <p className="rise-4 reflect text-fg-muted">pay only when you use ✿</p>
-        </div>
-        {/* live demo, centered in a premium glass frame */}
-        <div className="rise-2 relative mx-auto mt-16 md:mt-20 w-full max-w-xl">
-          <div className="absolute -inset-10 -z-10 glow-soft rounded-6" aria-hidden />
-          <div className="grad-ring rounded-5 lift">
-            <LiveBriefingDemo />
+
+          {/* right — the product, running */}
+          <div className="rise-2 relative w-full max-w-xl mx-auto lg:mx-0">
+            <div className="absolute -inset-10 -z-10 glow-soft rounded-6" aria-hidden />
+            <div className="grad-ring rounded-5 lift">
+              <LiveBriefingDemo />
+            </div>
           </div>
         </div>
       </Section>
 
-      {/* 2 · THREE CARDS */}
+      {/* 2 · SOCIAL-PROOF STRIP — honest, build-in-public facts (no fake logos) */}
+      <div className="border-y border-line bg-bg-elev/50">
+        <div className="w-full lg:w-[80%] max-w-[1280px] mx-auto px-6 py-5">
+          <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-fg-muted">
+            <li className="font-title font-medium text-fg">Built in public</li>
+            <Sep />
+            <li><N>{liveCount}</N> tools live</li>
+            <Sep />
+            <li>The right AI picked per job</li>
+            <Sep />
+            <li>Every run priced first</li>
+            <Sep />
+            <li>Quiet week = <N>$0</N></li>
+          </ul>
+        </div>
+      </div>
+
+      {/* 3 · THREE CARDS — why all41 */}
       <Section>
         <SectionHead phase="amber" eyebrow="Why all41" title="The best AI, for every job." />
         <div className="grid gap-6 md:grid-cols-3">
@@ -79,11 +110,42 @@ export default async function HomePage() {
         </div>
       </Section>
 
-      {/* 3 · APPS */}
+      {/* 4 · HOW IT WORKS — 3 steps, product shown at each */}
+      <Section id="how">
+        <SectionHead phase="red" eyebrow="How it works" title="Answer a few questions. Get it done." />
+        <div className="grid gap-6 md:grid-cols-3">
+          <Step n={1} phase="red" title="Say what you need" body="Pick a tool, or just describe the job.">
+            <div className="flex flex-wrap gap-2">
+              {["SEO + GEO", "Proposal", "Research", "describe it…"].map((c, i) => (
+                <span key={c} className={chip(i === 0 ? "red" : "line")}>{c}</span>
+              ))}
+            </div>
+          </Step>
+          <Step n={2} phase="amber" title="Answer a few quick things" body="Big taps, no forms. One at a time.">
+            <div className="flex flex-wrap gap-2">
+              {["from this week", "direct tone", "as a report", "double-check it"].map((c) => (
+                <span key={c} className={chip("amber")}>{c}</span>
+              ))}
+            </div>
+          </Step>
+          <Step n={3} phase="green" title="See the price, then run it" body="A result with sources. Nothing charged until you say go.">
+            <div className="squircle rounded-2 border border-green/40 bg-green-soft px-3 py-2 text-sm flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="num text-fg">≈ $0.004</span>
+              <span className="text-fg-faint">·</span>
+              <span className="text-green">today&apos;s best AI picked</span>
+            </div>
+          </Step>
+        </div>
+        <p className="text-fg-muted text-center max-w-2xl mx-auto mt-10">
+          It pulls in only what each job needs — sharper, and cheaper.
+        </p>
+      </Section>
+
+      {/* 5 · TOOLS — a grid of the flagship apps */}
       <Section id="apps">
-        <SectionHead phase="green" eyebrow="Apps" title="Ready-made tools. Just answer a few questions." />
+        <SectionHead phase="green" eyebrow="Tools" title="Ready-made tools for real jobs." />
         {apps.length === 0 ? (
-          <p className="text-fg-faint text-center">No apps published yet.</p>
+          <p className="text-fg-faint text-center">No tools published yet.</p>
         ) : (
           <div className="grid gap-5 md:grid-cols-3">
             {apps.map((a) => (
@@ -92,33 +154,86 @@ export default async function HomePage() {
           </div>
         )}
         <p className="text-fg-muted max-w-2xl mx-auto text-center mt-10 leading-relaxed">
-          For each job, all41 picks the right AI, gives it only what it needs, and combines the best tools behind the scenes — sharper results, no dozen subscriptions, nothing to learn.
+          For each job, all41 picks the right AI, gives it only what it needs, and combines the best tools behind the
+          scenes — sharper results, no dozen subscriptions, nothing to learn.
         </p>
         <div className="mt-6 text-center">
-          <TextLink href="/apps">See all tools</TextLink>
+          <TextLink href="/apps">See all {liveCount} tools</TextLink>
         </div>
       </Section>
 
-      {/* 4 · PRICING */}
+      {/* 6 · BENCHMARK PROOF BAND */}
+      <Section>
+        <div className="rounded-6 glass grad-ring glow-soft p-10 md:p-16 flex flex-col items-center text-center gap-4 max-w-3xl mx-auto">
+          <Eyebrow phase="red">The proof</Eyebrow>
+          <H2>Don&apos;t take our word for it.</H2>
+          <p className="text-fg-muted text-lg max-w-xl">
+            Every month, independent judges score all41 against regular AI and a professional — blind. We publish it.
+          </p>
+          <TextLink href="/benchmark">See this month&apos;s benchmark</TextLink>
+        </div>
+      </Section>
+
+      {/* 7 · PRICING */}
       <Section>
         <div className="rounded-6 glass grad-ring glow-soft p-10 md:p-16 flex flex-col items-center text-center gap-4 max-w-3xl mx-auto">
           <Eyebrow phase="green">Pricing</Eyebrow>
           <H2>Top up. Pay per task. That&apos;s it.</H2>
-          <p className="text-fg-muted text-lg">No subscription. A quiet week costs nothing.</p>
+          <p className="text-fg-muted text-lg">No subscription. <N>$2</N> free to start. A quiet week costs nothing.</p>
           <Link href="/login"><Button phase="warm" size="lg" className="glow-coral sheen">Start free</Button></Link>
         </div>
       </Section>
 
-      {/* 5 · START */}
+      {/* 8 · FINAL CTA */}
       <Section className="pb-28">
         <div className="relative rounded-6 p-12 md:p-20 text-center flex flex-col items-center gap-6 max-w-3xl mx-auto overflow-hidden">
           <div className="absolute inset-0 -z-10 grad-soft opacity-70" aria-hidden />
           <H2 className="text-4xl md:text-6xl">Try one job. See what comes back.</H2>
-          <p className="text-fg-muted text-lg">No card. No setup. <N>$2</N> free.</p>
+          <p className="text-fg-muted text-lg">No card. No setup. <N>$2</N> to spend on real work.</p>
           <Link href="/login"><Button phase="warm" size="lg" className="glow-coral sheen">Start free</Button></Link>
           <p className="reflect text-fg-muted mt-2">The AI does the work. You keep the result.</p>
         </div>
       </Section>
     </>
+  );
+}
+
+function Sep() {
+  return <li className="text-fg-faint select-none" aria-hidden>·</li>;
+}
+
+function chip(tone: "red" | "amber" | "green" | "line") {
+  const map = {
+    red: "border-red/40 bg-coral-soft text-coral",
+    amber: "border-amber/40 bg-amber-soft text-amber",
+    green: "border-green/40 bg-green-soft text-green",
+    line: "border-line text-fg-muted",
+  } as const;
+  return `squircle rounded-1 border px-3 py-1 text-xs font-mono ${map[tone]}`;
+}
+
+function Step({
+  n,
+  phase,
+  title,
+  body,
+  children,
+}: {
+  n: number;
+  phase: "red" | "amber" | "green";
+  title: string;
+  body: string;
+  children: React.ReactNode;
+}) {
+  const ring = { red: "text-coral", amber: "text-amber", green: "text-green" } as const;
+  return (
+    <Card className="flex flex-col gap-4 p-7 glass grad-ring lift h-full">
+      <div className="flex items-center gap-3">
+        <span className={`num text-2xl font-title font-semibold ${ring[phase]}`}>{n}</span>
+        <CardTitle className="text-xl">{title}</CardTitle>
+      </div>
+      <p className="text-fg-muted leading-relaxed">{body}</p>
+      <div className="mt-auto pt-2">{children}</div>
+    </Card>
   );
 }
