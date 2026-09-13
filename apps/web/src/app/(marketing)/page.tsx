@@ -39,7 +39,7 @@ export default async function HomePage() {
       {/* 1 · HERO — words left, illustrated hero right; light gradient wash + cinematic shine */}
       <Section className="relative pt-10 md:pt-14 pb-16 md:pb-24">
         <div className="absolute -top-36 bottom-0 left-1/2 -translate-x-1/2 w-screen -z-10 overflow-hidden hero-aura" aria-hidden />
-        <div className="flex flex-col items-center text-center gap-6 max-w-5xl mx-auto">
+        <div className="flex flex-col items-center text-center gap-6 max-w-7xl mx-auto">
           <Link
             href="/apps/seo-geo-optimizer"
             className="rise inline-flex items-center gap-2 rounded-full border border-line bg-bg-elev/70 backdrop-blur pl-1.5 pr-4 py-1.5 text-sm shadow-soft hover:shadow-lift transition"
@@ -52,12 +52,22 @@ export default async function HomePage() {
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber" aria-hidden />
             For anyone who&apos;s done juggling AI tools
           </p>
-          <h1 className="rise-1 text-6xl md:text-7xl xl:text-[4.75rem] font-semibold leading-[1.06] tracking-tight">
+          <h1 className="rise-1 text-6xl md:text-7xl xl:text-[5.25rem] font-semibold leading-[1.08] tracking-tight">
             One place.
             <br />
             <span className="lg:whitespace-nowrap">
               <span className="text-grad">The right AI for any </span>
-              <span className="italic inline-block align-middle rounded-2 bg-bg-elev border border-line shadow-soft px-2.5 md:px-3.5 text-grad">job</span>
+              <span
+              className="rounded-2 bg-bg-elev border border-line-strong"
+              style={{
+                padding: "0.04em 0.3em",
+                boxShadow: "0 8px 22px rgba(30,28,26,0.16)",
+                WebkitBoxDecorationBreak: "clone",
+                boxDecorationBreak: "clone",
+              }}
+            >
+              <span className="italic text-grad">job</span>
+            </span>
               <span className="text-grad">.</span>
             </span>
           </h1>
