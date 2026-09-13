@@ -163,6 +163,51 @@ export const OUTPUT_SCHEMAS = {
       },
     },
   },
+  clip_report: {
+    name: "clip_report",
+    schema: {
+      type: "object", additionalProperties: false,
+      required: ["summary", "clips", "dropped", "render_note", "flags", "sources", "confidence"],
+      properties: {
+        summary: { type: "string" },
+        clips: {
+          type: "array",
+          items: {
+            type: "object", additionalProperties: false,
+            required: ["title", "start_sec", "end_sec", "duration_sec", "virality_score", "dimension_scores", "hook_type", "why", "caption", "render_category", "platform_fit", "clip_file", "status"],
+            properties: {
+              title: { type: "string" },
+              start_sec: { type: "number" },
+              end_sec: { type: "number" },
+              duration_sec: { type: "number" },
+              virality_score: { type: "number" },
+              dimension_scores: {
+                type: "object", additionalProperties: false, required: ["hook", "pacing", "engagement"],
+                properties: { hook: { type: "number" }, pacing: { type: "number" }, engagement: { type: "number" } },
+              },
+              hook_type: { type: "string" },
+              why: { type: "string" },
+              caption: { type: "string" },
+              render_category: { type: "string", enum: ["A", "B"] },
+              platform_fit: { type: "array", items: { type: "string" } },
+              clip_file: { type: "string" },
+              caption_file: { type: "string" },
+              status: { type: "string", enum: ["ready", "render_pending"] },
+            },
+          },
+        },
+        dropped: {
+          type: "array",
+          items: { type: "object", additionalProperties: false, required: ["moment", "reason"],
+            properties: { moment: { type: "string" }, reason: { type: "string" } } },
+        },
+        render_note: { type: "string" },
+        flags: { type: "array", items: { type: "string" } },
+        sources: { type: "array", items: source },
+        confidence: { type: "number" },
+      },
+    },
+  },
   verification: {
     name: "verification",
     schema: {

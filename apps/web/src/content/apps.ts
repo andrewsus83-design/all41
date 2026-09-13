@@ -78,6 +78,7 @@ export const SCHEMA_WORDS: Record<OutputSchemaKey, string> = {
   verification: "a verdict with conflicts and unsupported claims listed",
   seo_report: "two health scores, top-5 quick wins, technical/keyword/competitor/GEO/social findings, sources cited",
   proposal_report: "a compliance matrix, an executive summary, consultant-grade sections, win themes, flags and sources",
+  clip_report: "ready-to-post vertical clips, each with a virality score, hook type, caption and why it was chosen — plus the moments that were dropped",
 };
 
 /** Roadmap apps from Master Plan §11 — not available yet. */

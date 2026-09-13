@@ -18,8 +18,11 @@ export function ResultPanel({ result, billedUsd, modelsUsed, title }: { result: 
   const r = (result ?? {}) as NonNullable<TaskResult>;
   const models = modelsUsed ?? r.modelsUsed ?? [];
   const runId = r.crew?.seoRunId;
-  const isProposal = r.schema === "proposal_report" || (!!r.output && typeof r.output === "object" && "compliance_matrix" in (r.output as object));
-  const detailHref = runId ? (isProposal ? `/my-apps/proposal/${runId}` : `/my-apps/audit/${runId}`) : null;
+  const hasOutput = !!r.output && typeof r.output === "object";
+  const isProposal = r.schema === "proposal_report" || (hasOutput && "compliance_matrix" in (r.output as object));
+  const isClip = r.schema === "clip_report" || (hasOutput && "render_note" in (r.output as object));
+  // SEO and Proposal have dedicated detail pages; Clip renders fully inline (no separate page).
+  const detailHref = runId && !isClip ? (isProposal ? `/my-apps/proposal/${runId}` : `/my-apps/audit/${runId}`) : null;
   return (
     <div className="space-y-3">
       {title && <p className="text-xs uppercase tracking-wide text-fg-faint">{title}</p>}

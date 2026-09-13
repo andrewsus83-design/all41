@@ -712,6 +712,118 @@ export type Database = {
         }
         Relationships: []
       }
+      clip_run_steps: {
+        Row: {
+          agent: string
+          cost_usd: number
+          created_at: string
+          id: string
+          input: Json | null
+          model_used: string | null
+          output: Json | null
+          run_id: string
+          status: string
+          tokens_in: number
+          tokens_out: number
+          user_id: string
+        }
+        Insert: {
+          agent: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          run_id: string
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          user_id: string
+        }
+        Update: {
+          agent?: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          run_id?: string
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_run_steps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "clip_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clip_runs: {
+        Row: {
+          clips: Json | null
+          created_at: string
+          focus_prompt: string | null
+          id: string
+          num_clips_requested: string | null
+          source_duration_sec: number | null
+          source_file_path: string | null
+          source_url: string | null
+          status: string
+          target: string | null
+          task_id: string | null
+          total_cost: number
+          user_id: string
+          vibe: string | null
+        }
+        Insert: {
+          clips?: Json | null
+          created_at?: string
+          focus_prompt?: string | null
+          id?: string
+          num_clips_requested?: string | null
+          source_duration_sec?: number | null
+          source_file_path?: string | null
+          source_url?: string | null
+          status?: string
+          target?: string | null
+          task_id?: string | null
+          total_cost?: number
+          user_id: string
+          vibe?: string | null
+        }
+        Update: {
+          clips?: Json | null
+          created_at?: string
+          focus_prompt?: string | null
+          id?: string
+          num_clips_requested?: string | null
+          source_duration_sec?: number | null
+          source_file_path?: string | null
+          source_url?: string | null
+          status?: string
+          target?: string | null
+          task_id?: string | null
+          total_cost?: number
+          user_id?: string
+          vibe?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_runs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposal_run_steps: {
         Row: {
           agent: string

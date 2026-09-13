@@ -452,6 +452,299 @@ const proposalRunner: Runner = async (ctx, step, _depth, runId) => {
   return { output: report, schema: "proposal_report", modelsUsed: [...models], agents: trail, verification, isMock: assemblerMock || trail.some((t) => t.isMock), billedUsd: billed };
 };
 
+// ---------- Clip Video crew (App #3 — viral short-form methodology, docs App#3 build package) ----------
+// The judgment agents (Moment Finder + Hook Optimizer + Captioner + Quality Checker) are LLM and run live.
+// Transcription (Deepgram/Whisper), reframe (ffmpeg) and animated captions (Remotion) are the media boundary —
+// wired as adapters below. Offline / no-VPS → a mock timestamped transcript + ready-to-render clip specs, so the
+// whole crew is testable end-to-end (matching the engine's mock-first design), and every clip is flagged render_pending.
+const METHOD_CLIP = {
+  moment_finder: `You are a viral-instinct short-form editor with the eye of someone who has studied 13.5M+ clips. Read the transcript and find self-contained clip-worthy MOMENTS — each must have a HOOK (a reason to stop scrolling in the first ~3 seconds) AND a PAYOFF (a resolution, insight, or emotional beat). A moment must STAND ALONE: reject anything that needs context from earlier in the video or trails off without resolving. Score every candidate 0–99 on three dimensions, then aggregate to an overall virality_score:
+1) HOOK STRENGTH — the first ~3 seconds; the single biggest factor in whether the algorithm keeps distributing.
+2) FLOW & PACING — narrative momentum and information density; no dead air, no meander.
+3) ENGAGEMENT VALUE — emotional trigger, shareability, and a clear payoff.
+Rank by aggregate score, keep the number requested, honour any focus. Give each a one-line honest "why it scored high". Treat the score as a strong SHORTLIST, not an oracle — the single best AI pick doesn't always win when posted. If this creator's past winning patterns are provided, weight toward what has worked for THEM. Use only lines that are actually in the transcript; never invent dialogue. start_sec/end_sec are in seconds.`,
+  hook_optimizer: `You are a short-form HOOK specialist. For each chosen moment, make it OPEN on its strongest beat. Trim dead air before the hook; if the payoff-worthy line is buried, move the clip's start so the first 1–3 seconds land on a proven high-performing hook type. The five that perform best (TikTok 7-day views, 34,635 clips analysed):
+1) Product/Outcome Showcase — show the finished result/transformation in the first 2 seconds (the HIGHEST performer, ~2× the weakest).
+2) Contrarian/Myth-Bust — reject a widely-held belief in the first sentence; the brain must resolve the contradiction, so the scroll stops.
+3) Credibility + Curiosity + Payoff — credibility in second 1, curiosity in 2, a payoff-promise in 3.
+4) Question / Curiosity gap — open a loop the viewer needs closed.
+5) High-stakes / Emotional — an emotional or high-stakes opening beat.
+For each clip, name the hook type it best fits and adjust start_sec/end_sec so it OPENS on that beat — all three "moves" should complete before the algorithm finishes its early distribution test. Reference each clip by its index. Only re-time what is actually in the transcript; never fabricate.`,
+  captioner: `You are a punchy social copywriter. For each clip, write a scroll-stopping HOOK TITLE (the on-screen text that earns the first second) and one clean caption line — both FAITHFUL to what was actually said. Captions and titles must never distort the meaning or clip-bait. Match the creator's caption style if provided. Keep titles tight and platform-native. Reference each clip by its index.`,
+  quality_checker: `You are a detail-focused reviewer AND an integrity guard. For each finished clip verify: is it coherent standalone? Is the caption/title accurate to what was said (no out-of-context misquoting, no meaning-distorting clip-bait)? Is the length right for its target platform? DROP any clip that fails — a discarded clip beats a misleading one. The industry discards ~40% of auto-generated clips, so be honest about which survive. Return kept_indexes (the clips that pass) and dropped (index + reason for each you cut).`,
+};
+
+const CLIP_SCHEMAS = {
+  moment_finder: { name: "clip_moments", schema: { type: "object", additionalProperties: false, required: ["moments", "notes"], properties: {
+    moments: { type: "array", items: { type: "object", additionalProperties: false, required: ["start_sec", "end_sec", "virality_score", "dimension_scores", "hook_type", "why", "self_contained"], properties: {
+      start_sec: { type: "number" }, end_sec: { type: "number" }, virality_score: { type: "number" },
+      dimension_scores: { type: "object", additionalProperties: false, required: ["hook", "pacing", "engagement"], properties: { hook: { type: "number" }, pacing: { type: "number" }, engagement: { type: "number" } } },
+      hook_type: { type: "string" }, why: { type: "string" }, self_contained: { type: "boolean" } } } },
+    notes: { type: "string" } } } },
+  hook_optimizer: { name: "clip_hooks", schema: { type: "object", additionalProperties: false, required: ["clips", "notes"], properties: {
+    clips: { type: "array", items: { type: "object", additionalProperties: false, required: ["index", "start_sec", "end_sec", "hook_type", "opening_rationale"], properties: {
+      index: { type: "number" }, start_sec: { type: "number" }, end_sec: { type: "number" }, hook_type: { type: "string" }, opening_rationale: { type: "string" } } } },
+    notes: { type: "string" } } } },
+  captioner: { name: "clip_captions", schema: { type: "object", additionalProperties: false, required: ["captions", "notes"], properties: {
+    captions: { type: "array", items: { type: "object", additionalProperties: false, required: ["index", "title", "caption"], properties: {
+      index: { type: "number" }, title: { type: "string" }, caption: { type: "string" } } } },
+    notes: { type: "string" } } } },
+  quality_checker: { name: "clip_quality", schema: { type: "object", additionalProperties: false, required: ["kept_indexes", "dropped", "notes"], properties: {
+    kept_indexes: { type: "array", items: { type: "number" } },
+    dropped: { type: "array", items: { type: "object", additionalProperties: false, required: ["index", "reason"], properties: { index: { type: "number" }, reason: { type: "string" } } } },
+    notes: { type: "string" } } } },
+} as const;
+
+type ClipMomentJson = { start_sec?: number; end_sec?: number; virality_score?: number; dimension_scores?: { hook?: number; pacing?: number; engagement?: number }; hook_type?: string; why?: string; self_contained?: boolean };
+type ClipHookJson = { index?: number; start_sec?: number; end_sec?: number; hook_type?: string; opening_rationale?: string };
+type ClipCapJson = { index?: number; title?: string; caption?: string };
+type ClipDropJson = { index?: number; reason?: string };
+type TranscriptSeg = { start: number; end: number; speaker: string; text: string };
+
+const RENDER_NOTE = "Clip judgment — moment-finding, hook, captions and the quality gate — runs live. Video rendering (transcription, ffmpeg reframe, Remotion animated captions) is wired to external services / a render VPS; until those are connected each clip is delivered as a ready-to-render spec (exact in/out timecodes, hook type, caption, render category) marked render_pending.";
+
+const fmt = (sec: number) => { const s = Math.max(0, Math.round(Number(sec) || 0)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+
+function secondsFromConfig(config: Record<string, unknown>) {
+  const raw = pick(config, "source_duration_sec", "duration_sec", "duration");
+  const n = Number(String(raw).replace(/[^\d.]/g, ""));
+  if (Number.isFinite(n) && n > 0) return n <= 300 ? Math.round(n * 60) : Math.round(n); // ≤300 read as minutes
+  return 2700; // default: a 45-minute source
+}
+
+function segmentText(segments: TranscriptSeg[], start: number, end: number) {
+  const overlap = segments.filter((s) => s.end > start && s.start < end).map((s) => s.text).join(" ");
+  return (overlap || segments.map((s) => s.text).join(" ")).slice(0, 600);
+}
+function shortTitle(text: string) { return ((text || "Clip").split(/\s+/).slice(0, 9).join(" ").replace(/[.,;:]+$/, "")) || "Clip"; }
+
+/** ffmpeg / Remotion boundary. No render VPS yet → a ready-to-render spec, flagged render_pending. */
+function renderClip(taskId: string, index: number) {
+  const stem = `runs/${taskId || "run"}/clip-${index + 1}`;
+  return { clip_file: `${stem}.mp4`, caption_file: `${stem}.captions.json`, status: "render_pending" as const };
+}
+/** Render Router (rules, no model): gate the heavy Remotion path — Category B only when branded captions earn it. */
+function routeRenderCategory(captionsChoice: string, target: string): "A" | "B" {
+  if (/plain|none/i.test(captionsChoice)) return "A";
+  if (/brand|animat/i.test(captionsChoice)) return "B";
+  return /tiktok|reel|short/i.test(target) ? "B" : "A"; // caption-first platforms default to branded
+}
+function platformFit(score: number, target: string) {
+  const all = ["TikTok", "Reels", "Shorts"];
+  const primary = /tiktok/i.test(target) ? ["TikTok"] : /reel/i.test(target) ? ["Reels"] : /short/i.test(target) ? ["Shorts"] : all;
+  return score >= 75 ? all : primary;
+}
+
+/** Transcription boundary (Deepgram/Whisper). Offline → a plausible timestamped transcript, seeded from an attached
+ * transcript when the user pasted/attached one, so the judgment crew has real material to work on. */
+function mockTranscript(durationSec: number, userData: string): TranscriptSeg[] {
+  const text = (userData || "").trim();
+  const attached = text ? text.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter((s) => s.length > 24).slice(0, 48) : [];
+  const base = attached.length >= 4 ? attached : [
+    "The thing nobody tells you is that the first three seconds decide whether this ever gets seen.",
+    "I spent six years doing it the hard way before I found the shortcut that actually works.",
+    "Here's the counterintuitive part — doing less got me dramatically better results.",
+    "Most people quit right before the exact step that would have made it click.",
+    "The one change that doubled my output was almost embarrassingly simple.",
+    "If you take away a single idea from this, let it be this one.",
+    "And that's the mistake I see literally everyone make when they start out.",
+    "So here's what I'd do differently if I were starting from zero today.",
+  ];
+  const span = Math.max(18, Math.floor(durationSec / base.length));
+  return base.map((t, i) => ({ start: i * span, end: Math.min(durationSec, (i + 1) * span - 2), speaker: "Speaker 1", text: t }));
+}
+
+async function transcribeVideo(ctx: CrewContext, runId: string, durationSec: number) {
+  const segments = mockTranscript(durationSec, ctx.userData);
+  const model = "mock:transcription"; // real: deepgram-nova / whisper — slots in here, metered per audio-minute
+  await logCrewStep(ctx, runId, "transcriber", { duration_sec: durationSec }, { segments: segments.length }, model, 0);
+  return { segments, isMock: true, billedUsd: 0, model };
+}
+
+/** Log a non-LLM (adapter / rules) agent's step to the crew's trail table so total_cost reconciles. */
+async function logCrewStep(ctx: CrewContext, runId: string, agent: string, input: unknown, output: unknown, model: string, costUsd: number, status: "ok" | "error" = "ok") {
+  await adminClient().from((ctx.stepsTable ?? "seo_run_steps") as "seo_run_steps").insert({
+    run_id: runId, user_id: ctx.userId, agent, input: input as unknown as Json, output: output as unknown as Json,
+    model_used: model, cost_usd: costUsd, status,
+  });
+}
+
+function mockClipReport(source: string, captionsChoice: string, target: string) {
+  const cat = /plain|none/i.test(captionsChoice) ? "A" as const : "B" as const;
+  const mk = (i: number, start: number, dur: number, score: number, hook: number, pacing: number, eng: number, hookType: string, title: string, caption: string, why: string) => ({
+    title, start_sec: start, end_sec: start + dur, duration_sec: dur, virality_score: score,
+    dimension_scores: { hook, pacing, engagement: eng }, hook_type: hookType, why, caption,
+    render_category: cat, platform_fit: platformFit(score, target),
+    clip_file: `runs/demo/clip-${i}.mp4`, caption_file: cat === "B" ? `runs/demo/clip-${i}.captions.json` : "", status: "render_pending" as const,
+  });
+  return {
+    summary: "3 vertical clips from your source — hook-scored, opened on their strongest beat, and quality-checked. (Demo run — paste a real video link and connect an AI key in /admin for a live cut.)",
+    clips: [
+      mk(1, 132, 41, 88, 92, 84, 88, "Product/Outcome Showcase", "The result nobody expected", "Here's what six months of this actually produced.", "Opens on the finished transformation in the first 2s — the highest-performing hook type — with a tight, shareable payoff."),
+      mk(2, 640, 34, 79, 82, 78, 77, "Contrarian/Myth-Bust", "Everyone's doing this wrong", "The advice you keep hearing is backwards — here's why.", "Rejects a widely-held belief in sentence one; the brain must resolve the contradiction, so the scroll stops."),
+      mk(3, 1180, 47, 71, 70, 74, 69, "Credibility + Curiosity + Payoff", "6 years in, the real answer", "I spent six years on this, and the real answer isn't what they tell you.", "Credibility → curiosity → payoff-promise across the first 3s; a self-contained arc."),
+    ],
+    dropped: [{ moment: "18:20 aside on scheduling", reason: "Not self-contained — leans on an earlier segment; would confuse a cold viewer." }],
+    render_note: RENDER_NOTE,
+    flags: [
+      "Demo run on placeholder data. Paste a real video and connect an AI key in /admin for a live cut.",
+      "Virality scores are a strong shortlist, not a guarantee — ~40% of auto-clips get discarded industry-wide; post the high scorers first.",
+    ],
+    sources: [{ ref: "T1", quote: source ? `Source: ${source}` : "Placeholder — connect a real video for a sourced run." }],
+    confidence: 0.4,
+  };
+}
+
+const clipRunner: Runner = async (ctx, step, _depth, runId) => {
+  const { config } = ctx;
+  const source = pick(config, "source_url", "video_url", "url") || pick(config, "source_file_path", "file");
+  const numRaw = (pick(config, "num_clips", "num_clips_requested", "clips") || "auto").toLowerCase();
+  const targetCount = /^\d+$/.test(numRaw) ? Math.min(10, Math.max(1, parseInt(numRaw, 10))) : 5; // 'auto' → 5
+  const vibe = pick(config, "vibe") || "punchy";
+  const target = pick(config, "target", "where") || "download";
+  const captionsChoice = pick(config, "captions") || "branded animated captions";
+  const focus = pick(config, "focus_prompt", "focus");
+  const durationSec = secondsFromConfig(config);
+  const pastPatterns = (ctx.groundingCtx || "").slice(0, 2000);
+
+  const trail: CrewAgentTrail[] = [];
+  const models = new Set<string>();
+  let billed = 0;
+  const soFar = () => billed;
+  const rec = (id: string, name: string, r: { model: string; billedUsd: number; findings: number; isMock: boolean }) => {
+    trail.push({ id, name, model: r.model, billedUsd: r.billedUsd, findings: r.findings, status: "ok", isMock: r.isMock }); models.add(r.model); billed += r.billedUsd;
+  };
+
+  // 1. Transcriber (adapter — Deepgram/Whisper boundary; mock timestamped transcript offline)
+  ctx.onEvent?.({ step: "crew.agent", id: "transcriber", name: "Transcriber", label: "Transcribing the video", phase: "running", billedSoFar: soFar() });
+  const trans = await transcribeVideo(ctx, runId, durationSec);
+  billed += trans.billedUsd; models.add(trans.model);
+  trail.push({ id: "transcriber", name: "Transcriber", model: trans.model, billedUsd: trans.billedUsd, findings: trans.segments.length, status: "ok", isMock: trans.isMock });
+  ctx.onEvent?.({ step: "crew.agent", id: "transcriber", name: "Transcriber", label: "Transcribing the video", phase: "done", billedSoFar: soFar(), isMock: trans.isMock, findings: trans.segments.length });
+  const transcriptText = trans.segments.map((s) => `[${fmt(s.start)}] ${s.speaker}: ${s.text}`).join("\n").slice(0, 16000);
+
+  // 2. Moment Finder (LLM — the value core; Part 3.A virality dimensions + 3.D self-contained)
+  const finder = await agentCall(ctx, runId, {
+    id: "moment_finder", name: "Moment Finder", taskType: "reasoning", system: METHOD_CLIP.moment_finder,
+    context: `SOURCE: ${source || "(none)"}\nCLIPS REQUESTED: ${numRaw} (aim for ~${targetCount})\nVIBE: ${vibe}\nFOCUS: ${focus || "(none)"}\nTARGET PLATFORM: ${target}\nCREATOR'S PAST WINNING PATTERNS: ${pastPatterns || "(none yet — first run for this creator)"}\n\nTRANSCRIPT (timestamps in mm:ss):\n${transcriptText}`,
+    schema: CLIP_SCHEMAS.moment_finder, label: "Finding clip-worthy moments",
+  }, soFar);
+  rec("moment_finder", "Moment Finder", finder);
+  const moments = ((finder.json.moments as ClipMomentJson[]) ?? [])
+    .slice().sort((a, b) => (Number(b?.virality_score) || 0) - (Number(a?.virality_score) || 0)).slice(0, targetCount);
+
+  // 3. Hook Optimizer (LLM — Part 3.B five hook types + 3.C storyline)
+  const hooks = await agentCall(ctx, runId, {
+    id: "hook_optimizer", name: "Hook Optimizer", taskType: "reasoning", system: METHOD_CLIP.hook_optimizer,
+    context: `SELECTED MOMENTS (reference each by #index):\n${moments.map((m, i) => `#${i} [${fmt(Number(m.start_sec))}–${fmt(Number(m.end_sec))}] score ${m.virality_score} — ${m.why ?? ""}`).join("\n")}\n\nTRANSCRIPT:\n${transcriptText}`,
+    schema: CLIP_SCHEMAS.hook_optimizer, label: "Sharpening the opening hook",
+  }, soFar);
+  rec("hook_optimizer", "Hook Optimizer", hooks);
+  const hookByIndex = new Map<number, ClipHookJson>();
+  for (const h of ((hooks.json.clips as ClipHookJson[]) ?? [])) hookByIndex.set(Number(h.index), h);
+
+  const working = moments.map((m, i) => {
+    const h = hookByIndex.get(i) ?? {};
+    const start = Number(h.start_sec ?? m.start_sec) || 0;
+    const end = Number(h.end_sec ?? m.end_sec) || start + 30;
+    const ds = m.dimension_scores ?? {};
+    return {
+      index: i, start_sec: start, end_sec: end, duration_sec: Math.max(1, Math.round(end - start)),
+      virality_score: Math.round(Number(m.virality_score) || 0),
+      dimension_scores: { hook: Math.round(Number(ds.hook) || 0), pacing: Math.round(Number(ds.pacing) || 0), engagement: Math.round(Number(ds.engagement) || 0) },
+      hook_type: h.hook_type ?? m.hook_type ?? "Question / Curiosity gap", why: m.why ?? "", segment_text: segmentText(trans.segments, start, end),
+    };
+  });
+
+  // 3.5 Render Router (rules — gate Remotion; no model cost)
+  ctx.onEvent?.({ step: "crew.agent", id: "render_router", name: "Render Router", label: "Choosing the render path", phase: "running", billedSoFar: soFar() });
+  const routed = working.map((c) => ({ ...c, render_category: routeRenderCategory(captionsChoice, target) }));
+  await logCrewStep(ctx, runId, "render_router", { captions: captionsChoice, target }, { A: routed.filter((c) => c.render_category === "A").length, B: routed.filter((c) => c.render_category === "B").length }, "rules:render_router", 0);
+  trail.push({ id: "render_router", name: "Render Router", model: "rules:render_router", billedUsd: 0, findings: routed.length, status: "ok", isMock: true });
+  ctx.onEvent?.({ step: "crew.agent", id: "render_router", name: "Render Router", label: "Choosing the render path", phase: "done", billedSoFar: soFar(), isMock: true, findings: routed.length });
+
+  // 4. Captioner (LLM — hook title + caption per clip, faithful to what was said)
+  const captioner = await agentCall(ctx, runId, {
+    id: "captioner", name: "Captioner", taskType: "content", system: METHOD_CLIP.captioner,
+    context: `CAPTION STYLE: ${captionsChoice}\nCLIPS (reference each by #index):\n${routed.map((c) => `#${c.index} [${fmt(c.start_sec)}] hook:${c.hook_type}\n${c.segment_text}`).join("\n\n")}`,
+    schema: CLIP_SCHEMAS.captioner, label: "Writing titles and captions",
+  }, soFar);
+  rec("captioner", "Captioner", captioner);
+  const capByIndex = new Map<number, ClipCapJson>();
+  for (const c of ((captioner.json.captions as ClipCapJson[]) ?? [])) capByIndex.set(Number(c.index), c);
+
+  // 4b/4. Clip Editor (ffmpeg, all clips) + Caption/Brand Renderer (Remotion, Category B) — adapters → render specs
+  const rendered = routed.map((c) => {
+    const cap = capByIndex.get(c.index) ?? {};
+    const rr = renderClip(ctx.taskId, c.index);
+    return {
+      ...c, title: cap.title ?? shortTitle(c.segment_text), caption: cap.caption ?? c.segment_text.slice(0, 140),
+      clip_file: rr.clip_file, caption_file: c.render_category === "B" ? rr.caption_file : "", status: rr.status,
+    };
+  });
+  await logCrewStep(ctx, runId, "clip_editor", { clips: rendered.length }, { rendered: rendered.length, pending: rendered.filter((r) => r.status === "render_pending").length }, "adapter:ffmpeg", 0);
+  trail.push({ id: "clip_editor", name: "Clip Editor", model: "adapter:ffmpeg", billedUsd: 0, findings: rendered.length, status: "ok", isMock: true });
+  const bCount = rendered.filter((r) => r.render_category === "B").length;
+  if (bCount) {
+    await logCrewStep(ctx, runId, "caption_renderer", { category_b: bCount }, { animated: bCount }, "adapter:remotion", 0);
+    trail.push({ id: "caption_renderer", name: "Caption/Brand Renderer", model: "adapter:remotion", billedUsd: 0, findings: bCount, status: "ok", isMock: true });
+  }
+
+  // 5. Quality Checker (LLM — Quality Layer 1: drop incoherent / meaning-distorting clips)
+  const qc = await agentCall(ctx, runId, {
+    id: "quality_checker", name: "Quality Checker", taskType: "reasoning", system: METHOD_CLIP.quality_checker,
+    context: `CLIPS (reference each by #index):\n${rendered.map((c) => `#${c.index} "${c.title}" [${c.duration_sec}s] score ${c.virality_score}\ncaption: ${c.caption}\nactually said: ${c.segment_text.slice(0, 400)}`).join("\n\n")}`,
+    schema: CLIP_SCHEMAS.quality_checker, label: "Checking quality and integrity",
+  }, soFar);
+  rec("quality_checker", "Quality Checker", qc);
+  const keptSet = new Set<number>(((qc.json.kept_indexes as number[]) ?? rendered.map((r) => r.index)).map(Number));
+  const droppedByQc = new Map<number, string>();
+  for (const d of ((qc.json.dropped as ClipDropJson[]) ?? [])) droppedByQc.set(Number(d.index), String(d.reason ?? "dropped"));
+
+  // 6. Assemble the clip_report. Mock → a realistic demo.
+  const { isMock: assemblerMock } = await routeTask(step.task_type);
+  let report: unknown;
+  if (assemblerMock) {
+    report = mockClipReport(source, captionsChoice, target);
+  } else {
+    const finalClips = rendered.filter((c) => keptSet.has(c.index) && !droppedByQc.has(c.index)).map((c) => ({
+      title: c.title, start_sec: c.start_sec, end_sec: c.end_sec, duration_sec: c.duration_sec,
+      virality_score: c.virality_score, dimension_scores: c.dimension_scores, hook_type: c.hook_type, why: c.why,
+      caption: c.caption, render_category: c.render_category, platform_fit: platformFit(c.virality_score, target),
+      clip_file: c.clip_file, caption_file: c.caption_file, status: c.status,
+    }));
+    const dropped = rendered.filter((c) => droppedByQc.has(c.index) || !keptSet.has(c.index))
+      .map((c) => ({ moment: `${fmt(c.start_sec)} "${c.title}"`, reason: droppedByQc.get(c.index) ?? "below the quality bar" }));
+    const flags: string[] = [];
+    if (rendered.some((r) => r.status === "render_pending")) flags.push("Rendering pending — connect transcription + ffmpeg/Remotion to produce the video files; timecodes, hooks, captions and scores are final.");
+    flags.push("Virality scores are a strong shortlist, not a guarantee — ~40% of auto-clips get discarded industry-wide; post the high scorers first and review the rest.");
+    if (!source) flags.push("No source video provided — attach a video link or upload for a real run.");
+    report = {
+      summary: `${finalClips.length} vertical clip${finalClips.length === 1 ? "" : "s"} from a ${Math.round(durationSec / 60)}-min source — hook-scored, opened on their strongest beat, and quality-checked.`,
+      clips: finalClips, dropped, render_note: RENDER_NOTE, flags: flags.slice(0, 8),
+      sources: [{ ref: "T1", quote: `Transcript of ${source || "the uploaded video"} — ${trans.segments.length} segments.` }],
+      confidence: finalClips.length ? 0.7 : 0.4,
+    };
+  }
+
+  // Verifier gate (Quality Layer 1) — captions must match what was said; no out-of-context clip-bait shipped.
+  let verification: Verification | undefined;
+  try {
+    verification = await verifyOutput({ userId: ctx.userId, taskId: ctx.taskId, output: report, context: `TRANSCRIPT:\n${transcriptText.slice(0, 6000)}` });
+    billed += verification.billedUsd ?? 0;
+    if (verification.model) models.add(verification.model);
+    if (verification.verdict !== "supported" && report && typeof report === "object") {
+      const r = report as { flags?: string[] };
+      r.flags = [...(r.flags ?? []), ...verification.conflicts.map((c) => `Caption may distort meaning: ${c}`), ...verification.unsupported_claims.map((c) => `Unsupported: ${c}`)].slice(0, 14);
+    }
+    ctx.onEvent?.({ step: "crew.gate", verdict: verification.verdict, conflicts: verification.conflicts.length });
+  } catch {
+    ctx.onEvent?.({ step: "crew.gate", verdict: "skipped", conflicts: 0 });
+  }
+
+  return { output: report, schema: "clip_report", modelsUsed: [...models], agents: trail, verification, isMock: assemblerMock || trail.some((t) => t.isMock), billedUsd: billed };
+};
+
 type CrewDef = {
   label: string; describe: string[]; agents: string[]; run: Runner;
   stepsTable: string;
@@ -524,6 +817,43 @@ export const CREWS: Record<string, CrewDef> = {
       }).eq("id", runId);
     },
     failRun: async (runId) => { await adminClient().from("proposal_runs").update({ status: "failed" }).eq("id", runId); },
+  },
+  clip: {
+    label: "Clip Video",
+    describe: [
+      "Transcribes your video with timestamps",
+      "A viral-instinct editor finds the self-contained, clip-worthy moments and scores each",
+      "Re-opens every clip on its strongest hook — the first 3 seconds",
+      "Cuts, reframes to vertical and captions — the heavy render runs only when it earns it",
+      "Quality-checks every clip and drops the weak or misleading ones",
+    ],
+    agents: ["Transcriber", "Moment Finder", "Hook Optimizer", "Render Router", "Clip Editor", "Caption/Brand Renderer", "Captioner", "Quality Checker", "Verifier"],
+    run: clipRunner,
+    stepsTable: "clip_run_steps",
+    createRun: async (ctx) => {
+      const { data } = await adminClient().from("clip_runs").insert({
+        user_id: ctx.userId, task_id: ctx.taskId,
+        source_url: pick(ctx.config, "source_url", "video_url", "url") || null,
+        source_file_path: pick(ctx.config, "source_file_path", "file") || null,
+        source_duration_sec: secondsFromConfig(ctx.config),
+        num_clips_requested: (pick(ctx.config, "num_clips", "num_clips_requested") || "auto").toLowerCase(),
+        vibe: (pick(ctx.config, "vibe") || "punchy").toLowerCase().includes("full") ? "full" : "punchy",
+        target: (pick(ctx.config, "target", "where") || "download").toLowerCase(),
+        focus_prompt: pick(ctx.config, "focus_prompt", "focus") || null,
+        status: "running",
+      }).select("id").single();
+      return data?.id as string | undefined;
+    },
+    finishRun: async (runId, out, taskId) => {
+      const db = adminClient();
+      const rep = out.output as { clips?: unknown } | null;
+      const { data: usage } = await db.from("api_usage_log").select("cost_usd").eq("task_id", taskId);
+      await db.from("clip_runs").update({
+        status: "done", clips: (rep?.clips ?? null) as unknown as Json,
+        total_cost: (usage ?? []).reduce((n, r) => n + Number(r.cost_usd), 0),
+      }).eq("id", runId);
+    },
+    failRun: async (runId) => { await adminClient().from("clip_runs").update({ status: "failed" }).eq("id", runId); },
   },
 };
 
