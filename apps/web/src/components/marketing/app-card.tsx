@@ -8,7 +8,7 @@ import type { RoadmapApp } from "@/content/apps";
 export function AppCard({ app, replaces }: { app: MarketingApp; replaces?: string }) {
   return (
     <Link href={`/apps/${app.slug}`} className="group block h-full">
-      <Card className="h-full space-y-5 transition group-hover:border-line-strong group-hover:bg-bg-elev-2">
+      <Card className="h-full space-y-5 lift group-hover:border-line-strong group-hover:shadow-lift">
         <span className="text-4xl" aria-hidden>{app.icon ?? "◻"}</span>
         <div className="space-y-1.5">
           <CardTitle className="text-xl">{app.name}</CardTitle>

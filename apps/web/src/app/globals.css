@@ -171,3 +171,116 @@ h2 {
 .pulse-soft {
   animation: pulse-soft 1.6s ease-in-out infinite;
 }
+
+/* ===========================================================
+   PREMIUM LAYER — supernova-grade effects, kept in the WARM v7 palette.
+   The design system (colors/fonts/tokens) is unchanged; these are the
+   "expensive" application details: aurora, frosted glass, gradient rings,
+   glow, fine grain, entrance motion, sheen, lift. Reusable everywhere.
+   =========================================================== */
+
+/* effects container (holds the aurora; does NOT change colors) */
+.premium {
+  position: relative;
+  isolation: isolate;
+}
+
+/* ---- aurora backdrop (slow drifting warm mesh, soft on cream) ---- */
+.aurora {
+  position: absolute;
+  inset: -30% -15% auto -15%;
+  height: 120vh;
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(64px);
+  opacity: 0.6;
+  background:
+    radial-gradient(38% 44% at 16% 20%, rgba(255, 107, 94, 0.28), transparent 62%),
+    radial-gradient(34% 40% at 80% 14%, rgba(124, 106, 239, 0.24), transparent 62%),
+    radial-gradient(40% 46% at 62% 82%, rgba(47, 190, 126, 0.18), transparent 62%),
+    radial-gradient(30% 38% at 92% 64%, rgba(255, 176, 32, 0.20), transparent 62%);
+  animation: aurora-drift 26s ease-in-out infinite alternate;
+}
+@keyframes aurora-drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to   { transform: translate3d(3%, 2.5%, 0) scale(1.1); }
+}
+
+/* ---- fine grain (kills flatness → reads expensive) ---- */
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+}
+
+/* ---- frosted glass (light) — premium card on cream ---- */
+.glass {
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(20px) saturate(1.25);
+  -webkit-backdrop-filter: blur(20px) saturate(1.25);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 28px 70px rgba(30, 28, 26, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+/* ---- gradient ring border (premium card outline) ---- */
+.grad-ring { position: relative; }
+.grad-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255, 107, 94, 0.55), rgba(124, 106, 239, 0.5) 45%, rgba(59, 168, 245, 0.42));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ---- colored glow (warm halo on cream) ---- */
+.glow-coral  { box-shadow: 0 18px 50px rgba(255, 107, 94, 0.30); }
+.glow-violet { box-shadow: 0 18px 50px rgba(124, 106, 239, 0.28); }
+.glow-green  { box-shadow: 0 18px 50px rgba(47, 190, 126, 0.26); }
+.glow-soft   { box-shadow: 0 24px 60px rgba(30, 28, 26, 0.14); }
+
+/* ---- entrance motion (on load) ---- */
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.rise   { animation: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.rise-1 { animation: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 0.06s both; }
+.rise-2 { animation: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 0.14s both; }
+.rise-3 { animation: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 0.22s both; }
+.rise-4 { animation: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 0.30s both; }
+@media (prefers-reduced-motion: reduce) {
+  .rise, .rise-1, .rise-2, .rise-3, .rise-4, .aurora { animation: none; }
+  .rise, .rise-1, .rise-2, .rise-3, .rise-4 { opacity: 1; transform: none; }
+}
+
+/* ---- moving sheen across a fill (buttons/chips) ---- */
+.sheen { position: relative; overflow: hidden; }
+.sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.28) 50%, transparent 68%);
+  transform: translateX(-130%);
+  transition: transform 0.6s ease;
+}
+.sheen:hover::after { transform: translateX(130%); }
+
+/* ---- hover lift (premium interaction) ---- */
+.lift { transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.25s ease; }
+.lift:hover { transform: translateY(-4px); }
+
+/* refined text gradient (headline accent) */
+.text-grad {
+  background: linear-gradient(120deg, #ffb020, #ff6b5e 45%, #a794ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

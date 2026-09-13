@@ -19,7 +19,7 @@ async function isSignedIn() {
 export async function MarketingHeader() {
   const signedIn = await isSignedIn();
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-white/40 glass">
       <div className="relative w-full max-w-6xl mx-auto px-6 h-18 flex items-center justify-between gap-6">
         <Link href="/" className="font-title text-2xl font-semibold tracking-tight">
           all41

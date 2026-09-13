@@ -32,26 +32,31 @@ export default async function HomePage() {
       <Section className="pt-16 md:pt-24 pb-16 md:pb-24">
         <div className="grid gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-16 items-center">
           <div className="space-y-8">
-            <Eyebrow phase="green">One chat. Done.</Eyebrow>
-            <h1 className="text-5xl md:text-6xl xl:text-7xl font-semibold leading-[1.02]">
+            <div className="rise"><Eyebrow phase="green">One chat. Done.</Eyebrow></div>
+            <h1 className="rise-1 text-5xl md:text-6xl xl:text-7xl font-semibold leading-[1.02]">
               Tell us the job.
               <br />
-              We&apos;ll handle the AI.
+              We&apos;ll handle <span className="text-grad">the AI.</span>
             </h1>
-            <Lead>
-              No prompts to learn. No tools to juggle. Describe what you need in plain words. all41 picks the right AI, does the work, and shows you the price before it runs.
-            </Lead>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="rise-2">
+              <Lead>
+                No prompts to learn. No tools to juggle. Describe what you need in plain words. all41 picks the right AI, does the work, and shows you the price before it runs.
+              </Lead>
+            </div>
+            <div className="rise-3 flex flex-col sm:flex-row gap-3">
               <Link href="/login">
-                <Button phase="green" size="lg" className="w-full sm:w-auto">Start with <N>${FREE_CREDIT_USD}</N> free</Button>
+                <Button phase="warm" size="lg" className="w-full sm:w-auto glow-coral sheen">Start with <N>${FREE_CREDIT_USD}</N> free</Button>
               </Link>
               <a href="#routing">
                 <Button phase="ghost" size="lg" className="w-full sm:w-auto">See how it picks</Button>
               </a>
             </div>
-            <p className="reflect text-fg-muted">Other AI tools let you be lazy. all41 makes you sharp.</p>
+            <p className="rise-4 reflect text-fg-muted">Other AI tools let you be lazy. all41 makes you sharp.</p>
           </div>
-          <LiveBriefingDemo />
+          <div className="rise-2 relative">
+            <div className="absolute -inset-6 -z-10 glow-soft rounded-6" aria-hidden />
+            <LiveBriefingDemo />
+          </div>
         </div>
       </Section>
 
