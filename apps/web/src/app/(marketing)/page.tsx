@@ -54,19 +54,12 @@ export default async function HomePage() {
           </p>
           <h1 className="rise-1 font-semibold leading-[1.12] tracking-tight">
             <span className="block text-7xl md:text-8xl xl:text-[7rem]">One place.</span>
-            <span className="block mt-1 text-5xl md:text-6xl xl:text-[4.5rem]">
+            <span className="block mt-1 text-5xl md:text-6xl xl:text-[4rem]">
               <span className="text-grad">The right AI for any </span>
-              <span className="relative inline-block italic text-grad">
-                job
-                <svg
-                  className="absolute left-[-0.05em] right-[-0.05em] -bottom-[0.14em] w-[calc(100%+0.1em)] h-[0.34em] overflow-visible"
-                  viewBox="0 0 120 20"
-                  preserveAspectRatio="none"
-                  aria-hidden
-                >
-                  <path d="M4 12 C 26 4, 50 16, 72 9 S 106 14, 116 8" fill="none" stroke="#ff6b5e" strokeWidth="4.5" strokeLinecap="round" />
-                  <path d="M9 17 C 32 11, 56 18, 78 13 S 107 16, 113 13" fill="none" stroke="#ff6b5e" strokeWidth="3" strokeLinecap="round" opacity="0.6" />
-                </svg>
+              <span className="relative inline-block px-[0.34em] py-[0.06em] align-baseline">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/scratch.svg" alt="" aria-hidden className="absolute inset-0 h-full w-full pointer-events-none select-none" />
+                <span className="relative italic text-white">job</span>
               </span>
               <span className="text-grad">.</span>
             </span>
