@@ -18,9 +18,9 @@ export async function MarketingHeader() {
   const signedIn = await isSignedIn();
   return (
     <header className="sticky top-3 md:top-5 z-40 px-4 sm:px-0">
-      <div className="mx-auto w-full sm:w-[82%] max-w-[1400px] flex items-center gap-4 lg:gap-16">
-        {/* floating cream pill — logo left, menu centered, sign-in right */}
-        <div className="relative flex-1 bg-bg-elev-2 border border-line text-fg rounded-full shadow-lift flex items-center gap-3 h-14 md:h-16 pl-5 md:pl-7 pr-3 md:pr-5">
+      <div className="mx-auto w-full sm:w-[82%] max-w-[1400px]">
+        {/* floating cream pill — logo left, menu centered, CTA right */}
+        <div className="relative bg-bg-elev-2 border border-line text-fg rounded-full shadow-lift flex items-center gap-3 h-14 md:h-16 pl-5 md:pl-7 pr-8">
           <div className="flex-1 flex justify-start">
             <Link href="/" className="font-title text-xl md:text-2xl font-bold tracking-tight text-fg shrink-0">
               all41
@@ -49,12 +49,12 @@ export async function MarketingHeader() {
               </svg>
               <span className="relative">{signedIn ? "My Apps" : "Sign in"}</span>
             </Link>
+            <Link href={signedIn ? "/build" : "/login"} className="hidden lg:block">
+              <Button phase="warm" size="sm" className="glow-coral">Get Started</Button>
+            </Link>
             <MobileNav signedIn={signedIn} />
           </div>
         </div>
-        <Link href={signedIn ? "/build" : "/login"} className="hidden lg:block shrink-0">
-          <Button phase="warm" size="lg" className="glow-coral">Get Started</Button>
-        </Link>
       </div>
     </header>
   );
