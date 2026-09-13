@@ -46,15 +46,26 @@ function verifyLine(verdict: string, conflicts: number) {
   return "Skipped the double-check to stay inside the spend limit.";
 }
 
+/** crew.gate — the Verifier's final word, in plain language. */
+function gateLine(verdict: string, conflicts: number) {
+  if (verdict === "supported") return "Double-checked ✓ — every claim holds up against its sources.";
+  if (verdict === "partially_supported") return `Double-checked — flagged ${conflicts} ${conflicts === 1 ? "thing" : "things"} we couldn’t confirm; they’re in the report.`;
+  if (verdict === "conflicts_found") return `Double-checked — flagged ${conflicts} ${conflicts === 1 ? "thing" : "things"} that didn’t line up; read those with care.`;
+  return "Skipped the double-check to stay inside the spend limit.";
+}
+
 type AgentRow = { n: number; of: number; thought: string; tool?: string; input?: string; done: boolean; spentUsd?: number };
+type CrewRow = { id: string; label: string; done: boolean; billedSoFar?: number; findings?: number };
 
 /**
  * One line per agent step: plan → tool → observe frames for the same step number fold into a single row,
  * so a 12-step run reads as 12 lines, not 36. Stop/verify frames stay as their own lines.
  */
-function foldFrames(frames: RunFrame[]): Array<RunFrame | { step: "agent.row"; row: AgentRow }> {
-  const out: Array<RunFrame | { step: "agent.row"; row: AgentRow }> = [];
+type FoldedFrame = RunFrame | { step: "agent.row"; row: AgentRow } | { step: "crew.row"; row: CrewRow };
+function foldFrames(frames: RunFrame[]): FoldedFrame[] {
+  const out: FoldedFrame[] = [];
   const rows = new Map<number, AgentRow>();
+  const crewRows = new Map<string, CrewRow>();
   for (const f of frames) {
     if (f.step === "agent.plan") {
       const row: AgentRow = { n: f.n, of: f.of, thought: f.thought, done: false };
@@ -66,6 +77,17 @@ function foldFrames(frames: RunFrame[]): Array<RunFrame | { step: "agent.row"; r
     } else if (f.step === "agent.observe") {
       const row = rows.get(f.n);
       if (row) { row.done = true; row.spentUsd = f.spentUsd; }
+    } else if (f.step === "crew.agent") {
+      // Each specialist folds into one row: first "running" event opens it, "done" closes it.
+      const existing = crewRows.get(f.id);
+      if (!existing) {
+        const row: CrewRow = { id: f.id, label: f.label, done: f.phase === "done", billedSoFar: f.billedSoFar, findings: f.findings };
+        crewRows.set(f.id, row);
+        out.push({ step: "crew.row", row });
+      } else {
+        existing.label = f.label;
+        if (f.phase === "done") { existing.done = true; existing.billedSoFar = f.billedSoFar; existing.findings = f.findings; }
+      }
     } else out.push(f);
   }
   return out;
@@ -79,6 +101,42 @@ export function RunProgress({ frames, running }: { frames: RunFrame[]; running: 
       {lines.map((f, i) => {
         if (f.step === "start") return <div key={i} className={cn(base, "border-line bg-bg-elev")}><Dot tone="amber" /><span className="text-fg-muted">{f.preview ? "Trying it out — this is a real run, so you can see exactly what you’d get." : "Starting the run."}</span></div>;
         if (f.step === "data") return <div key={i} className={cn(base, "border-line bg-bg-elev")}><Dot tone="amber" /><span>Reading your attached data · <span className="num">{f.sources}</span> {f.sources === 1 ? "source" : "sources"}</span></div>;
+        if (f.step === "step" && f.kind === "crew") {
+          // Group header for a crew step — the specialist rows fold in beneath it.
+          const runningNow = f.phase === "running";
+          if (f.phase === "skipped") return null;
+          return (
+            <div key={i} className={cn(base, f.phase === "done" ? "border-green/30 bg-bg-elev" : "border-line bg-bg-elev")}>
+              <Dot tone={f.phase === "done" ? "green" : "amber"} pulse={runningNow} />
+              <span className={cn("font-title", runningNow && "pulse-soft")}>{runningNow ? "Your team of specialists is on it…" : "Your team of specialists finished"}</span>
+              <span className="ml-auto text-sm text-fg-muted">so far <Money usd={f.billedSoFar} /></span>
+            </div>
+          );
+        }
+        if (f.step === "crew.row") {
+          const r = f.row;
+          const working = !r.done && running;
+          return (
+            <div key={i} className={cn(base, "border-line bg-bg-elev ml-6")}>
+              <Dot tone={r.done ? "green" : "amber"} pulse={working} />
+              <span className={cn("min-w-0", working && "pulse-soft")}>
+                {r.label}{working ? "…" : ""}
+                {r.done && r.findings ? <span className="text-fg-faint"> · found <span className="num">{r.findings}</span></span> : null}
+              </span>
+              {r.done && r.billedSoFar !== undefined && <span className="ml-auto text-sm text-fg-muted whitespace-nowrap">so far <Money usd={r.billedSoFar} /></span>}
+            </div>
+          );
+        }
+        if (f.step === "crew.gate") {
+          const bad = f.verdict === "conflicts_found";
+          const supported = f.verdict === "supported";
+          return (
+            <div key={i} className={cn(base, "ml-6", bad ? "border-red/40 bg-red-soft text-red" : supported ? "border-green/30 bg-green-soft" : "border-line bg-bg-elev")}>
+              <Dot tone={bad ? "red" : supported ? "green" : "amber"} />
+              <span>{gateLine(f.verdict, f.conflicts)}</span>
+            </div>
+          );
+        }
         if (f.step === "step") {
           const runningNow = f.phase === "running";
           return (

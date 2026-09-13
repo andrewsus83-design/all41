@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHint, CardTitle } from "@/components/ui/card";
+import { SeoReport } from "@/components/apps/seo-report";
 
 type Source = { ref: string; quote: string };
 type AnyOutput = Record<string, unknown> & { title?: string; sources?: Source[]; confidence?: number };
@@ -34,10 +35,16 @@ function List({ items }: { items: unknown }) {
   );
 }
 
-/** Renders any OUTPUT_SCHEMAS shape (answer/report/briefing/content_pack) + sources + confidence. */
-export function ResultView({ output, schema, isMock, modelsUsed }: { output: unknown; schema?: string; isMock?: boolean; modelsUsed?: string[] }) {
+type VerificationHint = { verdict?: string; conflicts?: string[] } | null;
+
+/** Renders any OUTPUT_SCHEMAS shape (answer/report/briefing/content_pack/seo_report) + sources + confidence. */
+export function ResultView({ output, schema, isMock, modelsUsed, verification }: { output: unknown; schema?: string; isMock?: boolean; modelsUsed?: string[]; verification?: VerificationHint }) {
   const o = (output ?? {}) as AnyOutput;
   if (!output || typeof output !== "object") return <Card><CardHint>No output.</CardHint></Card>;
+  // The flagship SEO/GEO Optimizer gets its own rich renderer (dials, quick wins, GEO, flags).
+  if (schema === "seo_report" || "health_score" in o) {
+    return <SeoReport report={output} isMock={isMock} verification={verification} />;
+  }
   const sources = Array.isArray(o.sources) ? o.sources : [];
   return (
     <Card className="space-y-6 border-green/30">

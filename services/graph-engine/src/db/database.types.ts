@@ -712,6 +712,140 @@ export type Database = {
         }
         Relationships: []
       }
+      public_benchmark_entries: {
+        Row: {
+          benchmark_id: string
+          created_at: string
+          id: string
+          label_revealed: boolean
+          output: Json | null
+          path: string
+          published: boolean
+        }
+        Insert: {
+          benchmark_id: string
+          created_at?: string
+          id?: string
+          label_revealed?: boolean
+          output?: Json | null
+          path: string
+          published?: boolean
+        }
+        Update: {
+          benchmark_id?: string
+          created_at?: string
+          id?: string
+          label_revealed?: boolean
+          output?: Json | null
+          path?: string
+          published?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_benchmark_entries_benchmark_id_fkey"
+            columns: ["benchmark_id"]
+            isOneToOne: false
+            referencedRelation: "public_benchmarks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_benchmark_scores: {
+        Row: {
+          accuracy: number | null
+          actionability: number | null
+          benchmark_id: string
+          completeness: number | null
+          created_at: string
+          depth: number | null
+          entry_id: string
+          id: string
+          judge: string
+          judge_kind: string
+          overall: number | null
+          published: boolean
+        }
+        Insert: {
+          accuracy?: number | null
+          actionability?: number | null
+          benchmark_id: string
+          completeness?: number | null
+          created_at?: string
+          depth?: number | null
+          entry_id: string
+          id?: string
+          judge: string
+          judge_kind: string
+          overall?: number | null
+          published?: boolean
+        }
+        Update: {
+          accuracy?: number | null
+          actionability?: number | null
+          benchmark_id?: string
+          completeness?: number | null
+          created_at?: string
+          depth?: number | null
+          entry_id?: string
+          id?: string
+          judge?: string
+          judge_kind?: string
+          overall?: number | null
+          published?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_benchmark_scores_benchmark_id_fkey"
+            columns: ["benchmark_id"]
+            isOneToOne: false
+            referencedRelation: "public_benchmarks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_benchmark_scores_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "public_benchmark_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_benchmarks: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          is_mock: boolean
+          methodology: string
+          published: boolean
+          status: string
+          task_prompt: string
+          task_type: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          is_mock?: boolean
+          methodology?: string
+          published?: boolean
+          status?: string
+          task_prompt: string
+          task_type: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          is_mock?: boolean
+          methodology?: string
+          published?: boolean
+          status?: string
+          task_prompt?: string
+          task_type?: string
+        }
+        Relationships: []
+      }
       routing_weights: {
         Row: {
           is_leader: boolean

@@ -3,6 +3,11 @@ export type Update = { date: string; title: string; body: string };
 
 export const UPDATES: Update[] = [
   {
+    date: "2026-09-13",
+    title: "A public benchmark: the same job, three ways, judged blind",
+    body: "We run one real task three ways — a regular AI, our app, and a professional-grade stand-in — and have independent AI judges score them without knowing which is which. We publish the results as-is and never score ourselves. See the method on the Benchmark page; the first live results post once the data sources are connected.",
+  },
+  {
     date: "2026-09-12",
     title: "We now talk to each AI service directly",
     body: "No middleman in between any more. Fewer hops, real prices, real speed numbers in our daily tests.",
