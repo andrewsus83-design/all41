@@ -324,10 +324,11 @@ h2 {
 /* ---- tracing light running around the blueprint frames (cinematic) ---- */
 @keyframes trace-run { to { stroke-dashoffset: -100; } }
 .trace {
-  stroke-dasharray: 26 74;      /* a visible light streak, gap for the rest — normalized via pathLength="100" */
+  stroke-dasharray: 48 52;      /* a long bright current gliding along the wire — normalized via pathLength="100" */
   stroke-dashoffset: 0;
-  stroke-linecap: round;
-  animation: trace-run 5.5s linear infinite;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  animation: trace-run 4s linear infinite;
 }
 @media (prefers-reduced-motion: reduce) { .trace { animation: none; opacity: 0; } }
 
