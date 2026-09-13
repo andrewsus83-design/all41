@@ -46,13 +46,20 @@ export async function MarketingHeader() {
                 preserveAspectRatio="none"
                 aria-hidden
               >
+                <defs>
+                  <linearGradient id="signinGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#ffb020" />
+                    <stop offset="100%" stopColor="#ff6b5e" />
+                  </linearGradient>
+                </defs>
                 <path
                   d="M20 2 H80 A18 18 0 0 1 80 38 H20 A18 18 0 0 1 20 2 Z"
                   pathLength={100}
                   fill="none"
+                  stroke="url(#signinGrad)"
                   strokeWidth={2.5}
                   className="draw-outline"
-                  style={{ stroke: "#f4642a", filter: "drop-shadow(0 0 4px #f4642a)" }}
+                  style={{ filter: "drop-shadow(0 0 4px rgba(255,138,90,0.55))" }}
                 />
               </svg>
               <span className="relative">{signedIn ? "My Apps" : "Sign in"}</span>
