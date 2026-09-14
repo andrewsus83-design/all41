@@ -84,8 +84,8 @@ export function AppDeck({ app }: { app: CatalogApp }) {
         </div>
       </div>
 
-      {/* deck viewport */}
-      <div className="relative flex-1 min-h-0 overflow-hidden" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      {/* deck viewport — overflow-clip (not hidden) so focusing an off-track control can't scroll the pager sideways */}
+      <div className="relative flex-1 min-h-0 overflow-clip" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <div className="flex h-full transition-transform duration-500 ease-out" style={{ transform: `translateX(-${i * 100}%)` }}>
           {pages.map((p, idx) => (
             <section key={idx} aria-hidden={idx !== i} className="w-full h-full shrink-0 overflow-y-auto overscroll-contain" aria-label={`${app.name} — ${PAGE_LABELS[idx]}`}>

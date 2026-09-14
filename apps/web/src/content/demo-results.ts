@@ -1676,6 +1676,264 @@ export const DEMO_EXAMPLES: Record<string, DemoExample[]> = {
         ],
         "confidence": 0.6
       }
+    },
+    {
+      "label": "Restaurant",
+      "schema": "website_report",
+      "result": {
+        "live_url": "https://firethorn.all41.app",
+        "status": "deploy_pending",
+        "subdomain": "firethorn.all41.app",
+        "checkout_linked": true,
+        "confidence": 0.92,
+        "render_note": "Copy, style, page structure and the SEO/GEO baseline are produced live; hosting at firethorn.all41.app connects at build.",
+        "flags": [
+          "Sample preview — connect your data for a live, sourced run."
+        ],
+        "pages": [
+          {
+            "type": "Home",
+            "slug": "/",
+            "headline": "Everything Here Touches the Fire",
+            "subhead": "A 38-seat hearth kitchen on Westminster Street in Providence's West End, cooking Rhode Island farms and Narragansett Bay over live oak and applewood — no gas line, no shortcuts.",
+            "value_prop": "One open hearth, produce picked within 40 miles the morning we cook it, and a menu reprinted every Wednesday to match the week's harvest.",
+            "proof": [
+              "38 seats, one 8-foot hearth — every plate finishes over oak and applewood coals, and there's no gas range anywhere on the property.",
+              "6 Rhode Island farms inside a 40-mile radius and 2 Narragansett Bay day-boats, delivered the morning we serve them.",
+              "Named Best New Restaurant by Rhode Island Monthly in 2024, and booked about 3 weeks out most weekends."
+            ],
+            "cta": "Reserve Your Table",
+            "cta_href": "#reserve",
+            "has_nav": true,
+            "image": "/samples/firethorn-hero.webp"
+          },
+          {
+            "type": "Menu",
+            "slug": "/menu",
+            "headline": "A New Menu Every Wednesday, Cooked Only Over Coals",
+            "subhead": "Reprinted every Wednesday around what the farms and the day-boats bring — ash-roasted delicata one week, a whole Narragansett black bass the next.",
+            "value_prop": "Small plates built to share, a short list of hearth mains, and a Sunday family-style Hearth Supper — every dish shaped around what live coals do best.",
+            "proof": [
+              "Ember-roasted whole black bass for two, $46 — line-caught in Narragansett Bay, split tableside over charred Meyer lemon.",
+              "Wood-grilled Rhode Island littlenecks with 'nduja butter, $18; ash-roasted beets with whipped Narragansett chèvre and burnt honey, $16.",
+              "Sunday Hearth Supper: 5 family-style courses for $58 a person, one 5pm seating, 24 covers only."
+            ],
+            "cta": "See This Week's Menu",
+            "cta_href": "#menu",
+            "has_nav": true
+          },
+          {
+            "type": "About",
+            "slug": "/about",
+            "headline": "Chef Nadia Ferro Brought Basque Fire Home to Narragansett Bay",
+            "subhead": "From her family's stand at the Pawtuxet farmers market to two years on the grill at Asador Etxebarri, the throughline was always live flame and food grown close to home.",
+            "value_prop": "Firethorn is Nadia's love letter to Rhode Island — the bay she grew up on, the farmers she buys from by name, and the hearth she laid brick by brick.",
+            "proof": [
+              "16 years on the line, including 2 years on the wood grill at Asador Etxebarri, long ranked among the World's 50 Best Restaurants.",
+              "Built Firethorn's 8-foot masonry hearth by hand with a Providence mason over the winter of 2023.",
+              "Sources by name from 6 farms and 2 Narragansett Bay day-boat fishermen she's known since her Cranston childhood."
+            ],
+            "cta": "Read the Full Story",
+            "cta_href": "#story",
+            "has_nav": true,
+            "image": "/samples/firethorn-about.webp"
+          },
+          {
+            "type": "Gallery",
+            "slug": "/gallery",
+            "headline": "The Hearth at Golden Hour, and the Plates It Chars",
+            "subhead": "The 8-foot fire at dusk, black char on a grilled cabbage, copper light pooling on reclaimed-oak tables — Firethorn, in pictures.",
+            "value_prop": "A low-lit 38-seat room framed in reclaimed New England oak and blackened steel, where every seat holds a clear line to the fire.",
+            "proof": [
+              "47 photographs of the room, the hearth and 20+ seasonal dishes, shot on film by Providence photographer Elena Marsh.",
+              "The hearth burns roughly 3 cords of local oak and applewood a month, split and stacked in view of the dining room.",
+              "6 counter stools at the fire's edge are the best seats in the house — they book first, every single night."
+            ],
+            "cta": "Book a Seat at the Fire",
+            "cta_href": "#reserve",
+            "has_nav": true
+          },
+          {
+            "type": "Reserve",
+            "slug": "/reserve",
+            "headline": "Reserve a Seat by the Fire in Under a Minute",
+            "subhead": "Live availability, instant confirmation and a same-day text reminder — Wednesday through Sunday, 5 to 10pm, at 512 Westminster Street.",
+            "value_prop": "Book a hearth-counter stool, a table for two, or the full 14-seat back room for a private Hearth Supper — all in a few taps.",
+            "proof": [
+              "Instant confirmation and a same-day text reminder — no phone tag; each night's tables release 30 days out at 9am sharp.",
+              "6 hearth-counter stools and a 14-seat private room book online; parties of 7 or more are confirmed by our team within 24 hours.",
+              "Open Wed–Sun, 5–10pm; a 24-hour cancellation window keeps your card uncharged, with a $25-a-seat no-show fee after."
+            ],
+            "cta": "Check Live Availability",
+            "cta_href": "#reserve",
+            "has_nav": true
+          }
+        ],
+        "style": {
+          "palette": [
+            "#1F140E",
+            "#C34A26",
+            "#F3E9D7"
+          ],
+          "typography": "Display headlines in a high-contrast serif with Canela/Ogg character; body in a clean humanist sans (Söhne, Founders Grotesk); menu dishes and prices set in tabular monospace so every plate and dollar figure aligns down the column.",
+          "tone": "Warm, confident and sensory — smoke, char, season and salt air — plainspoken about the craft and never precious about it.",
+          "layout": "Full-bleed hero of the hearth at dusk under a sticky charcoal top nav; alternating full-width image/text bands down the page; menu rendered as a live-updating two-column typographic list; reservation module pinned to a right rail on desktop and a sticky bottom bar on mobile."
+        },
+        "seo_geo_baseline": {
+          "summary": "Targets high-intent local searches — 'wood-fired restaurant Providence,' 'best new restaurant West End Providence,' 'live-fire dinner Rhode Island,' 'farm-to-table Providence reservations' and 'private dining Westminster Street' — plus dish-level intents like 'whole grilled black bass Providence' and 'Sunday family-style supper Providence.'",
+          "schema_present": true,
+          "geo_notes": [
+            "Restaurant and LocalBusiness JSON-LD carry geo coordinates, openingHours (Wed–Sun 17:00–22:00), priceRange $$$ and acceptsReservations=true, with Menu schema marking up each dish and price so the live weekly menu can surface directly in results.",
+            "Neighborhood-scoped headings for 'West End Providence' and 'Westminster Street' capture low-competition long-tail queries that the generic 'Providence restaurant' term buries.",
+            "FAQPage schema answers plain-language questions — 'Is Firethorn entirely wood-fired?', 'Does Firethorn take reservations?', 'What's on this week's menu?' — formatted for citation in ChatGPT, Perplexity and Google AI Overviews."
+          ]
+        },
+        "conversion_notes": [
+          "The Reserve CTA rides every page and collapses into a sticky bottom bar on mobile, so a hearth-counter stool is never more than one thumb-tap away.",
+          "Live availability is embedded in-page instead of a dead-end 'call us,' so a guest who decides at 10pm can hold a Friday table before the feeling passes — no waiting for the line to open.",
+          "Named, checkable proof — 38 seats, 40-mile sourcing, an Etxebarri pedigree, 'booked 3 weeks out' — stacks trust and scarcity in one glance and nudges the guest to reserve now, not 'sometime.'",
+          "The Wednesday menu page is crawlable and worth revisiting, so it doubles as fresh SEO fuel and a standing reason regulars return — and every return re-exposes them to the Reserve CTA."
+        ],
+        "sources": [
+          {
+            "ref": "B1",
+            "quote": "Restaurants that accept online reservations seat roughly 27% more covers than phone-only peers."
+          },
+          {
+            "ref": "B2",
+            "quote": "73% of diners visit a restaurant's website before booking, and most decide within 90 seconds of landing."
+          }
+        ]
+      }
+    },
+    {
+      "label": "Fitness studio",
+      "schema": "website_report",
+      "result": {
+        "live_url": "https://forgeandfern.all41.app",
+        "status": "deploy_pending",
+        "subdomain": "forgeandfern.all41.app",
+        "checkout_linked": true,
+        "confidence": 0.94,
+        "render_note": "Copy, style, page structure and the SEO/GEO baseline are generated live; hosting at forgeandfern.all41.app connects at build.",
+        "flags": [
+          "Sample preview — connect your data for a live, sourced run."
+        ],
+        "pages": [
+          {
+            "type": "Home",
+            "slug": "/",
+            "headline": "Barbell-strong and yoga-supple — on four hours a week.",
+            "subhead": "Forge & Fern is Denver's strength-and-yoga studio inside a restored 1926 RiNo iron foundry, pairing a 50-minute tempo lift with a 60-minute breath-led flow in the same training week.",
+            "value_prop": "Most gyms make you choose between getting strong and staying mobile; the Forge Method programs both in one weekly rhythm, so you add muscle without trading away your range.",
+            "proof": [
+              "16-person class cap and a 1:8 coach-to-lifter ratio — never a wait for a squat rack",
+              "4.9 stars across 380+ Google reviews since we opened on Larimer Street in 2019",
+              "New here? Two weeks of unlimited classes for $59"
+            ],
+            "cta": "Claim your $59 intro",
+            "cta_href": "#join",
+            "has_nav": true,
+            "image": "/samples/forgefern-hero.webp"
+          },
+          {
+            "type": "Classes",
+            "slug": "/classes",
+            "headline": "Three formats, one outcome: strong under the bar, supple on the mat.",
+            "subhead": "Heavy compound strength, 95°F power yoga, and our 75-minute hybrid — every session capped at 16 and coached by name, never by screen.",
+            "value_prop": "Whether you want 40 pounds on your deadlift or to finally sit in a full squat, every session is coached live and scaled to you — no pre-recorded video, no autopilot.",
+            "proof": [
+              "Drop-in $36 · 8-class pack $256 ($32/class) · Forge Unlimited $229/mo, no contract",
+              "The Full Forge — our 75-minute flagship: a heavy strength block, then a grounding flow, in one session",
+              "Ember runs 95°F power yoga; The Anvil pairs barbell compounds with kettlebells in 45 minutes"
+            ],
+            "cta": "See the full schedule",
+            "cta_href": "#book",
+            "has_nav": true
+          },
+          {
+            "type": "About",
+            "slug": "/about",
+            "headline": "Two surgeons said she'd never lift again. She built a studio instead.",
+            "subhead": "Founder Sena Okafor rowed lightweight double sculls for a national team until an L4–L5 disc herniation ended her racing at 29 — then rebuilt her spine with the exact load-then-mobilize method Forge & Fern teaches today.",
+            "value_prop": "The Forge Method isn't strength bolted onto yoga; it's one system — load the joint, then mobilize it — that Sena reverse-engineered across 18 months of her own rehab and 12 years of coaching since.",
+            "proof": [
+              "Sena is a CSCS-certified strength coach and an RYT-500 registered yoga teacher",
+              "Every floor coach holds a strength cert plus 200+ hours of yoga training — a hiring bar held since 2019",
+              "3,800 sq ft inside a 1926 iron foundry, the original cast-iron beams left exposed"
+            ],
+            "cta": "Meet the coaching team",
+            "cta_href": "#book",
+            "has_nav": true,
+            "image": "/samples/forgefern-about.webp"
+          },
+          {
+            "type": "Results",
+            "slug": "/results",
+            "headline": "Heavier lifts, deeper breaths, and a 4.9 that 380 people meant.",
+            "subhead": "From a first-ever bodyweight deadlift to a backbend a decade in the making — this is what happens when strength and mobility are finally trained together.",
+            "value_prop": "We log load and range for every member, so progress here is measured in pounds lifted and inches gained — not vibes or flattering before-after lighting.",
+            "proof": [
+              "Members add an average 38% to their deadlift 1RM in their first 16-week cycle",
+              "'First time in my life I can deadlift my bodyweight and sit in a full squat.' — Priya M., member since 2021",
+              "89% six-month retention · 4.9★ across 380+ reviews · 'Best Boutique Studio,' 5280 Magazine 2023"
+            ],
+            "cta": "Read all 380 reviews",
+            "cta_href": "#book",
+            "has_nav": true
+          },
+          {
+            "type": "Join",
+            "slug": "/join",
+            "headline": "Start with two weeks. Decide with your body.",
+            "subhead": "Grab the $59 intro, book your first class in under 90 seconds, and let a coach map your first four weeks on day one.",
+            "value_prop": "No contracts, no initiation fee, freeze or cancel anytime — we'd rather earn your month 13 than trap you in month 2.",
+            "proof": [
+              "$59 for two weeks of unlimited classes — every format, no restrictions",
+              "Book instantly online; open 5:30am–9pm weekdays, 7am–2pm weekends",
+              "Your first class includes a free 15-minute movement screen with your coach"
+            ],
+            "cta": "Book my first class",
+            "cta_href": "#book",
+            "has_nav": true
+          }
+        ],
+        "style": {
+          "palette": [
+            "#22201C",
+            "#C85A34",
+            "#F3ECDF"
+          ],
+          "typography": "Display headlines in a high-contrast condensed serif (Canela / Ogg register) that reads forged and editorial; body in a clean neutral grotesque (Söhne / Neue Haas) at a generous 1.6 line-height; class names and prices set in small-caps, tracked mono labels.",
+          "tone": "Grounded, confident, quietly premium — coach-in-your-corner directness with none of the shouty bootcamp energy; every sentence earns trust by naming a specific.",
+          "layout": "Full-bleed foundry hero with a slow-motion lift-into-flow reel; sticky top nav carrying a persistent ember 'Claim $59 intro' button; asymmetric editorial grids on warm cream; a live-times schedule block; a three-tier pricing table with per-class math; and a member testimonial wall above the Join CTA."
+        },
+        "seo_geo_baseline": {
+          "summary": "Targets high-intent local search — 'strength and yoga studio Denver,' 'boutique gym RiNo,' 'deadlift coaching Denver,' 'heated power yoga near me,' 'strength training for runners Denver' — plus trial-shopper queries like 'gym free trial Denver RiNo' and 'best boutique fitness studio Denver.'",
+          "schema_present": true,
+          "geo_notes": [
+            "LocalBusiness + HealthClub schema carries geo-coordinates, opening hours (Mon–Fri 5:30am–9pm, Sat–Sun 7am–2pm) and priceRange ($$), so the studio surfaces in Google's Map Pack and 'near me' results across RiNo.",
+            "Each class is marked up as a Service with an Offer (Drop-in $36, Forge Unlimited $229/mo), letting long-tail pages rank for 'The Full Forge Denver' and 'heated yoga RiNo pricing.'",
+            "FAQPage, Review and AggregateRating schema plus plain-language answer blocks ('Is Forge & Fern good for beginners?') give AI assistants clean, citable facts, so ChatGPT, Perplexity and Google AI Overviews name the studio for 'strength and yoga in Denver.'"
+          ]
+        },
+        "conversion_notes": [
+          "The $59 two-week intro rides in the sticky nav on every page, so the low-risk trial is always one tap away and reframes the decision as a test drive, not a contract.",
+          "Every proof point carries a hard number — 16-person cap, 4.9★, 38% deadlift gain — pre-empting the two biggest boutique objections: crowding and 'will it actually work.'",
+          "Pricing is shown openly with the per-class math spelled out ($256 = $32/class), killing the hidden-cost anxiety that bounces premium shoppers to a competitor.",
+          "The Results page opens with tracked metrics and a named member quote, landing believable social proof right before the Join CTA that sits in the persistent nav."
+        ],
+        "sources": [
+          {
+            "ref": "B1",
+            "quote": "Studios leading with a low-cost intro trial convert first-timers at roughly 3x the rate of contract-first gyms. — IHRSA Boutique Studio Report"
+          },
+          {
+            "ref": "B2",
+            "quote": "Pairing resistance training with dedicated mobility work improves functional strength outcomes by up to 30%. — ACSM's Health & Fitness Journal"
+          }
+        ]
+      }
     }
   ],
   "content-pipeline": [
