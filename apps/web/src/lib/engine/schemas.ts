@@ -252,6 +252,37 @@ export const OUTPUT_SCHEMAS = {
       },
     },
   },
+  content_report: {
+    name: "content_report",
+    schema: {
+      type: "object", additionalProperties: false,
+      required: ["summary", "core", "repurposes", "schedule", "flags", "sources", "confidence"],
+      properties: {
+        summary: { type: "string" },
+        core: {
+          type: "object", additionalProperties: false, required: ["title_options", "body", "takeaway"],
+          properties: { title_options: { type: "array", items: { type: "string" } }, body: { type: "string" }, takeaway: { type: "string" } },
+        },
+        repurposes: {
+          type: "array",
+          items: {
+            type: "object", additionalProperties: false, required: ["channel", "content", "hook_options"],
+            properties: { channel: { type: "string" }, content: { type: "string" }, hook_options: { type: "array", items: { type: "string" } } },
+          },
+        },
+        schedule: {
+          type: "array",
+          items: {
+            type: "object", additionalProperties: false, required: ["channel", "when", "piece_ref"],
+            properties: { channel: { type: "string" }, when: { type: "string" }, piece_ref: { type: "string" } },
+          },
+        },
+        flags: { type: "array", items: { type: "string" } },
+        sources: { type: "array", items: source },
+        confidence: { type: "number" },
+      },
+    },
+  },
   verification: {
     name: "verification",
     schema: {

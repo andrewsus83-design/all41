@@ -712,6 +712,115 @@ export type Database = {
         }
         Relationships: []
       }
+      content_runs: {
+        Row: {
+          account_id: string | null
+          channels: string[]
+          content: Json | null
+          created_at: string
+          id: string
+          idea: string | null
+          output_set: string | null
+          status: string
+          task_id: string | null
+          tone: string | null
+          total_cost: number
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          channels?: string[]
+          content?: Json | null
+          created_at?: string
+          id?: string
+          idea?: string | null
+          output_set?: string | null
+          status?: string
+          task_id?: string | null
+          tone?: string | null
+          total_cost?: number
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          channels?: string[]
+          content?: Json | null
+          created_at?: string
+          id?: string
+          idea?: string | null
+          output_set?: string | null
+          status?: string
+          task_id?: string | null
+          tone?: string | null
+          total_cost?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_runs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_run_steps: {
+        Row: {
+          account_id: string | null
+          agent: string
+          cost_usd: number
+          created_at: string
+          id: string
+          input: Json | null
+          model_used: string | null
+          output: Json | null
+          run_id: string
+          status: string
+          tokens_in: number
+          tokens_out: number
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          agent: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          run_id: string
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          agent?: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          run_id?: string
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_run_steps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "content_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clip_run_steps: {
         Row: {
           agent: string

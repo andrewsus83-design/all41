@@ -4,6 +4,7 @@ import { SeoReport } from "@/components/apps/seo-report";
 import { ProposalReport } from "@/components/apps/proposal-report";
 import { ClipReport } from "@/components/apps/clip-report";
 import { WebsiteReport } from "@/components/apps/website-report";
+import { ContentReport } from "@/components/apps/content-report";
 
 type Source = { ref: string; quote: string };
 type AnyOutput = Record<string, unknown> & { title?: string; sources?: Source[]; confidence?: number };
@@ -59,6 +60,10 @@ export function ResultView({ output, schema, isMock, modelsUsed, verification }:
   // Web Builder gets its own renderer (live URL, per-page structure, style, SEO/GEO, flags).
   if (schema === "website_report" || "live_url" in o) {
     return <WebsiteReport report={output} isMock={isMock} verification={verification} />;
+  }
+  // Content Pipeline gets its own renderer (core piece, channel-native repurposes, schedule).
+  if (schema === "content_report" || "repurposes" in o) {
+    return <ContentReport report={output} isMock={isMock} verification={verification} />;
   }
   const sources = Array.isArray(o.sources) ? o.sources : [];
   return (

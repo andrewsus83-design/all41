@@ -932,6 +932,181 @@ const webBuilderRunner: Runner = async (ctx, step, _depth, runId) => {
   return { output: report, schema: "website_report", modelsUsed: [...models], agents: trail, verification, isMock: assemblerMock || trail.some((t) => t.isMock), billedUsd: billed };
 };
 
+// ---------- Content Pipeline crew (App #5 — content marketing, docs App#5 build package) ----------
+// One idea → a week of channel-native content in the brand voice. Strategist → Researcher (live search) →
+// Writer → Repurposer → Brand-Voice Editor → Verifier. All LLM; the Researcher grounds with the search tool.
+// Brand voice + past content come from the graph (ctx.groundingCtx) — the moat over generic AI.
+const METHOD_CONTENT = {
+  strategist: `You are a sharp content strategist. Turn the seed idea into a specific ANGLE and a content plan — never generic coverage. "10 SEO tips" is generic; "The 3 SEO mistakes killing local bakeries" has an angle. Decide the core long-form piece and which channel repurposes to make, with ONE clear point per piece, mapped to the audience and goal. Use the past-content topics provided to avoid repeating what the brand already covered.`,
+  researcher: `You are a diligent research assistant. Gather supporting facts, real statistics (each with its source), concrete examples, and the angles currently ranking/trending for the topic, so the content is grounded, not generic filler. NEVER invent statistics — the fastest way to lose credibility. Only return facts/stats you can attribute to a real source in the material provided.`,
+  writer: `You are a versatile content writer working in the brand's voice. Write the core long-form piece (blog/article): open on a scroll-stopping HOOK (a bold claim, a surprising stat, a relatable problem, a contrarian take, or a specific promise), use a clear skimmable structure (subheads), land ONE strong takeaway, and weave in the researched facts (cited) with natural keywords (no stuffing) so it can rank on Google AND be cited by AI engines. Give several title/hook OPTIONS (marketers test them). Write to be read and shared, not to fill space.`,
+  repurposer: `You are a multi-platform social writer. Adapt the core piece into channel-native formats — each REWRITTEN for its platform, never copy-pasted (which performs badly and looks lazy). LinkedIn: professional, hook in line 1, short paragraphs/line breaks, a soft CTA. X/Twitter: a punchy thread, one idea per tweet, numbered, strong first tweet, payoff at the end. Instagram: casual, emoji-aware, story-led, a clear CTA, a few hashtags. Newsletter: personal, scannable, one core idea, a clear next step. Blog: skimmable subheads, SEO-aware, depth + takeaway. Give each piece its own platform-appropriate hook options. Produce exactly one repurpose per requested channel.`,
+  editor: `You are the brand-voice guardian. Make every piece sound like THIS brand — apply the tone, signature phrases and do's/don'ts from the brand-voice profile provided; fix anything off-voice; tighten for clarity and each platform's norms. Do not change the facts or add claims. Return the polished core body and the polished per-channel pieces.`,
+  verifier: `You are a skeptical fact-checker and originality guard. Check every fact/stat/claim against the research sources provided; flag anything you cannot confirm rather than letting it ship; ensure no piece is a near-copy of a source (originality). Return the flags, the specific unconfirmed claims, and whether the set is original. Content integrity is the trust bar — never wave through an unverified stat.`,
+};
+
+const CONTENT_SCHEMAS = {
+  strategist: { name: "content_plan", schema: { type: "object", additionalProperties: false, required: ["angle", "core_brief", "key_points", "repurpose_list", "notes"], properties: {
+    angle: { type: "string" }, core_brief: { type: "string" }, key_points: { type: "array", items: { type: "string" } }, repurpose_list: { type: "array", items: { type: "string" } }, notes: { type: "string" } } } },
+  researcher: { name: "content_research", schema: { type: "object", additionalProperties: false, required: ["facts", "stats", "examples", "ranking_angles", "notes"], properties: {
+    facts: { type: "array", items: { type: "string" } },
+    stats: { type: "array", items: { type: "object", additionalProperties: false, required: ["claim", "source"], properties: { claim: { type: "string" }, source: { type: "string" } } } },
+    examples: { type: "array", items: { type: "string" } }, ranking_angles: { type: "array", items: { type: "string" } }, notes: { type: "string" } } } },
+  writer: { name: "core_piece", schema: { type: "object", additionalProperties: false, required: ["title_options", "body", "takeaway", "notes"], properties: {
+    title_options: { type: "array", items: { type: "string" } }, body: { type: "string" }, takeaway: { type: "string" }, notes: { type: "string" } } } },
+  repurposer: { name: "content_repurposes", schema: { type: "object", additionalProperties: false, required: ["repurposes", "notes"], properties: {
+    repurposes: { type: "array", items: { type: "object", additionalProperties: false, required: ["channel", "content", "hook_options"], properties: {
+      channel: { type: "string" }, content: { type: "string" }, hook_options: { type: "array", items: { type: "string" } } } } }, notes: { type: "string" } } } },
+  editor: { name: "content_edited", schema: { type: "object", additionalProperties: false, required: ["core_body", "repurposes", "notes"], properties: {
+    core_body: { type: "string" }, repurposes: { type: "array", items: { type: "object", additionalProperties: false, required: ["channel", "content"], properties: { channel: { type: "string" }, content: { type: "string" } } } }, notes: { type: "string" } } } },
+  verifier: { name: "content_check", schema: { type: "object", additionalProperties: false, required: ["flags", "unconfirmed", "originality_ok", "notes"], properties: {
+    flags: { type: "array", items: { type: "string" } }, unconfirmed: { type: "array", items: { type: "string" } }, originality_ok: { type: "boolean" }, notes: { type: "string" } } } },
+} as const;
+
+type ContentRepurposeJson = { channel?: string; content?: string; hook_options?: string[] };
+
+function contentChannels(config: Record<string, unknown>): string[] {
+  const raw = pick(config, "channels", "platforms");
+  const parsed = raw ? raw.split(/[,;]+/).map((s) => s.trim()).filter(Boolean) : [];
+  return (parsed.length ? parsed : ["LinkedIn", "X", "Newsletter"]).slice(0, 6);
+}
+function contentSchedule(channels: string[]) {
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  return channels.map((ch, i) => ({ channel: ch, when: days[i % days.length], piece_ref: ch.toLowerCase() }));
+}
+
+function mockContentReport(idea: string, channels: string[], tone: string) {
+  const topic = idea || "your idea";
+  return {
+    summary: `A week of content from one idea — a core piece plus ${channels.length} channel-native repurpose${channels.length === 1 ? "" : "s"}, in a ${tone || "brand"} voice. (Demo run — add a real idea and connect an AI key in /admin for a live batch.)`,
+    core: {
+      title_options: [`The one thing most people get wrong about ${topic}`, `${topic}: what actually works (with the numbers)`, `Stop guessing at ${topic} — here's the playbook`],
+      body: `# The one thing most people get wrong about ${topic}\n\nMost advice on ${topic} is generic. Here's the specific angle that actually moves the needle, grounded in what's working now — and the one takeaway you can act on today.\n\n(Demo body — a live run writes the full research-grounded piece in your brand voice.)`,
+      takeaway: `Pick the single highest-leverage move on ${topic} and ship it this week.`,
+    },
+    repurposes: channels.map((ch) => ({
+      channel: ch,
+      content: `[${ch}] A channel-native rewrite of the core piece about ${topic} — hook first, formatted for ${ch}. (Demo — a live run rewrites it natively per platform.)`,
+      hook_options: [`The ${topic} mistake I see every week`, `Nobody talks about this part of ${topic}`],
+    })),
+    schedule: contentSchedule(channels),
+    flags: ["Demo run on placeholder data. Add a real idea and connect an AI key in /admin for a live, verified batch.", "Every stat in a live run is checked against its source before delivery."],
+    sources: [{ ref: "R1", quote: idea ? `Seed idea: ${idea}` : "Placeholder — add a real idea/topic for a sourced run." }],
+    confidence: 0.4,
+  };
+}
+
+const contentRunner: Runner = async (ctx, step, _depth, runId) => {
+  const { config, tools } = ctx;
+  const idea = pick(config, "idea", "topic", "seed") || "the idea";
+  const outputSet = pick(config, "output_set") || "Blog + social";
+  const channels = contentChannels(config);
+  const tone = pick(config, "tone") || "brand voice";
+  const brandCtx = (ctx.groundingCtx || "").slice(0, 2500); // brand voice + past content from the graph
+
+  const trail: CrewAgentTrail[] = [];
+  const models = new Set<string>();
+  let billed = 0;
+  const soFar = () => billed;
+  const rec = (id: string, name: string, r: { model: string; billedUsd: number; findings: number; isMock: boolean }) => {
+    trail.push({ id, name, model: r.model, billedUsd: r.billedUsd, findings: r.findings, status: "ok", isMock: r.isMock }); models.add(r.model); billed += r.billedUsd;
+  };
+
+  // 1. Content Strategist (LLM) — angle + plan (Part 3.A). Past topics from the graph to avoid repeats.
+  const strategist = await agentCall(ctx, runId, { id: "strategist", name: "Content Strategist", taskType: "reasoning", system: METHOD_CONTENT.strategist,
+    context: `SEED IDEA: ${idea}\nOUTPUT SET: ${outputSet}\nCHANNELS: ${channels.join(", ")}\nTONE: ${tone}\nBRAND CONTEXT + PAST CONTENT (avoid repeating):\n${brandCtx || "(new brand — no past content yet)"}`,
+    schema: CONTENT_SCHEMAS.strategist, label: "Finding the angle" }, soFar);
+  rec("strategist", "Content Strategist", strategist);
+  const angle = String(strategist.json.angle ?? idea);
+
+  // 2. Researcher — live search, then ground the facts/stats (Part 3.D)
+  ctx.onEvent?.({ step: "crew.agent", id: "researcher", name: "Researcher", label: "Researching the topic", phase: "running", billedSoFar: soFar() });
+  const search = await tools.search(`${angle} — facts, statistics, examples, what's ranking`);
+  billed += search.billedUsd;
+  const researcher = await agentCall(ctx, runId, { id: "researcher", name: "Researcher", taskType: "research", system: METHOD_CONTENT.researcher,
+    context: `ANGLE: ${angle}\nCORE BRIEF: ${String(strategist.json.core_brief ?? "").slice(0, 1200)}\n[R] LIVE SEARCH RESULTS:\n${search.results.map((r, i) => `[R${i + 1}] ${r.title} — ${r.link}\n${r.snippet}`).join("\n")}`,
+    schema: CONTENT_SCHEMAS.researcher, label: "Researching the topic" }, soFar);
+  rec("researcher", "Researcher", researcher);
+
+  // 3. Writer (LLM) — core long-form piece in brand voice (Part 3.B/F)
+  const writer = await agentCall(ctx, runId, { id: "writer", name: "Writer", taskType: "content", system: METHOD_CONTENT.writer,
+    context: `PLAN:\n${JSON.stringify(strategist.json).slice(0, 2500)}\nRESEARCH (facts/stats with sources):\n${JSON.stringify(researcher.json).slice(0, 4000)}\nBRAND VOICE:\n${brandCtx || "(use the chosen tone: " + tone + ")"}`,
+    schema: CONTENT_SCHEMAS.writer, label: "Writing the core piece" }, soFar);
+  rec("writer", "Writer", writer);
+
+  // 4. Repurposer (LLM) — channel-native rewrites (Part 3.C), one per channel
+  const repurposer = await agentCall(ctx, runId, { id: "repurposer", name: "Repurposer", taskType: "content", system: METHOD_CONTENT.repurposer,
+    context: `CHANNELS (one native rewrite each): ${channels.join(", ")}\nCORE PIECE:\nTITLE OPTIONS: ${JSON.stringify(writer.json.title_options)}\nBODY:\n${String(writer.json.body ?? "").slice(0, 5000)}\nTAKEAWAY: ${writer.json.takeaway ?? ""}\nBRAND VOICE: ${brandCtx ? "as in context" : tone}`,
+    schema: CONTENT_SCHEMAS.repurposer, label: "Adapting per platform" }, soFar);
+  rec("repurposer", "Repurposer", repurposer);
+  const repByChannel = new Map<string, ContentRepurposeJson>();
+  for (const rp of ((repurposer.json.repurposes as ContentRepurposeJson[]) ?? [])) repByChannel.set(String(rp.channel ?? "").toLowerCase(), rp);
+
+  // 5. Brand-Voice Editor (LLM) — make every piece sound like the brand (Part 3.E, the moat)
+  const editor = await agentCall(ctx, runId, { id: "editor", name: "Brand-Voice Editor", taskType: "reasoning", system: METHOD_CONTENT.editor,
+    context: `BRAND-VOICE PROFILE:\n${brandCtx || "(no saved profile — enforce the chosen tone: " + tone + ")"}\nCORE BODY:\n${String(writer.json.body ?? "").slice(0, 5000)}\nREPURPOSES:\n${JSON.stringify(repurposer.json.repurposes).slice(0, 5000)}`,
+    schema: CONTENT_SCHEMAS.editor, label: "Making it sound like you" }, soFar);
+  rec("editor", "Brand-Voice Editor", editor);
+  const editedByChannel = new Map<string, string>();
+  for (const rp of ((editor.json.repurposes as ContentRepurposeJson[]) ?? [])) editedByChannel.set(String(rp.channel ?? "").toLowerCase(), String(rp.content ?? ""));
+
+  // 6. Verifier (LLM) — facts vs sources + originality (Part 3.G / Quality Layer 1)
+  const verifier = await agentCall(ctx, runId, { id: "verifier", name: "Verifier", taskType: "reasoning", system: METHOD_CONTENT.verifier,
+    context: `RESEARCH SOURCES:\n${JSON.stringify(researcher.json).slice(0, 3000)}\nCORE BODY:\n${String(editor.json.core_body ?? writer.json.body ?? "").slice(0, 5000)}\nREPURPOSES:\n${JSON.stringify((editor.json.repurposes ?? repurposer.json.repurposes)).slice(0, 4000)}`,
+    schema: CONTENT_SCHEMAS.verifier, label: "Checking facts and originality" }, soFar);
+  rec("verifier", "Verifier", verifier);
+
+  // 7. Assemble content_report. Mock → a realistic demo.
+  const { isMock: assemblerMock } = await routeTask(step.task_type);
+  let report: unknown;
+  if (assemblerMock) {
+    report = mockContentReport(idea, channels, tone);
+  } else {
+    const repurposes = channels.map((ch) => {
+      const key = ch.toLowerCase();
+      const base = repByChannel.get(key) ?? {};
+      const editedContent = editedByChannel.get(key);
+      return { channel: ch, content: editedContent || String(base.content ?? ""), hook_options: Array.isArray(base.hook_options) ? (base.hook_options as string[]).map(String) : [] };
+    }).filter((r) => r.content);
+    const stats = (researcher.json.stats as Array<{ claim?: string; source?: string }>) ?? [];
+    const flags = [...((verifier.json.flags as string[]) ?? []), ...((verifier.json.unconfirmed as string[]) ?? []).map((u) => `Unconfirmed — verify before posting: ${u}`)];
+    if (verifier.json.originality_ok === false) flags.push("Originality check flagged a passage too close to a source — reword before posting.");
+    report = {
+      summary: `A week of content from one idea — a core piece plus ${repurposes.length} channel-native repurpose${repurposes.length === 1 ? "" : "s"}, in your ${tone} voice.`,
+      core: {
+        title_options: Array.isArray(writer.json.title_options) ? (writer.json.title_options as string[]).map(String) : [],
+        body: String(editor.json.core_body ?? writer.json.body ?? ""),
+        takeaway: String(writer.json.takeaway ?? ""),
+      },
+      repurposes,
+      schedule: contentSchedule(repurposes.map((r) => r.channel)),
+      flags: flags.slice(0, 10),
+      sources: [
+        { ref: "IDEA", quote: `Seed: ${idea}` },
+        ...stats.slice(0, 6).map((s, i) => ({ ref: `S${i + 1}`, quote: `${s.claim ?? ""} — ${s.source ?? ""}`.slice(0, 200) })),
+      ],
+      confidence: repurposes.length && stats.length ? 0.75 : 0.55,
+    };
+  }
+
+  // Verifier gate (Quality Layer 1) — facts vs sources; no unverified stat, no near-copy shipped.
+  let verification: Verification | undefined;
+  try {
+    verification = await verifyOutput({ userId: ctx.userId, taskId: ctx.taskId, output: report, context: `RESEARCH:\n${JSON.stringify(researcher.json).slice(0, 5000)}` });
+    billed += verification.billedUsd ?? 0;
+    if (verification.model) models.add(verification.model);
+    if (verification.verdict !== "supported" && report && typeof report === "object") {
+      const r = report as { flags?: string[] };
+      r.flags = [...(r.flags ?? []), ...verification.conflicts.map((c) => `Check this claim: ${c}`), ...verification.unsupported_claims.map((c) => `No source found: ${c}`)].slice(0, 14);
+    }
+    ctx.onEvent?.({ step: "crew.gate", verdict: verification.verdict, conflicts: verification.conflicts.length });
+  } catch {
+    ctx.onEvent?.({ step: "crew.gate", verdict: "skipped", conflicts: 0 });
+  }
+
+  return { output: report, schema: "content_report", modelsUsed: [...models], agents: trail, verification, isMock: assemblerMock || trail.some((t) => t.isMock), billedUsd: billed };
+};
+
 type CrewDef = {
   label: string; describe: string[]; agents: string[]; run: Runner;
   stepsTable: string;
@@ -1081,6 +1256,39 @@ export const CREWS: Record<string, CrewDef> = {
       }).eq("id", runId);
     },
     failRun: async (runId) => { await adminClient().from("websites").update({ status: "failed" }).eq("id", runId); },
+  },
+  content: {
+    label: "Content Pipeline",
+    describe: [
+      "Turns one idea into a sharp angle and a content plan",
+      "Researches real facts and stats to ground it",
+      "Writes the core piece in your brand voice",
+      "Rewrites it natively for each platform — not copy-paste",
+      "Polishes every piece to your voice, then fact-checks it",
+    ],
+    agents: ["Content Strategist", "Researcher", "Writer", "Repurposer", "Brand-Voice Editor", "Verifier"],
+    run: contentRunner,
+    stepsTable: "content_run_steps",
+    createRun: async (ctx) => {
+      const { data } = await adminClient().from("content_runs").insert({
+        user_id: ctx.userId, account_id: ctx.userId, task_id: ctx.taskId,
+        idea: pick(ctx.config, "idea", "topic") || null,
+        output_set: (pick(ctx.config, "output_set") || "").toLowerCase().replace(/[^a-z]+/g, "_").replace(/^_|_$/g, "") || null,
+        channels: contentChannels(ctx.config),
+        tone: (pick(ctx.config, "tone") || "brand_voice").toLowerCase().includes("brand") ? "brand_voice" : (pick(ctx.config, "tone") || "brand_voice").toLowerCase(),
+        status: "running",
+      }).select("id").single();
+      return data?.id as string | undefined;
+    },
+    finishRun: async (runId, out, taskId) => {
+      const db = adminClient();
+      const { data: usage } = await db.from("api_usage_log").select("cost_usd").eq("task_id", taskId);
+      await db.from("content_runs").update({
+        status: "done", content: (out.output ?? null) as unknown as Json,
+        total_cost: (usage ?? []).reduce((n, r) => n + Number(r.cost_usd), 0),
+      }).eq("id", runId);
+    },
+    failRun: async (runId) => { await adminClient().from("content_runs").update({ status: "failed" }).eq("id", runId); },
   },
 };
 
