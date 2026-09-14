@@ -8,10 +8,8 @@ const SECTIONS = [
   { href: "/admin/apps", label: "Apps", hint: "Schema · build · versions", exact: false },
   { href: "/admin/apis", label: "APIs", hint: "Provider keys · Vault", exact: false },
   { href: "/admin/members", label: "Members", hint: "Users · credits · roles", exact: false },
-  { href: "/admin/organizations", label: "Organizations", hint: "Teams · invites", exact: false },
   { href: "/admin/payment", label: "Payment", hint: "Credits · transactions", exact: false },
   { href: "/admin/inbox", label: "Inbox", hint: "Email in & out", exact: false },
-  { href: "/admin/graph", label: "Graph", hint: "Obsidian-style memory", exact: false },
   { href: "/admin/services", label: "Services", hint: "LLM · data · jobs health", exact: false },
   { href: "/admin/ops", label: "Platform Ops", hint: "Routing · rates · pricing", exact: false },
 ] as const;

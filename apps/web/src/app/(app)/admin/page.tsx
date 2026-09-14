@@ -15,11 +15,10 @@ async function count(table: string, published?: boolean): Promise<number> {
 
 export default async function AdminOverview() {
   const db = adminClient();
-  const [apps, published, members, orgs, tasks] = await Promise.all([
+  const [apps, published, members, tasks] = await Promise.all([
     count("mini_apps"),
     count("mini_apps", true),
     count("profiles"),
-    count("organizations"),
     count("tasks"),
   ]);
   const { data: audit } = await db.from("admin_audit_log").select("action,target,created_at").order("created_at", { ascending: false }).limit(8);
@@ -27,7 +26,6 @@ export default async function AdminOverview() {
   const stats = [
     { label: "Apps", value: apps, sub: `${published} published`, href: "/admin/apps" },
     { label: "Members", value: members, sub: "users", href: "/admin/members" },
-    { label: "Organizations", value: orgs, sub: "teams", href: "/admin/organizations" },
     { label: "Runs", value: tasks, sub: "all-time tasks", href: "/admin/payment" },
   ];
 
