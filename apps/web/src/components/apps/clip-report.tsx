@@ -1,8 +1,11 @@
+"use client";
+import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
 import { ConfidenceBadge } from "@/components/result-view";
 
 /** Client-safe shapes for the `clip_report` schema (see lib/engine/schemas.ts). All fields optional-guarded. */
+type SourceVideo = { provider?: string; id?: string; title?: string; author?: string };
 type DimScores = { hook?: number; pacing?: number; engagement?: number };
 type Clip = {
   title?: string;
@@ -24,6 +27,7 @@ type Dropped = { moment?: string; reason?: string };
 type Source = { ref?: string; quote?: string };
 export type ClipReportData = {
   summary?: string;
+  source_video?: SourceVideo;
   clips?: Clip[];
   dropped?: Dropped[];
   render_note?: string;
@@ -80,8 +84,13 @@ function DimBar({ label, value }: { label: string; value: number }) {
 
 /** Plain-language renderer for a Clip Video run — hero, per-clip cards, honest drops, render note, flags, sources. */
 export function ClipReport({ report, isMock, verification }: { report: unknown; isMock?: boolean; verification?: Verdict }) {
+  const [seek, setSeek] = useState<number | null>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
   if (!report || typeof report !== "object") return null;
   const r = report as ClipReportData;
+  const sv = r.source_video;
+  const ytId = sv?.provider === "youtube" && sv.id ? sv.id : null;
+  const play = (start?: number) => { setSeek(Math.max(0, Math.round(Number(start) || 0))); playerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }); };
   const clips = arr<Clip>(r.clips).slice().sort((a, b) => (Number(b.virality_score) || 0) - (Number(a.virality_score) || 0));
   const dropped = arr<Dropped>(r.dropped);
   const sources = arr<Source>(r.sources);
@@ -122,6 +131,25 @@ export function ClipReport({ report, isMock, verification }: { report: unknown; 
         )}
       </div>
 
+      {/* SOURCE VIDEO — the real thing; clips seek into it */}
+      {ytId && (
+        <section ref={playerRef} className="space-y-2 scroll-mt-6">
+          <div className="squircle rounded-4 overflow-hidden border border-line-strong bg-black" style={{ aspectRatio: "16 / 9" }}>
+            <iframe
+              key={seek ?? "start"}
+              src={`https://www.youtube.com/embed/${ytId}?rel=0${seek != null ? `&start=${seek}&autoplay=1` : ""}`}
+              title={sv?.title ?? "Source video"}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{ width: "100%", height: "100%", border: 0 }}
+            />
+          </div>
+          <p className="text-xs text-fg-faint px-1">
+            Source: <span className="text-fg-muted">{sv?.title}</span>{sv?.author ? <> · {sv.author}</> : null} — clip a moment below to jump to it{seek != null ? <> · playing from <span className="num">{fmt(seek)}</span></> : null}.
+          </p>
+        </section>
+      )}
+
       {/* CLIPS — one card each, best first */}
       {clips.length > 0 && (
         <section className="space-y-4">
@@ -142,7 +170,11 @@ export function ClipReport({ report, isMock, verification }: { report: unknown; 
                             <Badge tone={scoreTone(score)}>{scoreBand(score)}</Badge>
                             {c.hook_type && <span className="inline-flex items-center h-6 px-2 rounded-1 bg-bg-elev-2 text-fg-muted">{c.hook_type}</span>}
                             <Badge tone={c.render_category === "B" ? "violet" : undefined}>{c.render_category === "B" ? "Branded captions" : "Plain cut"}</Badge>
-                            <span className="num">{fmt(c.start_sec)}–{fmt(c.end_sec)}</span>
+                            {ytId ? (
+                              <button type="button" onClick={() => play(c.start_sec)} className="num inline-flex items-center gap-1 h-6 px-2 rounded-1 bg-coral-soft text-coral hover:bg-coral hover:text-white transition font-medium">▶ {fmt(c.start_sec)}–{fmt(c.end_sec)}</button>
+                            ) : (
+                              <span className="num">{fmt(c.start_sec)}–{fmt(c.end_sec)}</span>
+                            )}
                             {typeof c.duration_sec === "number" && <span className="num">{Math.round(c.duration_sec)}s</span>}
                           </p>
                         </div>

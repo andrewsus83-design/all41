@@ -938,26 +938,32 @@ export const DEMO_EXAMPLES: Record<string, DemoExample[]> = {
   ],
   "clip-video": [
     {
-      "label": "Founder podcast",
+      "label": "YC startup talk",
       "schema": "clip_report",
       "result": {
-        "summary": "Scanned all 47:12 of \"How we bootstrapped to $1M ARR with no ads\" with founder Priya Nadkarni (Loomwork). Flagged 4 high-probability clips and dropped 2 weaker moments. The strongest cut is a genuine pattern-break: she claims turning down a $2.5M seed round is what got them to $1M — a contrarian founder take that stops the scroll in under 2 seconds. Each clip below is a ready-to-render spec with a rewritten first-line hook, tightened in/out points, and platform fit. Hooks are rewritten to front-load the surprising number or claim within the first 1.5s, because that's where 80% of the retention decision is made. Recommended posting order matches virality_score, top-down.",
+        "summary": "4 clips from Michael Seibel's YC startup talk — the highest-signal moments, hook-scored, reframed vertical and caption-ready. Tap a timestamp to watch that moment.",
+        "source_video": {
+          "provider": "youtube",
+          "id": "Pg72m3CjuK4",
+          "title": "Everything We Teach at Y Combinator in 10 Minutes",
+          "author": "Startup Istanbul"
+        },
         "clips": [
           {
-            "title": "\"We said no to $2.5M — that's why we hit $1M\"",
-            "start_sec": 1042,
-            "end_sec": 1089,
-            "duration_sec": 47,
-            "virality_score": 92,
+            "title": "The mistake founders make picking an idea",
+            "start_sec": 68,
+            "end_sec": 118,
+            "duration_sec": 50,
+            "virality_score": 89,
             "dimension_scores": {
-              "hook": 95,
-              "pacing": 89,
-              "engagement": 91
+              "hook": 92,
+              "pacing": 85,
+              "engagement": 88
             },
-            "hook_type": "Contrarian claim + specific dollar amount in first 1.5s",
-            "why": "Priya turning down a $2.5M seed term sheet is a genuine pattern-break — the whole internet assumes raising = winning. She names the exact investor pressure and the exact reason she walked. The clip has a clean setup-turn-payoff arc inside 47s, and the closing line (\"ownership is the only moat nobody can dilute\") is a natural quote-tweet / stitch magnet. Original first line was throat-clearing (\"So, uh, around that time we were talking to a few funds...\") — rewritten hook drops you straight into the number.",
-            "caption": "She turned down $2.5M. Then hit $1M ARR with zero ad spend. The math behind saying no 👇 #bootstrapping #startups #founderstory",
-            "render_category": "A",
+            "hook_type": "Contrarian / mistake",
+            "why": "Opens on the #1 founder anxiety — 'is my idea any good?' — inside the first two seconds.",
+            "caption": "Most founders pick the wrong idea for the same reason. Here's the test YC uses.",
+            "render_category": "B",
             "platform_fit": [
               "TikTok",
               "Reels",
@@ -968,71 +974,67 @@ export const DEMO_EXAMPLES: Record<string, DemoExample[]> = {
             "status": "render_pending"
           },
           {
-            "title": "The pricing mistake that cost them $400K",
-            "start_sec": 1863,
-            "end_sec": 1912,
-            "duration_sec": 49,
-            "virality_score": 84,
+            "title": "Launch before you're ready — here's why",
+            "start_sec": 132,
+            "end_sec": 184,
+            "duration_sec": 52,
+            "virality_score": 83,
             "dimension_scores": {
-              "hook": 88,
+              "hook": 86,
               "pacing": 82,
-              "engagement": 85
+              "engagement": 80
             },
-            "hook_type": "Confessed mistake + quantified loss (regret hook)",
-            "why": "Vulnerability plus a big round number. Priya admits they charged $29/mo for 14 months when the market would bear $99, and back-of-napkins it as roughly $400K left on the table. Founders and coaches save these 'don't-do-what-I-did' clips at a high rate, and the specificity ($29 → $99, 14 months) makes it feel like real data, not a platitude. Cut starts on the admission, not the wind-up.",
-            "caption": "We charged $29 when we could've charged $99. For 14 months. Here's what that actually cost us 👇 #saas #pricing #startuplessons",
+            "hook_type": "Contrarian",
+            "why": "Rejects the 'polish it first' belief in sentence one — the scroll stops.",
+            "caption": "You don't need more features. You need to launch. The MVP trap, explained.",
             "render_category": "B",
             "platform_fit": [
               "TikTok",
-              "Reels",
-              "Shorts"
+              "Reels"
             ],
             "clip_file": "runs/demo/clip-2.mp4",
             "caption_file": "runs/demo/clip-2.captions.json",
             "status": "render_pending"
           },
           {
-            "title": "How they got the first 100 customers from one Slack group",
-            "start_sec": 744,
-            "end_sec": 783,
-            "duration_sec": 39,
+            "title": "The only growth number that matters early",
+            "start_sec": 192,
+            "end_sec": 246,
+            "duration_sec": 54,
             "virality_score": 78,
             "dimension_scores": {
               "hook": 80,
-              "pacing": 79,
-              "engagement": 77
+              "pacing": 77,
+              "engagement": 76
             },
-            "hook_type": "Concrete tactic + exact channel named",
-            "why": "Actionable and screenshot-worthy. She names the exact channel (the 6,000-member Online Geniuses Slack), the exact play (answering one question a day for 90 days, never pitching), and the exact result (first 100 paying users, zero ad spend). Tactical clips like this drive high saves and 'sending this to my cofounder' shares. Slightly lower ceiling because it's how-to rather than emotional, but very shareable inside founder circles.",
-            "caption": "0 ads. 1 Slack group. First 100 paying customers. The 90-day rule she used 👇 #growth #bootstrapped #communityled",
+            "hook_type": "Number / curiosity",
+            "why": "Promises one specific metric — curiosity gap plus a concrete payoff.",
+            "caption": "Forget vanity metrics. This is the one growth number YC founders obsess over.",
             "render_category": "B",
             "platform_fit": [
-              "TikTok",
-              "Reels",
-              "Shorts"
+              "TikTok"
             ],
             "clip_file": "runs/demo/clip-3.mp4",
             "caption_file": "runs/demo/clip-3.captions.json",
             "status": "render_pending"
           },
           {
-            "title": "\"I had $1,100 left and almost shut it down\"",
-            "start_sec": 2451,
-            "end_sec": 2489,
-            "duration_sec": 38,
-            "virality_score": 73,
+            "title": "What investors actually want to hear",
+            "start_sec": 320,
+            "end_sec": 372,
+            "duration_sec": 52,
+            "virality_score": 74,
             "dimension_scores": {
               "hook": 76,
-              "pacing": 74,
-              "engagement": 75
+              "pacing": 73,
+              "engagement": 72
             },
-            "hook_type": "Rock-bottom stakes + specific bank balance",
-            "why": "Emotional relatability. Priya describes the month their account hit $1,100 and she'd drafted the shutdown email — then a single annual plan came in that Friday. The specificity of the balance and the drafted email makes it land as real, not a highlight-reel humblebrag. Strong comment-bait ('how close were you?'). Rewritten hook leads with the dollar figure instead of the original slow lead-in about 'a rough stretch in year two.'",
-            "caption": "$1,100 in the bank. Shutdown email in drafts. Then Friday happened 👇 #foundersjourney #bootstrapping #startuplife",
-            "render_category": "C",
+            "hook_type": "Insider",
+            "why": "Insider framing on a high-stakes topic every founder is anxious about.",
+            "caption": "Fundraising isn't about the deck. Here's what actually moves investors.",
+            "render_category": "A",
             "platform_fit": [
-              "TikTok",
-              "Reels"
+              "Shorts"
             ],
             "clip_file": "runs/demo/clip-4.mp4",
             "caption_file": "runs/demo/clip-4.captions.json",
@@ -1041,33 +1043,21 @@ export const DEMO_EXAMPLES: Record<string, DemoExample[]> = {
         ],
         "dropped": [
           {
-            "moment": "8:30–11:40 — Priya's 3-minute walk through Loomwork's onboarding funnel and activation metrics",
-            "reason": "Substantively useful but visually flat and jargon-heavy (talks CAC, activation rate, cohort curves with no on-screen numbers). No clean hook in the first 3s and no emotional or contrarian turn — retention would drop off a cliff before the payoff."
-          },
-          {
-            "moment": "38:05–39:20 — the host and Priya trading remote-work tool recommendations",
-            "reason": "Off-topic tangent with two speakers talking over each other; no standalone claim, and it's tied to the host's question, so it can't be cut cleanly without confusing context."
+            "moment": "0:00 Introduction",
+            "reason": "Housekeeping and speaker intro — not self-contained and no standalone hook."
           }
         ],
-        "render_note": "Clip judgment runs live; video rendering (transcription, ffmpeg, Remotion) connects at build — each clip is delivered as a ready-to-render spec.",
+        "render_note": "Clip selection and hook-scoring run live against the transcript; the vertical render (reframe + captions) connects at build. Each clip ships as a ready-to-render spec with exact in/out points on the source.",
         "flags": [
-          "Sample preview — connect your data for a live, sourced run."
+          "Sample preview on a public YC talk (Startup Istanbul). Connect your own video for a live run."
         ],
         "sources": [
           {
-            "ref": "T1",
-            "quote": "17:22 — \"They wanted 22% for two and a half million. I did the math on ownership and just... couldn't.\""
-          },
-          {
-            "ref": "T2",
-            "quote": "31:03 — \"We charged twenty-nine bucks for over a year. That's probably four hundred grand we just left sitting there.\""
-          },
-          {
-            "ref": "T3",
-            "quote": "40:51 — \"The month it got scary we had about eleven hundred dollars. I'd already written the email.\""
+            "ref": "V1",
+            "quote": "Everything We Teach at Y Combinator in 10 Minutes — Startup Istanbul (youtu.be/Pg72m3CjuK4)"
           }
         ],
-        "confidence": 0.55
+        "confidence": 0.62
       }
     },
     {
