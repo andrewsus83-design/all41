@@ -231,11 +231,11 @@ function SitePage({ page, brand, colors, fonts }: { page: Page; brand: string; c
       {/* image hero with overlaid copy */}
       <div style={{ position: "relative" }}>
         <div style={{ minHeight: 380 }}><Hero src={page.image} alt={brand} colors={colors} minH={380} /></div>
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.32) 42%, rgba(0,0,0,0.78) 100%)" }} />
-        <div style={{ position: "absolute", inset: 0, padding: "40px 28px", display: "flex", flexDirection: "column", justifyContent: "flex-end", color: "#fff", textShadow: "0 2px 18px rgba(0,0,0,0.55)" }}>
-          <span style={{ fontWeight: 600, fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", color: "#fff", opacity: 0.9 }}>Mobile dog grooming</span>
-          <h1 style={{ fontFamily: D, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.05, fontSize: "clamp(28px, 4.6vw, 46px)", maxWidth: 620, marginTop: 10 }}>{page.headline}</h1>
-          {page.subhead && <p style={{ fontSize: 16, lineHeight: 1.55, maxWidth: 520, marginTop: 12, opacity: 0.95 }}>{page.subhead}</p>}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.42) 45%, rgba(0,0,0,0.85) 100%)" }} />
+        <div style={{ position: "absolute", inset: 0, padding: "40px 28px", display: "flex", flexDirection: "column", justifyContent: "flex-end", color: "#fff", textShadow: "0 2px 20px rgba(0,0,0,0.6)" }}>
+          <span style={{ fontWeight: 700, fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: "#fff", opacity: 0.85 }}>{brand}</span>
+          <h1 style={{ fontFamily: D, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.05, fontSize: "clamp(28px, 4.6vw, 46px)", maxWidth: 620, marginTop: 10, color: "#fff" }}>{page.headline}</h1>
+          {page.subhead && <p style={{ fontSize: 16, lineHeight: 1.55, maxWidth: 520, marginTop: 12, opacity: 0.95, color: "#fff" }}>{page.subhead}</p>}
           <div style={{ marginTop: 18 }}>
             <span style={{ background: colors.accent, color: colors.onAccent, fontWeight: 700, padding: "14px 28px", borderRadius: 999, fontSize: 16 }}>{page.cta || "Book now"}</span>
           </div>
