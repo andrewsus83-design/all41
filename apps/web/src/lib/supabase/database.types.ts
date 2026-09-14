@@ -907,6 +907,7 @@ export type Database = {
           onboarded_at: string | null
           plan: string
           role: string | null
+          space_name: string | null
           updated_at: string
         }
         Insert: {
@@ -917,6 +918,7 @@ export type Database = {
           onboarded_at?: string | null
           plan?: string
           role?: string | null
+          space_name?: string | null
           updated_at?: string
         }
         Update: {
@@ -927,7 +929,62 @@ export type Database = {
           onboarded_at?: string | null
           plan?: string
           role?: string | null
+          space_name?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      journal_notes: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      journal_todos: {
+        Row: {
+          cadence: string | null
+          completed_at: string | null
+          created_at: string
+          done: boolean
+          id: string
+          kind: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          cadence?: string | null
+          completed_at?: string | null
+          created_at?: string
+          done?: boolean
+          id?: string
+          kind?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          cadence?: string | null
+          completed_at?: string | null
+          created_at?: string
+          done?: boolean
+          id?: string
+          kind?: string
+          title?: string
+          user_id?: string
         }
         Relationships: []
       }

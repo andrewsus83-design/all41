@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Money } from "@/components/ui/money";
 import { cn } from "@/lib/cn";
-import { AppModal } from "@/components/build/catalog";
+import { AppDetail } from "./app-detail";
 import { categoryLabel, costPrefix } from "@/components/build/catalog-copy";
 import type { CatalogApp } from "@/components/apps/types";
 
@@ -94,7 +94,7 @@ export function ExploreGallery({ apps }: { apps: CatalogApp[] }) {
         </div>
       )}
 
-      {active && <AppModal app={active} onClose={() => setActive(null)} onBuild={() => open(active.slug)} />}
+      {active && <AppDetail app={active} onClose={() => setActive(null)} onBuild={() => open(active.slug)} />}
     </div>
   );
 }
