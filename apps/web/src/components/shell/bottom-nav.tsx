@@ -48,12 +48,12 @@ export function BottomNav() {
             aria-label={label}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "group relative grid place-items-center size-12 rounded-full transition",
-              active ? "bg-fg text-bg" : "text-fg-muted hover:text-fg hover:bg-bg-elev-2",
+              "flex items-center gap-2 h-12 rounded-full transition",
+              active ? "bg-fg text-bg pl-3.5 pr-4" : "text-fg-muted hover:text-fg hover:bg-bg-elev-2 w-12 justify-center",
             )}
           >
             <Icon />
-            <span className="absolute -top-8 whitespace-nowrap text-xs px-2 py-1 rounded-full bg-fg text-bg opacity-0 group-hover:opacity-100 transition pointer-events-none">{label}</span>
+            {active && <span className="font-title font-medium text-sm whitespace-nowrap">{label}</span>}
           </Link>
         );
       })}
