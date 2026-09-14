@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
 import { ConfidenceBadge } from "@/components/result-view";
@@ -20,10 +22,47 @@ export type ContentReportData = {
 type Verdict = { verdict?: string; conflicts?: string[] } | null | undefined;
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 
-const channelTone: Record<string, "sky" | "violet" | "coral" | "green" | "amber" | "neutral"> = {
-  linkedin: "sky", x: "neutral", twitter: "neutral", instagram: "violet", ig: "violet", blog: "coral", email: "green", newsletter: "green",
-};
-const toneFor = (ch: string) => channelTone[ch.toLowerCase().replace(/[^a-z]/g, "")] ?? "neutral";
+type Brand = { label: string; color: string; glyph: string; handle?: string };
+function brandOf(ch: string): Brand {
+  const k = ch.toLowerCase().replace(/[^a-z]/g, "");
+  if (k.includes("linkedin")) return { label: "LinkedIn", color: "#0a66c2", glyph: "in", handle: "You · Founder" };
+  if (k === "x" || k.includes("twitter")) return { label: "X", color: "#111111", glyph: "𝕏", handle: "@you" };
+  if (k.includes("instagram") || k === "ig") return { label: "Instagram", color: "#c13584", glyph: "◙", handle: "@you" };
+  if (k.includes("news") || k.includes("email")) return { label: "Newsletter", color: "#0e7a4b", glyph: "✉", handle: "To subscribers" };
+  if (k.includes("blog")) return { label: "Blog", color: "#d8402f", glyph: "¶" };
+  return { label: ch, color: "#6b6660", glyph: "•" };
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async () => { try { await navigator.clipboard.writeText(text); setDone(true); setTimeout(() => setDone(false), 1500); } catch {} }}
+      className={cn("inline-flex items-center gap-1.5 text-xs font-title font-medium px-2.5 py-1.5 rounded-full border transition", done ? "border-green/40 text-green bg-green-soft" : "border-line text-fg-muted hover:text-fg hover:border-line-strong")}
+    >
+      {done ? "Copied ✓" : "Copy"}
+    </button>
+  );
+}
+
+/** Minimal markdown → prose (headings, bullets, paragraphs). No external deps. */
+function Prose({ md }: { md: string }) {
+  const blocks = md.split(/\n{2,}/);
+  return (
+    <div className="space-y-3">
+      {blocks.map((b, i) => {
+        const line = b.trim();
+        if (/^#\s/.test(line)) return <h3 key={i} className="font-title text-xl font-semibold">{line.replace(/^#\s/, "")}</h3>;
+        if (/^##\s/.test(line)) return <h4 key={i} className="font-title text-lg font-medium">{line.replace(/^##\s/, "")}</h4>;
+        if (/^[-*]\s/m.test(line)) {
+          return <ul key={i} className="list-disc pl-5 space-y-1">{line.split(/\n/).map((l, j) => <li key={j}>{l.replace(/^[-*]\s/, "")}</li>)}</ul>;
+        }
+        return <p key={i} className="leading-relaxed whitespace-pre-wrap">{line}</p>;
+      })}
+    </div>
+  );
+}
 
 function doubleChecked(v: Verdict) {
   if (!v?.verdict) return null;
@@ -33,7 +72,7 @@ function doubleChecked(v: Verdict) {
   return null;
 }
 
-/** Plain-language renderer for a Content Pipeline run — core piece, channel-native repurposes, schedule, flags. */
+/** Content Pipeline result — the finished pieces, shown the way you'd actually use them (Jasper-style workspace). */
 export function ContentReport({ report, isMock, verification }: { report: unknown; isMock?: boolean; verification?: Verdict }) {
   if (!report || typeof report !== "object") return null;
   const r = report as ContentReportData;
@@ -44,114 +83,122 @@ export function ContentReport({ report, isMock, verification }: { report: unknow
   const flags = arr<string>(r.flags);
   const sources = arr<Source>(r.sources);
   const dc = doubleChecked(verification);
+  const pieceCount = repurposes.length + (core.body ? 1 : 0);
 
   return (
     <div className="space-y-8">
-      {/* HERO */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-end gap-2 flex-wrap">
-          {isMock && <Badge tone="amber">demo run</Badge>}
+      {/* header */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge tone="green">{pieceCount} pieces ready</Badge>
+          <span className="text-sm text-fg-muted">A week of content from one idea — ready to copy and post.</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {isMock && <Badge tone="amber">sample</Badge>}
           <ConfidenceBadge value={typeof r.confidence === "number" ? r.confidence : undefined} />
         </div>
-        <section className="squircle rounded-4 border border-line bg-bg-elev p-8 space-y-3">
-          <div className="flex items-baseline justify-between gap-4 flex-wrap">
-            <h2 className="font-title text-2xl font-medium">Your content set</h2>
-            <p className="text-sm text-fg-muted"><span className="num">{repurposes.length + (core.body ? 1 : 0)}</span> pieces</p>
-          </div>
-          {r.summary && <p className="text-lg leading-relaxed text-fg-muted">{r.summary}</p>}
-        </section>
-        {dc && (
-          <p className={cn("flex items-center gap-2 text-sm px-1", dc.tone === "green" ? "text-green" : "text-amber")}>
-            <span className={cn("inline-block size-2 rounded-full", dc.tone === "green" ? "bg-green" : "bg-amber")} />
-            {dc.text}
-          </p>
-        )}
       </div>
+      {dc && (
+        <p className={cn("flex items-center gap-2 text-sm px-1", dc.tone === "green" ? "text-green" : "text-amber")}>
+          <span className={cn("inline-block size-2 rounded-full", dc.tone === "green" ? "bg-green" : "bg-amber")} />{dc.text}
+        </p>
+      )}
 
-      {/* CORE PIECE */}
+      {/* CORE PIECE — a real document */}
       {(core.body || titles.length > 0) && (
-        <section className="squircle rounded-4 border border-coral/30 bg-coral-soft/40 p-6 space-y-3">
-          <p className="text-xs uppercase tracking-wide text-coral">Core piece</p>
+        <section className="space-y-4">
+          <h3 className="font-title text-xl font-medium">The core piece</h3>
           {titles.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-xs uppercase tracking-wide text-fg-faint">Title options (test them)</p>
-              <ul className="space-y-1 text-sm">
-                {titles.map((t, i) => <li key={i} className="font-title font-medium">{t}</li>)}
-              </ul>
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-wide text-fg-faint">Headline options — A/B test them</p>
+              <div className="flex flex-wrap gap-2">
+                {titles.map((t, i) => <span key={i} className="squircle rounded-full border border-line bg-bg-elev px-3 py-1.5 text-sm font-title font-medium">{t}</span>)}
+              </div>
             </div>
           )}
-          {core.body && <div className="text-fg-muted leading-relaxed whitespace-pre-wrap text-sm border-t border-line/60 pt-3">{core.body}</div>}
-          {core.takeaway && <p className="text-sm text-green border-t border-line/60 pt-3"><span className="text-fg-faint">Takeaway: </span>{core.takeaway}</p>}
+          {core.body && (
+            <article className="squircle rounded-4 border border-line bg-bg-elev p-6 md:p-8">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <span className="text-xs uppercase tracking-wide text-fg-faint">Article draft</span>
+                <CopyButton text={core.body} />
+              </div>
+              <div className="text-fg leading-relaxed"><Prose md={core.body} /></div>
+              {core.takeaway && <p className="mt-5 pt-4 border-t border-line text-sm text-green"><span className="text-fg-faint">Takeaway: </span>{core.takeaway}</p>}
+            </article>
+          )}
         </section>
       )}
 
-      {/* REPURPOSES — channel-native */}
+      {/* REPURPOSES — channel-native post cards */}
       {repurposes.length > 0 && (
         <section className="space-y-4">
-          <h3 className="font-title text-xl font-medium">Channel-native repurposes</h3>
-          <div className="space-y-3">
-            {repurposes.map((p, i) => (
-              <div key={i} className="squircle rounded-4 border border-line bg-bg-elev p-6 space-y-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  {p.channel && <Badge tone={toneFor(p.channel)}>{p.channel}</Badge>}
-                </div>
-                {p.content && <div className="text-fg-muted leading-relaxed whitespace-pre-wrap">{p.content}</div>}
-                {arr<string>(p.hook_options).length > 0 && (
-                  <div className="border-t border-line/60 pt-2 space-y-1">
-                    <p className="text-xs uppercase tracking-wide text-fg-faint">Hook options</p>
-                    <ul className="space-y-1 text-sm text-fg-muted">
-                      {arr<string>(p.hook_options).map((h, j) => <li key={j} className="flex gap-2"><span className="text-fg-faint shrink-0">•</span>{h}</li>)}
-                    </ul>
+          <h3 className="font-title text-xl font-medium">Ready to post</h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            {repurposes.map((p, i) => {
+              const b = brandOf(p.channel ?? "");
+              return (
+                <div key={i} className="squircle rounded-4 border border-line bg-bg-elev overflow-hidden flex flex-col">
+                  {/* channel header */}
+                  <div className="flex items-center gap-2.5 px-4 py-3 border-b border-line">
+                    <span className="grid place-items-center size-8 rounded-full text-white text-sm font-bold shrink-0" style={{ background: b.color }}>{b.glyph}</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-title font-medium leading-tight">{b.label}</p>
+                      {b.handle && <p className="text-xs text-fg-faint leading-tight">{b.handle}</p>}
+                    </div>
+                    <div className="ml-auto"><CopyButton text={p.content ?? ""} /></div>
                   </div>
-                )}
-              </div>
-            ))}
+                  {/* post body */}
+                  {p.content && <div className="px-4 py-4 text-sm leading-relaxed whitespace-pre-wrap flex-1">{p.content}</div>}
+                  {/* alt hooks */}
+                  {arr<string>(p.hook_options).length > 0 && (
+                    <div className="px-4 py-3 border-t border-line bg-bg-elev-2 space-y-1">
+                      <p className="text-xs uppercase tracking-wide text-fg-faint">Alt hooks</p>
+                      {arr<string>(p.hook_options).map((h, j) => <p key={j} className="text-sm text-fg-muted flex gap-2"><span className="text-fg-faint shrink-0">•</span>{h}</p>)}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
 
-      {/* SCHEDULE */}
+      {/* SCHEDULE — the week */}
       {schedule.length > 0 && (
         <section className="space-y-3">
-          <h3 className="font-title text-xl font-medium">Suggested posting order</h3>
-          <div className="overflow-x-auto squircle rounded-4 border border-line">
-            <table className="w-full text-sm border-collapse">
-              <thead className="text-fg-faint text-xs uppercase tracking-wide bg-bg-elev">
-                <tr><th className="text-left font-medium py-3 px-4">When</th><th className="text-left font-medium py-3 px-4">Channel</th></tr>
-              </thead>
-              <tbody>
-                {schedule.map((s, i) => (
-                  <tr key={i} className="border-t border-line bg-bg-elev">
-                    <td className="py-3 px-4 text-fg-muted">{s.when}</td>
-                    <td className="py-3 px-4">{s.channel && <Badge tone={toneFor(s.channel)}>{s.channel}</Badge>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <h3 className="font-title text-xl font-medium">Your posting week</h3>
+          <div className="flex flex-wrap gap-2">
+            {schedule.map((s, i) => {
+              const b = brandOf(s.channel ?? "");
+              return (
+                <div key={i} className="squircle rounded-3 border border-line bg-bg-elev px-4 py-2.5 flex items-center gap-2.5">
+                  <span className="grid place-items-center size-6 rounded-full text-white text-xs font-bold" style={{ background: b.color }}>{b.glyph}</span>
+                  <div className="leading-tight">
+                    <p className="text-xs text-fg-faint">{s.when}</p>
+                    <p className="text-sm font-title font-medium">{b.label}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
 
-      {/* FLAGS */}
+      {/* flags */}
       {flags.length > 0 && (
         <section className="squircle rounded-4 border border-amber/40 bg-amber-soft p-6 space-y-2">
           <p className="font-title text-lg font-medium text-amber">Before you post</p>
-          <ul className="space-y-1.5 list-disc pl-5 text-sm">
-            {flags.map((f, i) => <li key={i}>{f}</li>)}
-          </ul>
+          <ul className="space-y-1.5 list-disc pl-5 text-sm">{flags.map((f, i) => <li key={i}>{f}</li>)}</ul>
         </section>
       )}
 
-      {/* SOURCES */}
+      {/* sources */}
       {sources.length > 0 && (
         <section className="space-y-3">
           <p className="text-xs uppercase tracking-wide text-fg-faint">Sources · <span className="num">{sources.length}</span></p>
           <ul className="space-y-2 text-sm">
             {sources.map((s, i) => (
-              <li key={i} className="flex gap-3">
-                <span className="num text-fg-faint shrink-0 max-w-[10rem] truncate">{s.ref}</span>
-                <span className="text-fg-muted">“{s.quote}”</span>
-              </li>
+              <li key={i} className="flex gap-3"><span className="num text-fg-faint shrink-0 max-w-[10rem] truncate">{s.ref}</span><span className="text-fg-muted">“{s.quote}”</span></li>
             ))}
           </ul>
         </section>
