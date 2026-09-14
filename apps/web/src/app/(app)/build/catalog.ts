@@ -6,7 +6,9 @@ import type { CatalogApp, ConfigQuestion } from "@/components/apps/types";
 /** Every app all41 offers (published catalog + the always-available "custom" template, shown first). */
 export async function loadCatalog(): Promise<CatalogApp[]> {
   const { data } = await adminClient().from("mini_apps").select("slug, name, description, icon, category, tags, brief_template, who_for, config_schema, workflow_def, est_credit_cost, is_published").order("sort_order");
-  const rows = (data ?? []).filter((a) => a.is_published || a.slug === "custom");
+  // For now: only the SOP-grade crew apps (their workflow has a `crew` step) + the always-buildable custom template.
+  const isCrew = (wf: unknown) => (((wf as { steps?: { kind?: string }[] } | null)?.steps ?? []).some((s) => s.kind === "crew"));
+  const rows = (data ?? []).filter((a) => (a.is_published && isCrew(a.workflow_def)) || a.slug === "custom");
   const toApp = (a: (typeof rows)[number]): CatalogApp => {
     const def = a.workflow_def as unknown as WorkflowDef;
     const steps = describeWorkflow(def);

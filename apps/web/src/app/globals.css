@@ -371,3 +371,10 @@ h2 {
 @keyframes sceneIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .scene-in { animation: sceneIn 0.28s cubic-bezier(0.4, 0, 0.2, 1); }
 @media (prefers-reduced-motion: reduce) { .scene-in { animation: none; } }
+
+/* Build page — slide from catalog to the full-screen app/chat */
+@keyframes slideInRight { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+.slide-in-right { animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+@keyframes slideFade { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
+.slide-fade { animation: slideFade 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) { .slide-in-right, .slide-fade { animation: none; } }

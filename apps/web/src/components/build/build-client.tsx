@@ -11,7 +11,7 @@ import { ResultPanel } from "@/components/apps/result-panel";
 import { TaskView, type PastTask } from "@/components/apps/task-view";
 import { useAppRun } from "@/components/apps/use-app-run";
 import { scheduleLabel, targetLabel } from "@/components/apps/format";
-import { CatalogGrid, AppModal } from "./catalog";
+import { CatalogGrid } from "./catalog";
 import { Consultant } from "./consultant";
 import { BriefEditor } from "./brief-editor";
 import { createDraft, updateDraftAnswers, publishDraft, discardDraft, type DraftResult } from "@/app/(app)/build/actions";
@@ -21,7 +21,6 @@ type Draft = { instanceId: string; estimateUsd: number; balance: number };
 
 export function BuildClient({ apps, preselect, task, balance }: { apps: CatalogApp[]; preselect: string | null; task: PastTask | null; balance: number }) {
   const router = useRouter();
-  const [modal, setModal] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(preselect && apps.some((a) => a.slug === preselect) ? preselect : null);
   const [answers, setAnswers] = useState<Answers | null>(null);
   const [editing, setEditing] = useState(false);
@@ -45,7 +44,6 @@ export function BuildClient({ apps, preselect, task, balance }: { apps: CatalogA
   }, [stream]);
 
   function pick(slug: string) {
-    setModal(null);
     setShowTask(false);
     if (slug !== selected) resetAll();
     setSelected(slug);
@@ -91,21 +89,26 @@ export function BuildClient({ apps, preselect, task, balance }: { apps: CatalogA
   const insufficient = draft && !stream.running && !stream.result && draft.balance < draft.estimateUsd;
   const runFailed = draft && !stream.running && !stream.result && (stream.blocked || stream.error);
 
+  const backToApps = () => { resetAll(); setSelected(null); setShowTask(false); router.replace("/build", { scroll: false }); };
+  const inApp = !!app || (showTask && !!task);
+
   return (
-    <div className="grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-10 max-w-7xl">
-      {modal && apps.find((a) => a.slug === modal) && <AppModal app={apps.find((a) => a.slug === modal)!} onClose={() => setModal(null)} onBuild={() => pick(modal)} />}
-
-      {/* left: everything all41 offers */}
-      <aside className="space-y-4 min-w-0">
-        <div className="space-y-1">
-          <h2 className="text-xl">Every app all41 offers <span className="num text-fg-faint">{apps.length}</span></h2>
-          <p className="text-sm text-fg-muted">Tap one to see how it works. Credit: <Money usd={balance} className="text-fg" /></p>
+    <div className="relative min-h-[55vh]">
+      {/* catalog — the apps you can build */}
+      {!inApp && (
+        <div key="catalog" className="slide-fade space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-xl">Apps <span className="num text-fg-faint">{apps.filter((a) => !a.isCustom).length}</span></h2>
+            <p className="text-sm text-fg-muted">Tap one to build it — it opens full-screen. Credit: <Money usd={balance} className="text-fg" /></p>
+          </div>
+          <CatalogGrid apps={apps} selected={selected} onOpen={(slug) => pick(slug)} />
         </div>
-        <CatalogGrid apps={apps} selected={selected} onOpen={(slug) => setModal(slug)} />
-      </aside>
+      )}
 
-      {/* right: the consultant */}
-      <section className="space-y-6 min-w-0">
+      {/* the chosen app, full-screen — slides in from the catalog */}
+      {inApp && (
+      <section className="slide-in-right max-w-4xl mx-auto space-y-6 min-w-0">
+        <button type="button" onClick={backToApps} className="inline-flex items-center gap-1.5 text-sm text-fg-muted hover:text-fg transition">← Apps</button>
         {showTask && task ? (
           <TaskView task={task} />
         ) : !app ? (
@@ -204,6 +207,7 @@ export function BuildClient({ apps, preselect, task, balance }: { apps: CatalogA
         )}
         <div ref={bottomRef} />
       </section>
+      )}
     </div>
   );
 }

@@ -27,7 +27,9 @@ export const getPublishedApps = cache(async (): Promise<MarketingApp[]> => {
     .select("id, slug, name, description, icon, category, est_credit_cost, config_schema, workflow_def")
     .eq("is_published", true)
     .order("sort_order");
-  return (data ?? []).map((a) => ({
+  // For now: show only the SOP-grade crew apps (their workflow has a `crew` step).
+  const isCrew = (wf: unknown) => (((wf as { steps?: { kind?: string }[] } | null)?.steps ?? []).some((s) => s.kind === "crew"));
+  return (data ?? []).filter((a) => isCrew(a.workflow_def)).map((a) => ({
     id: a.id,
     slug: a.slug,
     name: a.name,

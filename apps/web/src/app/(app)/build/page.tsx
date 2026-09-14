@@ -4,7 +4,7 @@ import { getBalance } from "@/lib/finance";
 import { BuildClient } from "@/components/build/build-client";
 import type { PastTask } from "@/components/apps/task-view";
 
-export const metadata = { title: "Build" };
+export const metadata = { title: "Apps" };
 
 export default async function BuildPage(props: PageProps<"/build">) {
   const sp = await props.searchParams;
@@ -31,8 +31,8 @@ export default async function BuildPage(props: PageProps<"/build">) {
   return (
     <div className="space-y-10">
       <header className="space-y-2">
-        <h1 className="text-4xl font-semibold">Build</h1>
-        <p className="text-fg-muted">Pick an app, answer a few questions with the consultant, see it run for real, then publish.</p>
+        <h1 className="text-4xl font-semibold">Apps</h1>
+        <p className="text-fg-muted">Pick an app — it opens full-screen, where a consultant walks you through a few questions, runs it once for real, then you publish.</p>
       </header>
       <BuildClient apps={apps} preselect={preselect} task={task} balance={balance} />
     </div>

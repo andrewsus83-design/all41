@@ -16,7 +16,7 @@ import { PERSONA, SEO_RESULT, RUN_COST, START_CREDIT } from "./demo-fixtures";
 /* ----------------------------- shell ----------------------------- */
 const NAV = [
   { label: "Calendar", hint: "Plans & history by day" },
-  { label: "Build", hint: "Make an app with a consultant" },
+  { label: "Apps", hint: "Build & run your apps" },
   { label: "My Apps", hint: "Your apps, live" },
   { label: "Data", hint: "Files · sheets · docs" },
   { label: "AI", hint: "Think tank on your apps" },
@@ -75,7 +75,7 @@ export function TryDemo() {
   const run = useMockRun();
   const dwell = useRef<number | null>(null);
 
-  const sidebarActive = scene === 4 ? "Calendar" : scene === 3 ? "My Apps" : "Build";
+  const sidebarActive = scene === 4 ? "Calendar" : scene === 3 ? "My Apps" : "Apps";
   // credit is DERIVED (never set in an effect): the try run spends once it finishes, plus each morning run.
   const tryDone = scene >= 2 || run.done;
   const credit = START_CREDIT - (tryDone ? RUN_COST : 0) - morningRuns * RUN_COST;
@@ -156,7 +156,7 @@ function SceneBrief({ goal, setGoal, onBuild }: { goal: string; setGoal: (g: str
   return (
     <div className="grid lg:grid-cols-[5fr_7fr] gap-8 items-start">
       <div className="space-y-4">
-        <h1 className="text-3xl font-semibold tracking-tight">Build</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Apps</h1>
         <p className="text-fg-muted">Pick an app, answer a few questions with the consultant, see it run for real, then publish.</p>
         <div className="squircle rounded-4 border border-line bg-bg-elev p-5 space-y-2">
           <div className="flex items-center gap-2"><span className="text-2xl">📈</span><span className="font-title font-medium">SEO &amp; GEO Optimizer</span></div>
