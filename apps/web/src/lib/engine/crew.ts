@@ -1291,6 +1291,187 @@ const competitorRunner: Runner = async (ctx, step, _depth, runId) => {
   return { output: report, schema: "competitor_report", modelsUsed: [...models], agents: trail, verification, isMock: assemblerMock || trail.some((t) => t.isMock), billedUsd: billed };
 };
 
+// ---------------- App #7 — Social Pulse (analytics crew) ----------------
+const METHOD_SOCIAL = {
+  analyst: `You are a rigorous social-media performance analyst. From the normalized post data, detect the patterns that actually drive results — grounded ONLY in the numbers provided, never invented:
+- Performance by CONTENT TYPE (carousel, reel, short video, story, static, long video): count, average engagement rate, average reach, trend vs the previous period, and a verdict (best / good / ok / flat / drop).
+- Optimal POSTING TIMES: build an engagement heatmap by day × time-slot from the data, name the single best window, and note secondary windows. State the timezone.
+- FOLLOWER GROWTH trend across the window (per period point), and what it correlates with.
+- CROSS-PLATFORM comparison when multiple platforms are present: posts, reach, engagement rate, growth, best/worst format, best time per platform — plus a synthesis of each platform's ROLE (engagement engine vs discovery engine).
+Every figure must trace to the data. If there isn't enough data, say so rather than guessing.`,
+  insighter: `You are a sharp social strategist who turns analysis into action. Grounded in the analysis and the actual posts:
+- Identify the TOP performing posts and explain WHY each worked — specific, data-backed reasons (format, hook, length, timing, save/share ratio), each compared to this account's own averages. Never generic.
+- Identify the UNDERPERFORMERS and give a concrete FIX for each (what went wrong + exactly what to do differently).
+- Produce 3-5 prioritized, ACTIONABLE recommendations (high/medium/low impact) written for a busy small-business owner — each with a concrete next action, ideally naming the all41 app that executes it (Content Pipeline, Clip Video). No fluff, no vanity metrics.`,
+  verifier: `You are a skeptical fact-checker. Wrong analytics lead to wrong content decisions, so this gate is strict. Check every insight, "why it worked", fix and recommendation against the actual post metrics provided; flag anything not supported by the data rather than asserting it. Never fabricate a post, a number, or a pattern.`,
+} as const;
+
+const SOCIAL_SCHEMAS = {
+  analyst: { name: "sp_analysis", schema: { type: "object", additionalProperties: false, required: ["content_types", "posting_times", "growth", "platforms"], properties: {
+    content_types: { type: "array", items: { type: "object", additionalProperties: false, required: ["type", "avg_engagement", "verdict"], properties: {
+      type: { type: "string" }, count: { type: "number" }, avg_engagement: { type: "number" }, avg_reach: { type: "number" }, trend: { type: "string" }, verdict: { type: "string" } } } },
+    posting_times: { type: "object", additionalProperties: false, required: ["finding", "best_window"], properties: {
+      finding: { type: "string" }, best_window: { type: "string" }, timezone: { type: "string" },
+      heatmap: { type: "array", items: { type: "object", additionalProperties: false, required: ["time"], properties: {
+        time: { type: "string" }, mon: { type: "number" }, tue: { type: "number" }, wed: { type: "number" }, thu: { type: "number" }, fri: { type: "number" }, sat: { type: "number" }, sun: { type: "number" } } } } } },
+    growth: { type: "object", additionalProperties: false, required: ["finding", "points"], properties: {
+      finding: { type: "string" }, points: { type: "array", items: { type: "object", additionalProperties: false, required: ["label", "followers"], properties: { label: { type: "string" }, followers: { type: "number" }, net_change: { type: "number" } } } } } },
+    platforms: { type: "object", additionalProperties: false, required: ["synthesis", "rows"], properties: {
+      synthesis: { type: "string" }, rows: { type: "array", items: { type: "object", additionalProperties: false, required: ["platform", "engagement_rate"], properties: {
+        platform: { type: "string" }, posts: { type: "number" }, reach: { type: "string" }, engagement_rate: { type: "string" }, follower_growth: { type: "string" }, best_format: { type: "string" }, worst_format: { type: "string" }, best_time: { type: "string" } } } } } } } } },
+  insighter: { name: "sp_insights", schema: { type: "object", additionalProperties: false, required: ["top_posts", "bottom_posts", "recommendations"], properties: {
+    top_posts: { type: "array", items: { type: "object", additionalProperties: false, required: ["platform", "type", "content", "engagement_rate", "why"], properties: {
+      platform: { type: "string" }, type: { type: "string" }, content: { type: "string" }, engagement_rate: { type: "string" }, reach: { type: "string" }, why: { type: "array", items: { type: "string" } } } } },
+    bottom_posts: { type: "array", items: { type: "object", additionalProperties: false, required: ["platform", "content", "engagement_rate", "problem", "fix"], properties: {
+      platform: { type: "string" }, type: { type: "string" }, content: { type: "string" }, engagement_rate: { type: "string" }, problem: { type: "string" }, fix: { type: "string" } } } },
+    recommendations: { type: "array", items: { type: "object", additionalProperties: false, required: ["title", "priority", "body"], properties: {
+      title: { type: "string" }, priority: { type: "string", enum: ["high", "medium", "low"] }, body: { type: "string" }, action: { type: "string" } } } } } } },
+} as const;
+
+/** The BRD's Kopi Nusantara scenario — the demo/preview and the offline (no-key) result. */
+function mockSocialReport(platforms: string[]) {
+  const multi = platforms.length > 1;
+  return {
+    summary: `${multi ? platforms.join(" + ") : platforms[0] || "Instagram"} over the last 30 days — 47 posts analysed. Educational carousels are your engine (7.8% avg), TikTok is your discovery channel (3.1× the reach), and Wednesday 5–8 PM is your golden window.`,
+    metrics: [
+      { label: "Total posts", value: "47", sub: "IG 32 · TT 15" },
+      { label: "Avg engagement", value: "4.7%", sub: "↑ 1.2% vs prev period" },
+      { label: "Follower growth", value: "+187", sub: "IG +142 · TT +45" },
+      { label: "Best day", value: "Wednesday", sub: "Peak 7–8 PM WIB" },
+    ],
+    top_posts: [
+      { platform: "Instagram", type: "Carousel", content: "\"5 cara seduh kopi tanpa alat mahal\" — 7-slide step-by-step tutorial", engagement_rate: "12.3%", reach: "8,420", why: ["Educational carousels average 9.2% here vs 3.1% for static — your #1 format", "\"Tanpa alat mahal\" hooks a real pain point: 73% of saves came from non-followers (strong discovery)", "7 slides is your sweet spot — 3-slide carousels average only 4.1%", "Posted Wed 7:15 PM WIB, your highest-engagement window"] },
+      { platform: "TikTok", type: "Video", content: "\"POV: barista pemula vs 1 tahun\" — 12s transition video", engagement_rate: "9.8%", reach: "15,200", why: ["Before/after transition format gets 3.2× the completion of talking-head videos here", "12s is under the critical 15s line — 89% completion vs 41% for your 30s+ videos", "\"POV\" and \"vs\" are high-performing hooks in the food/bev niche"] },
+      { platform: "Instagram", type: "Reel", content: "\"Latte art fail compilation\" — 15s humour reel", engagement_rate: "8.1%", reach: "6,800", why: ["Humour/fail content drives 2.4× more shares than polished content on this account", "15s hits the IG Reels engagement sweet spot", "Comment-to-like ratio (0.18) is 3× your average — humour drives conversation"] },
+      { platform: "Instagram", type: "Carousel", content: "\"Menu baru: Es Kopi Aren Gula Merah\" — product launch, 5 slides", engagement_rate: "7.4%", reach: "5,100", why: ["Launching as a carousel (not a static) put it above your 4.7% average", "Product-in-use slides beat flat product shots for saves"] },
+      { platform: "TikTok", type: "Video", content: "\"Espresso shot in slow motion\" — 8s ASMR, no text overlay", engagement_rate: "6.9%", reach: "11,400", why: ["Short ASMR with no text lets the visual carry — high completion", "8s runtime maximises loops/replays"] },
+    ],
+    bottom_posts: [
+      { platform: "Instagram", type: "Static", content: "Product photo of the new tumbler (Mon 2 PM)", engagement_rate: "0.8%", problem: "Static product photos average 1.1% here, Monday 2 PM is your lowest slot, and there's no caption hook — just price + link.", fix: "Convert product launches to a carousel (tumbler in use, 5 angles, a \"why this tumbler\" hook) and repost Wed 7 PM instead of Mon 2 PM." },
+      { platform: "TikTok", type: "Video", content: "45s \"about our sourcing\" talking head", engagement_rate: "1.2%", problem: "45s is too long — only 18% completion, and a talking head with no cuts loses viewers at the 8s mark.", fix: "Cut to 12s and use the before/after format that works — show the sourcing visually (farm → roast → cup) instead of talking about it." },
+      { platform: "Instagram", type: "Carousel", content: "3-slide \"our values\" brand story", engagement_rate: "1.5%", problem: "Brand storytelling performs 4× worse than educational content here, and 3 slides is below your 5–7 sweet spot.", fix: "Reframe as educational: \"3 things to check before buying coffee beans\" — same message, positioned as value for the reader, not brand narrative." },
+    ],
+    content_types: [
+      { type: "Carousel (IG)", count: 12, avg_engagement: 7.8, avg_reach: 5640, trend: "↑ 2.1%", verdict: "best" },
+      { type: "Short video (TT)", count: 10, avg_engagement: 6.2, avg_reach: 12100, trend: "↑ 0.8%", verdict: "good" },
+      { type: "Reels (IG)", count: 8, avg_engagement: 4.9, avg_reach: 4200, trend: "↑ 0.3%", verdict: "ok" },
+      { type: "Story (IG)", count: 9, avg_engagement: 3.2, avg_reach: 1800, trend: "→ 0%", verdict: "flat" },
+      { type: "Static image (IG)", count: 5, avg_engagement: 1.4, avg_reach: 1200, trend: "↓ 0.5%", verdict: "drop" },
+      { type: "Long video (TT 30s+)", count: 3, avg_engagement: 1.8, avg_reach: 3400, trend: "↓ 1.2%", verdict: "drop" },
+    ],
+    posting_times: {
+      finding: "Your sweet spot is Wednesday 5–8 PM WIB (7.2% avg — 3× higher than Monday mornings). Schedule your best content here. Saturday mornings and Sunday lunch are secondary windows.",
+      best_window: "Wednesday 5–8 PM WIB", timezone: "WIB",
+      heatmap: [
+        { time: "7–9 AM", mon: 2.1, tue: 3.4, wed: 3.8, thu: 2.9, fri: 2.5, sat: 4.1, sun: 3.9 },
+        { time: "12–2 PM", mon: 1.8, tue: 3.1, wed: 4.2, thu: 3.5, fri: 3.0, sat: 3.8, sun: 4.5 },
+        { time: "5–8 PM", mon: 2.4, tue: 4.8, wed: 7.2, thu: 5.1, fri: 4.2, sat: 5.5, sun: 4.8 },
+        { time: "8–10 PM", mon: 1.5, tue: 2.8, wed: 5.1, thu: 3.2, fri: 2.1, sat: 3.4, sun: 2.9 },
+      ],
+    },
+    growth: {
+      finding: "Growth accelerated 2.5× in weeks 3–4 — it correlates with more carousels (5 in week 3 vs 2 in week 1). The carousel strategy is compounding — keep it up.",
+      points: [
+        { label: "Aug 15–21", followers: 2998, net_change: 28 },
+        { label: "Aug 22–28", followers: 3050, net_change: 52 },
+        { label: "Aug 29–Sep 4", followers: 3120, net_change: 70 },
+        { label: "Sep 5–14", followers: 3230, net_change: 110 },
+      ],
+    },
+    platforms: {
+      synthesis: "Instagram is your engagement engine — people interact more. TikTok is your discovery engine — 3.1× more reach per post despite fewer followers. Create carousels for IG (engagement + saves), then adapt them into short videos for TT (reach + discovery). Don't duplicate — adapt.",
+      rows: [
+        { platform: "Instagram", posts: 32, reach: "48,200", engagement_rate: "4.7%", follower_growth: "+142 (6.4%)", best_format: "Carousel (7.8%)", worst_format: "Static image (1.4%)", best_time: "Wed 5–8 PM WIB" },
+        { platform: "TikTok", posts: 15, reach: "67,500", engagement_rate: "4.1%", follower_growth: "+45 (5.3%)", best_format: "Short video <15s (6.2%)", worst_format: "Long video 30s+ (1.8%)", best_time: "Thu–Fri 8–10 PM WIB" },
+      ],
+    },
+    recommendations: [
+      { title: "Double down on carousels", priority: "high" as const, body: "Carousels are your #1 format at 7.8% avg (3.5× better than static). They're only 25% of your IG posts — push to 50%. Use 5–7 slides with an educational hook, and make every product launch a carousel, not a static.", action: "Run Content Pipeline with a carousel-first brief" },
+      { title: "Keep TikTok videos under 15 seconds", priority: "high" as const, body: "Sub-15s videos get 89% completion vs 41% for 30s+. All three of your long videos underperformed. Use the before/after transition format that already works — your top TikTok (12s) proves it.", action: "Run Clip Video with a 12–15s vertical preset" },
+      { title: "Own Wednesday 5–8 PM", priority: "medium" as const, body: "That window averages 7.2% — 3× your Monday mornings. Schedule your single best piece there each week, and stop posting in the Monday 2 PM dead zone.", action: "Set your posting schedule around this window" },
+      { title: "Turn brand stories into education", priority: "medium" as const, body: "\"Our values\"-style posts perform 4× worse than educational ones here. Reframe brand messages as reader value (\"3 things to check before buying beans\") — same story, better numbers.", action: "Rework your next brand post as an educational carousel" },
+    ],
+    flags: ["Sample preview on the Kopi Nusantara scenario — connect your Instagram/TikTok in the Data tab for a live, sourced analysis of your own account.", "Every insight is grounded in the post metrics and checked before delivery."],
+    sources: [{ ref: "S1", quote: "Instagram Graph API — 32 posts, last 30 days (demo data)" }, { ref: "S2", quote: "TikTok Business API — 15 videos, last 30 days (demo data)" }],
+    confidence: 0.55,
+  };
+}
+
+const socialRunner: Runner = async (ctx, step, _depth, runId) => {
+  const { config } = ctx;
+  const platformsRaw = pick(config, "platforms", "platform") || "All connected";
+  const platforms = /all/i.test(platformsRaw)
+    ? ["Instagram", "TikTok"]
+    : platformsRaw.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean);
+  const goal = pick(config, "goal") || "Full analysis";
+  const window = pick(config, "time_range", "window") || "Last 30 days";
+  const data = (ctx.groundingCtx || "").slice(0, 8000); // connected-account post data (via the graph / Data tab) — empty until OAuth is wired
+
+  const trail: CrewAgentTrail[] = [];
+  const models = new Set<string>();
+  let billed = 0;
+  const soFar = () => billed;
+  const rec = (id: string, name: string, r: { model: string; billedUsd: number; findings: number; isMock: boolean }) => {
+    trail.push({ id, name, model: r.model, billedUsd: r.billedUsd, findings: r.findings, status: "ok", isMock: r.isMock }); models.add(r.model); billed += r.billedUsd;
+  };
+
+  const dataCtx = data || "(no account connected — analyse from the scenario, and flag that live data needs connecting)";
+
+  // 1. Pattern Analyst — content-type, timing, growth, cross-platform patterns (Part 6)
+  ctx.onEvent?.({ step: "crew.agent", id: "analyst", name: "Pattern Analyst", label: "Detecting patterns", phase: "running", billedSoFar: soFar() });
+  const analyst = await agentCall(ctx, runId, { id: "analyst", name: "Pattern Analyst", taskType: "reasoning", system: METHOD_SOCIAL.analyst,
+    context: `PLATFORMS: ${platforms.join(", ")}\nGOAL: ${goal}\nWINDOW: ${window}\nPOST DATA:\n${dataCtx}`,
+    schema: SOCIAL_SCHEMAS.analyst, label: "Detecting patterns" }, soFar);
+  rec("analyst", "Pattern Analyst", analyst);
+
+  // 2. Insight Writer — top/bottom posts + prioritized recommendations (Part 6/8)
+  const insighter = await agentCall(ctx, runId, { id: "insighter", name: "Insight Writer", taskType: "reasoning", system: METHOD_SOCIAL.insighter,
+    context: `GOAL: ${goal}\nANALYSIS:\n${JSON.stringify(analyst.json).slice(0, 6000)}\nPOST DATA:\n${dataCtx}`,
+    schema: SOCIAL_SCHEMAS.insighter, label: "Writing the insights" }, soFar);
+  rec("insighter", "Insight Writer", insighter);
+
+  // 3. Assemble social_report. Mock (no key / no connected data) → the Kopi Nusantara demo.
+  const { isMock: assemblerMock } = await routeTask(step.task_type);
+  let report: unknown;
+  if (assemblerMock || !data) {
+    report = mockSocialReport(platforms);
+  } else {
+    const a = analyst.json as Record<string, unknown>;
+    const ins = insighter.json as Record<string, unknown>;
+    report = {
+      summary: `${platforms.join(" + ")} over ${window.toLowerCase()} — analysed.`,
+      metrics: [],
+      top_posts: Array.isArray(ins.top_posts) ? ins.top_posts : [],
+      bottom_posts: Array.isArray(ins.bottom_posts) ? ins.bottom_posts : [],
+      content_types: Array.isArray(a.content_types) ? a.content_types : [],
+      posting_times: a.posting_times ?? { finding: "", best_window: "" },
+      growth: a.growth ?? { finding: "", points: [] },
+      platforms: a.platforms ?? { synthesis: "", rows: [] },
+      recommendations: Array.isArray(ins.recommendations) ? ins.recommendations : [],
+      flags: ["Every insight is grounded in your post metrics and checked before delivery."],
+      sources: platforms.map((p, i) => ({ ref: `S${i + 1}`, quote: `${p} — connected account, ${window.toLowerCase()}` })),
+      confidence: 0.75,
+    };
+  }
+
+  // Verifier gate (Quality Layer 1) — wrong analytics = wrong content decisions.
+  let verification: Verification | undefined;
+  try {
+    verification = await verifyOutput({ userId: ctx.userId, taskId: ctx.taskId, output: report, context: `POST DATA:\n${dataCtx.slice(0, 6000)}` });
+    billed += verification.billedUsd ?? 0;
+    if (verification.model) models.add(verification.model);
+    if (verification.verdict !== "supported" && report && typeof report === "object") {
+      const r = report as { flags?: string[] };
+      r.flags = [...(r.flags ?? []), ...verification.unsupported_claims.map((c) => `Unconfirmed: ${c}`)].slice(0, 12);
+    }
+    ctx.onEvent?.({ step: "crew.gate", verdict: verification.verdict, conflicts: verification.conflicts.length });
+  } catch {
+    ctx.onEvent?.({ step: "crew.gate", verdict: "skipped", conflicts: 0 });
+  }
+
+  return { output: report, schema: "social_report", modelsUsed: [...models], agents: trail, verification, isMock: assemblerMock || !data || trail.some((t) => t.isMock), billedUsd: billed };
+};
+
 type CrewDef = {
   label: string; describe: string[]; agents: string[]; run: Runner;
   stepsTable: string;
@@ -1502,6 +1683,34 @@ export const CREWS: Record<string, CrewDef> = {
       }).eq("id", runId);
     },
     failRun: async (runId) => { await adminClient().from("competitor_runs").update({ status: "failed" }).eq("id", runId); },
+  },
+  social_pulse: {
+    label: "Social Pulse",
+    describe: [
+      "Pulls your posts across the connected platforms over your chosen window",
+      "Finds which content types and posting times actually work — from the data",
+      "Explains why your top posts won and gives a concrete fix for the weak ones",
+      "Compares platforms and hands you prioritized, one-tap-actionable moves",
+      "Grounds every insight in the real metrics, then fact-checks it",
+    ],
+    agents: ["Pattern Analyst", "Insight Writer", "Verifier"],
+    run: socialRunner,
+    stepsTable: "social_pulse_run_steps",
+    createRun: async (ctx) => {
+      const { data } = await adminClient().from("social_pulse_runs").insert({
+        user_id: ctx.userId, account_id: ctx.userId, task_id: ctx.taskId, status: "running",
+      }).select("id").single();
+      return data?.id as string | undefined;
+    },
+    finishRun: async (runId, out, taskId) => {
+      const db = adminClient();
+      const { data: usage } = await db.from("api_usage_log").select("cost_usd").eq("task_id", taskId);
+      await db.from("social_pulse_runs").update({
+        status: "done", results: (out.output ?? null) as unknown as Json,
+        total_cost: (usage ?? []).reduce((n, r) => n + Number(r.cost_usd), 0),
+      }).eq("id", runId);
+    },
+    failRun: async (runId) => { await adminClient().from("social_pulse_runs").update({ status: "failed" }).eq("id", runId); },
   },
 };
 

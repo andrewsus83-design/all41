@@ -988,6 +988,96 @@ export type Database = {
         }
         Relationships: []
       }
+      social_pulse_runs: {
+        Row: {
+          account_id: string | null
+          created_at: string
+          goal: string | null
+          id: string
+          platforms: string[] | null
+          results: Json | null
+          status: string
+          task_id: string | null
+          time_range: string | null
+          total_cost: number
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string
+          goal?: string | null
+          id?: string
+          platforms?: string[] | null
+          results?: Json | null
+          status?: string
+          task_id?: string | null
+          time_range?: string | null
+          total_cost?: number
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string
+          goal?: string | null
+          id?: string
+          platforms?: string[] | null
+          results?: Json | null
+          status?: string
+          task_id?: string | null
+          time_range?: string | null
+          total_cost?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      social_pulse_run_steps: {
+        Row: {
+          account_id: string | null
+          agent: string
+          cost_usd: number
+          created_at: string
+          id: string
+          input: Json | null
+          model_used: string | null
+          output: Json | null
+          run_id: string
+          status: string
+          tokens_in: number
+          tokens_out: number
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          agent: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          run_id: string
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          agent?: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          run_id?: string
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       competitor_watches: {
         Row: {
           account_id: string | null

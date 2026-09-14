@@ -326,6 +326,39 @@ export const OUTPUT_SCHEMAS = {
       },
     },
   },
+  social_report: {
+    name: "social_report",
+    schema: {
+      type: "object", additionalProperties: false,
+      required: ["summary", "metrics", "top_posts", "bottom_posts", "content_types", "posting_times", "growth", "platforms", "recommendations", "flags", "sources", "confidence"],
+      properties: {
+        summary: { type: "string" },
+        metrics: { type: "array", items: { type: "object", additionalProperties: false, required: ["label", "value"], properties: {
+          label: { type: "string" }, value: { type: "string" }, sub: { type: "string" } } } },
+        top_posts: { type: "array", items: { type: "object", additionalProperties: false, required: ["platform", "type", "content", "engagement_rate", "why"], properties: {
+          platform: { type: "string" }, type: { type: "string" }, content: { type: "string" }, engagement_rate: { type: "string" }, reach: { type: "string" }, why: { type: "array", items: { type: "string" } } } } },
+        bottom_posts: { type: "array", items: { type: "object", additionalProperties: false, required: ["platform", "content", "engagement_rate", "problem", "fix"], properties: {
+          platform: { type: "string" }, type: { type: "string" }, content: { type: "string" }, engagement_rate: { type: "string" }, problem: { type: "string" }, fix: { type: "string" } } } },
+        content_types: { type: "array", items: { type: "object", additionalProperties: false, required: ["type", "avg_engagement", "verdict"], properties: {
+          type: { type: "string" }, count: { type: "number" }, avg_engagement: { type: "number" }, avg_reach: { type: "number" }, trend: { type: "string" }, verdict: { type: "string" } } } },
+        posting_times: { type: "object", additionalProperties: false, required: ["finding", "best_window"], properties: {
+          finding: { type: "string" }, best_window: { type: "string" }, timezone: { type: "string" },
+          heatmap: { type: "array", items: { type: "object", additionalProperties: false, required: ["time"], properties: {
+            time: { type: "string" }, mon: { type: "number" }, tue: { type: "number" }, wed: { type: "number" }, thu: { type: "number" }, fri: { type: "number" }, sat: { type: "number" }, sun: { type: "number" } } } } } },
+        growth: { type: "object", additionalProperties: false, required: ["finding", "points"], properties: {
+          finding: { type: "string" }, points: { type: "array", items: { type: "object", additionalProperties: false, required: ["label", "followers"], properties: {
+            label: { type: "string" }, followers: { type: "number" }, net_change: { type: "number" } } } } } },
+        platforms: { type: "object", additionalProperties: false, required: ["synthesis", "rows"], properties: {
+          synthesis: { type: "string" }, rows: { type: "array", items: { type: "object", additionalProperties: false, required: ["platform", "engagement_rate"], properties: {
+            platform: { type: "string" }, posts: { type: "number" }, reach: { type: "string" }, engagement_rate: { type: "string" }, follower_growth: { type: "string" }, best_format: { type: "string" }, worst_format: { type: "string" }, best_time: { type: "string" } } } } } },
+        recommendations: { type: "array", items: { type: "object", additionalProperties: false, required: ["title", "priority", "body"], properties: {
+          title: { type: "string" }, priority: { type: "string", enum: ["high", "medium", "low"] }, body: { type: "string" }, action: { type: "string" } } } },
+        flags: { type: "array", items: { type: "string" } },
+        sources: { type: "array", items: source },
+        confidence: { type: "number" },
+      },
+    },
+  },
   verification: {
     name: "verification",
     schema: {

@@ -6,6 +6,7 @@ import { ClipReport } from "@/components/apps/clip-report";
 import { WebsiteReport } from "@/components/apps/website-report";
 import { ContentReport } from "@/components/apps/content-report";
 import { CompetitorReport } from "@/components/apps/competitor-report";
+import { SocialReport } from "@/components/apps/social-report";
 
 type Source = { ref: string; quote: string };
 type AnyOutput = Record<string, unknown> & { title?: string; sources?: Source[]; confidence?: number };
@@ -69,6 +70,10 @@ export function ResultView({ output, schema, isMock, modelsUsed, verification }:
   // Competitor Intelligence gets its own renderer (changes, intel, battlecards, trends).
   if (schema === "competitor_report" || "battlecards" in o) {
     return <CompetitorReport report={output} isMock={isMock} verification={verification} />;
+  }
+  // Social Pulse — hero metrics, top/bottom posts, content-type + timing + growth, cross-platform, recs.
+  if (schema === "social_report" || "posting_times" in o) {
+    return <SocialReport report={output} isMock={isMock} verification={verification} />;
   }
   const sources = Array.isArray(o.sources) ? o.sources : [];
   return (

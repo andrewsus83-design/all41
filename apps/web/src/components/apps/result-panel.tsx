@@ -24,8 +24,9 @@ export function ResultPanel({ result, billedUsd, modelsUsed, title }: { result: 
   const isWebsite = r.schema === "website_report" || (hasOutput && "live_url" in (r.output as object));
   const isContent = r.schema === "content_report" || (hasOutput && "repurposes" in (r.output as object));
   const isCompetitor = r.schema === "competitor_report" || (hasOutput && "battlecards" in (r.output as object));
+  const isSocial = r.schema === "social_report" || (hasOutput && "posting_times" in (r.output as object));
   // SEO and Proposal have dedicated detail pages; the newer crews render fully inline (no separate page).
-  const detailHref = runId && !isClip && !isWebsite && !isContent && !isCompetitor ? (isProposal ? `/my-apps/proposal/${runId}` : `/my-apps/audit/${runId}`) : null;
+  const detailHref = runId && !isClip && !isWebsite && !isContent && !isCompetitor && !isSocial ? (isProposal ? `/my-apps/proposal/${runId}` : `/my-apps/audit/${runId}`) : null;
   return (
     <div className="space-y-3">
       {title && <p className="text-xs uppercase tracking-wide text-fg-faint">{title}</p>}

@@ -82,6 +82,7 @@ export const SCHEMA_WORDS: Record<OutputSchemaKey, string> = {
   website_report: "a live, conversion-optimized website — pages with a benefit-led headline, value prop, proof and one CTA, the style, an SEO/GEO baseline, and what to check",
   content_report: "a week of content from one idea — a core piece plus channel-native repurposes with hook options, a posting schedule, and sources",
   competitor_report: "what changed per competitor (noise filtered) with why it matters, intel on what it signals, dynamic battlecards, trends over time, and sources",
+  social_report: "a social-media performance report: hero metrics, top and bottom posts with why/how-to-fix, performance by content type, best posting times, follower growth, cross-platform comparison, and prioritized recommendations",
 };
 
 /** Roadmap apps from Master Plan §11 — not available yet. */
