@@ -19,7 +19,7 @@ import type { Answers, CatalogApp } from "@/components/apps/types";
 
 type Draft = { instanceId: string; estimateUsd: number; balance: number };
 
-export function BuildClient({ apps, preselect, task, balance }: { apps: CatalogApp[]; preselect: string | null; task: PastTask | null; balance: number }) {
+export function BuildClient({ apps, preselect, task, balance, basePath = "/build" }: { apps: CatalogApp[]; preselect: string | null; task: PastTask | null; balance: number; basePath?: string }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(preselect && apps.some((a) => a.slug === preselect) ? preselect : null);
   const [answers, setAnswers] = useState<Answers | null>(null);
@@ -49,7 +49,7 @@ export function BuildClient({ apps, preselect, task, balance }: { apps: CatalogA
     setSelected(slug);
     const a = apps.find((x) => x.slug === slug);
     setName(a?.isCustom ? "" : (a?.name ?? ""));
-    router.replace(`/build?app=${slug}`, { scroll: false });
+    router.replace(`${basePath}?app=${slug}`, { scroll: false });
   }
 
   function onAnswers(a: Answers) {
@@ -89,7 +89,7 @@ export function BuildClient({ apps, preselect, task, balance }: { apps: CatalogA
   const insufficient = draft && !stream.running && !stream.result && draft.balance < draft.estimateUsd;
   const runFailed = draft && !stream.running && !stream.result && (stream.blocked || stream.error);
 
-  const backToApps = () => { resetAll(); setSelected(null); setShowTask(false); router.replace("/build", { scroll: false }); };
+  const backToApps = () => { resetAll(); setSelected(null); setShowTask(false); router.replace(basePath, { scroll: false }); };
   const inApp = !!app || (showTask && !!task);
 
   return (
@@ -199,7 +199,7 @@ export function BuildClient({ apps, preselect, task, balance }: { apps: CatalogA
                 <CardHint>{published.live ? "It'll run on schedule — the next run is on your calendar. You can attach your own data, edit answers, or run it any time." : "It ran once and the result is saved. You can run it again any time from My Apps."}</CardHint>
                 <div className="flex gap-4 text-sm">
                   <Link href={`/my-apps?id=${published.instanceId}`} className="text-green underline">Open it in My Apps →</Link>
-                  <button type="button" className="text-fg-muted underline" onClick={() => { resetAll(); setSelected(null); router.replace("/build", { scroll: false }); }}>Build another</button>
+                  <button type="button" className="text-fg-muted underline" onClick={() => { resetAll(); setSelected(null); router.replace(basePath, { scroll: false }); }}>Build another</button>
                 </div>
               </Card>
             )}

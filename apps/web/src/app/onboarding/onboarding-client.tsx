@@ -47,7 +47,7 @@ export function OnboardingClient() {
               </li>
             ))}
           </ol>
-          <Link href="/build"><Button phase="green" size="lg">Go to Chat →</Button></Link>
+          <Link href="/chat"><Button phase="green" size="lg">Go to Chat →</Button></Link>
         </Card>
       </div>
     );
@@ -59,7 +59,7 @@ export function OnboardingClient() {
         <CardTitle className="text-xl">{done.blocked ? "Almost there" : "First run didn’t finish"}</CardTitle>
         <CardHint>{done.error}</CardHint>
         <div className="flex gap-3">
-          <Link href="/build"><Button phase="green">Continue to Chat</Button></Link>
+          <Link href="/chat"><Button phase="green">Continue to Chat</Button></Link>
           {done.blocked && <Link href="/settings/billing"><Button phase="ghost">Top up</Button></Link>}
         </div>
       </Card>

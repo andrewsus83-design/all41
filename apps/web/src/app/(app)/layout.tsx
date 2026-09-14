@@ -1,9 +1,9 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getBalance } from "@/lib/finance";
-import { Sidebar } from "@/components/shell/sidebar";
-import { Topbar } from "@/components/shell/topbar";
-import { isAdminUser } from "@/lib/admin";
+import { Money } from "@/components/ui/money";
+import { BottomNav } from "@/components/shell/bottom-nav";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const supabase = await createClient();
@@ -19,12 +19,18 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   if (!profile?.onboarded_at) redirect("/onboarding");
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar isAdmin={isAdminUser(user)} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Topbar email={user.email ?? ""} balance={balance} />
-        <main className="flex-1 p-10">{children}</main>
+    <div className="min-h-screen">
+      {/* minimal credit chip — the only persistent top chrome */}
+      <div className="fixed top-4 right-5 z-40">
+        <Link href="/settings/billing" className="squircle rounded-full border border-line bg-bg-elev/90 backdrop-blur px-4 py-1.5 flex items-center gap-2 text-sm hover:bg-bg-elev-2 transition shadow-sm">
+          <span className="text-fg-faint">Credit</span>
+          <Money usd={balance} className="text-fg" />
+        </Link>
       </div>
+
+      <main className="p-5 md:p-10 pb-28 min-h-screen">{children}</main>
+
+      <BottomNav />
     </div>
   );
 }
