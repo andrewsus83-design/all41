@@ -1,7 +1,7 @@
 import { createClient, requireUser } from "@/lib/supabase/server";
 import { loadCatalog } from "../build/catalog";
 import { getBalance } from "@/lib/finance";
-import { BuildClient } from "@/components/build/build-client";
+import { ChatShell } from "@/components/chat/chat-shell";
 import type { PastTask } from "@/components/apps/task-view";
 
 export const metadata = { title: "Chat" };
@@ -28,18 +28,5 @@ export default async function ChatPage(props: { searchParams: Promise<{ [key: st
       }
     : null;
 
-  return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      {/* the AI leads — you just answer */}
-      <div className="flex items-start gap-3 max-w-3xl">
-        <span className="grid place-items-center size-10 rounded-full bg-amber-soft text-amber font-title font-bold shrink-0">a</span>
-        <div className="squircle rounded-4 bg-bg-elev border border-line px-5 py-4 space-y-1">
-          <p className="text-lg font-title font-medium">Hi — what do you want to get done today?</p>
-          <p className="text-sm text-fg-muted">Pick one below (or tell me in your own words). I&apos;ll ask a few quick questions, run it once for real so you can see it, then it lands in your Home.</p>
-        </div>
-      </div>
-
-      <BuildClient apps={apps} preselect={preselect} task={task} balance={balance} basePath="/chat" />
-    </div>
-  );
+  return <ChatShell apps={apps} preselect={preselect} task={task} balance={balance} />;
 }

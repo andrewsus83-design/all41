@@ -16,10 +16,11 @@ function artifactTitle(result: unknown, fallback: string): string {
 }
 
 export default async function HomePage() {
-  await requireUser();
+  const { user } = await requireUser();
   const supabase = await createClient();
 
-  const [{ data: instances }, { data: artifacts }, { count: nodeCount }, { count: fileCount }] = await Promise.all([
+  const [{ data: profile }, { data: instances }, { data: artifacts }, { count: nodeCount }, { count: fileCount }] = await Promise.all([
+    supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
     supabase.from("user_app_instances").select("id, name, status, schedule, next_run_at, mini_apps(icon, name, slug)").neq("status", "draft").order("created_at", { ascending: false }).limit(24),
     supabase.from("tasks").select("id, result, created_at, user_app_instances(name, mini_apps(icon, name))").eq("status", "done").not("result", "is", null).order("created_at", { ascending: false }).limit(24),
     supabase.from("knowledge_nodes").select("*", { count: "exact", head: true }),
@@ -29,6 +30,7 @@ export default async function HomePage() {
   const apps = instances ?? [];
   const arts = artifacts ?? [];
   const empty = apps.length === 0 && arts.length === 0;
+  const name = profile?.display_name?.trim() || (user.email?.split("@")[0] ?? "there");
   const appMeta = (row: { mini_apps?: { icon?: string | null; name?: string | null } | { icon?: string | null; name?: string | null }[] | null }) => {
     const m = Array.isArray(row.mini_apps) ? row.mini_apps[0] : row.mini_apps;
     return { icon: m?.icon ?? "◻", name: m?.name ?? "App" };
@@ -36,15 +38,25 @@ export default async function HomePage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-10">
-      <header className="space-y-2">
-        <h1 className="text-4xl font-semibold tracking-tight">Your world</h1>
-        <p className="text-fg-muted">Everything you&apos;ve built and everything all41 remembers for you — it compounds every time you use it.</p>
-        <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-fg-muted num pt-1">
-          <span><span className="text-fg font-semibold">{arts.length}</span> results</span>
-          <span><span className="text-fg font-semibold">{apps.length}</span> living apps</span>
-          <span><span className="text-fg font-semibold">{nodeCount ?? 0}</span> memory nodes</span>
-          <span><span className="text-fg font-semibold">{fileCount ?? 0}</span> files</span>
+      <header className="space-y-5">
+        <div className="space-y-3">
+          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">Hello, {name} <span className="align-middle">👋</span></h1>
+          <p className="text-lg text-fg-muted max-w-2xl leading-relaxed text-pretty">
+            Welcome to all41 — your <span className="text-fg font-medium">personalized AI chat</span>, armed with the right AI models, tools and skills, and tuned with <span className="text-fg font-medium">your own context</span>. So every result comes out sharper, faster and cheaper than a generic chatbot could ever give you.
+          </p>
         </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/chat"><Button phase="green" size="lg" className="glow-coral">Open Chat →</Button></Link>
+          <span className="reflect text-fg-muted text-lg">Tell it what you need — it does the work ✿</span>
+        </div>
+        {!empty && (
+          <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-fg-muted num pt-1">
+            <span><span className="text-fg font-semibold">{arts.length}</span> results</span>
+            <span><span className="text-fg font-semibold">{apps.length}</span> living apps</span>
+            <span><span className="text-fg font-semibold">{nodeCount ?? 0}</span> memory nodes</span>
+            <span><span className="text-fg font-semibold">{fileCount ?? 0}</span> files</span>
+          </div>
+        )}
       </header>
 
       {empty ? (
