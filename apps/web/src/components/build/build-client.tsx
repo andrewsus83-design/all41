@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHint, CardTitle } from "@/components/ui/card";
+import { SplitPane } from "@/components/ui/split-pane";
 import { Money } from "@/components/ui/money";
 import { RunProgress } from "@/components/apps/run-progress";
 import { ResultPanel } from "@/components/apps/result-panel";
@@ -90,19 +91,23 @@ export function BuildClient({ apps, preselect, task, balance, basePath = "/build
   const runFailed = draft && !stream.running && !stream.result && (stream.blocked || stream.error);
 
   return (
-    <div className="grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-6 lg:gap-8 items-start">
-      {/* LEFT — the apps you can use */}
-      <aside className="space-y-4 min-w-0 order-2 lg:order-1 lg:sticky lg:top-4 self-start">
-        <div className="space-y-1">
-          <h2 className="text-lg font-medium">What you can do</h2>
-          <p className="text-sm text-fg-muted">Tap one and I&apos;ll walk you through it. Credit: <Money usd={balance} className="text-fg" /></p>
-        </div>
-        <CatalogGrid apps={apps} selected={selected} onOpen={(slug) => pick(slug)} />
-      </aside>
-
-      {/* RIGHT — the chatroom */}
-      <section className="space-y-6 min-w-0 order-1 lg:order-2">
-        {intro}
+    <SplitPane
+      storageKey="all41-chat-split"
+      defaultPct={40}
+      left={
+        /* LEFT — the apps you can use */
+        <aside className="space-y-4 min-w-0">
+          <div className="space-y-1">
+            <h2 className="text-lg font-medium">What you can do</h2>
+            <p className="text-sm text-fg-muted">Tap one and I&apos;ll walk you through it. Credit: <Money usd={balance} className="text-fg" /></p>
+          </div>
+          <CatalogGrid apps={apps} selected={selected} onOpen={(slug) => pick(slug)} />
+        </aside>
+      }
+      right={
+        /* RIGHT — the chatroom */
+        <section className="space-y-6 min-w-0">
+          {intro}
         {showTask && task ? (
           <TaskView task={task} />
         ) : !app ? (
@@ -199,8 +204,9 @@ export function BuildClient({ apps, preselect, task, balance, basePath = "/build
             )}
           </>
         )}
-        <div ref={bottomRef} />
-      </section>
-    </div>
+          <div ref={bottomRef} />
+        </section>
+      }
+    />
   );
 }
