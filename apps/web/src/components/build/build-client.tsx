@@ -133,9 +133,10 @@ export function BuildClient({ apps, preselect, task, balance, basePath = "/build
         defaultPct={66}
         min={24}
         max={80}
+        fill
         left={
           /* LEFT — the apps you can use (2/3) */
-          <aside className="space-y-4 min-w-0">
+          <aside className="space-y-4 min-w-0 lg:h-full lg:overflow-y-auto lg:pr-1">
             <div className="space-y-1">
               <h2 className="text-lg font-medium">What you can do</h2>
               <p className="text-sm text-fg-muted">Tap one and I&apos;ll walk you through it. Credit: <Money usd={balance} className="text-fg" /></p>
@@ -145,8 +146,8 @@ export function BuildClient({ apps, preselect, task, balance, basePath = "/build
         }
         right={
           /* RIGHT — the chatroom (1/3) */
-          <section className="flex flex-col min-w-0 gap-4">
-            <div className="flex-1 space-y-4">
+          <section className="flex flex-col min-w-0 gap-3 lg:h-full lg:min-h-0">
+            <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto space-y-4 pr-1">
               {intro}
               {chatHint && <AIMsg className="text-fg-muted">{chatHint}</AIMsg>}
 
@@ -252,7 +253,7 @@ function ChatInput({ onSend }: { onSend: (text: string) => void }) {
   const [text, setText] = useState("");
   const submit = () => { if (text.trim()) { onSend(text); setText(""); } };
   return (
-    <div className="sticky bottom-20 bg-bg/80 backdrop-blur pt-1">
+    <div className="shrink-0 bg-bg/80 backdrop-blur pt-2 border-t border-line">
       <div className="flex items-center gap-2 squircle rounded-full border border-line bg-bg-elev pl-4 pr-1.5 py-1.5">
         <input
           value={text}

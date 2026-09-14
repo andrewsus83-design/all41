@@ -10,6 +10,7 @@ export function SplitPane({
   defaultPct = 42,
   min = 24,
   max = 74,
+  fill = false,
 }: {
   left: ReactNode;
   right: ReactNode;
@@ -17,6 +18,8 @@ export function SplitPane({
   defaultPct?: number;
   min?: number;
   max?: number;
+  /** Fill the viewport height (desktop) so each panel scrolls internally — for chat-style panes. */
+  fill?: boolean;
 }) {
   const [pct, setPct] = useState(defaultPct);
   const [dragging, setDragging] = useState(false);
@@ -60,8 +63,8 @@ export function SplitPane({
       </div>
 
       {/* desktop: resizable split */}
-      <div ref={ref} className={cn("hidden lg:flex items-stretch", dragging && "cursor-col-resize select-none")}>
-        <div style={{ width: `${pct}%` }} className="min-w-0 pr-3">{left}</div>
+      <div ref={ref} className={cn("hidden lg:flex items-stretch", fill && "h-[calc(100vh-10rem)]", dragging && "cursor-col-resize select-none")}>
+        <div style={{ width: `${pct}%` }} className={cn("min-w-0 pr-3", fill && "h-full min-h-0")}>{left}</div>
 
         <div
           role="separator"
@@ -79,7 +82,7 @@ export function SplitPane({
           <span className={cn("h-14 w-1 rounded-full transition", dragging ? "bg-coral" : "bg-line-strong group-hover:bg-coral group-focus:bg-coral")} />
         </div>
 
-        <div style={{ width: `${100 - pct}%` }} className="min-w-0 pl-3">{right}</div>
+        <div style={{ width: `${100 - pct}%` }} className={cn("min-w-0 pl-3", fill && "h-full min-h-0")}>{right}</div>
       </div>
     </>
   );
