@@ -58,10 +58,6 @@ function parsePrices(page: Page): { name: string; price: string }[] {
   return out;
 }
 
-function Stars({ color }: { color: string }) {
-  return <span style={{ color, letterSpacing: 1 }} aria-hidden>★★★★★</span>;
-}
-
 function Hero({ src, alt, colors, radius = 0, minH = 260 }: { src?: string; alt: string; colors: Colors; radius?: number; minH?: number }) {
   // eslint-disable-next-line @next/next/no-img-element
   if (src) return <img src={src} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: radius, display: "block", minHeight: minH }} />;
@@ -73,17 +69,17 @@ function Hd({ font, size = 40, children }: { font: string; size?: number; childr
 }
 
 function TopNav({ brand, pages, active, onNav, colors, D }: { brand: string; pages: Page[]; active: number; onNav: (i: number) => void; colors: Colors; D: string }) {
-  const cta = pages[active]?.cta || "Book";
+  const cta = pages[active]?.cta;
   return (
-    <div className="flex items-center justify-between px-6 sm:px-9 py-4" style={{ borderBottom: `1px solid ${colors.line}` }}>
+    <div className="flex items-center justify-between gap-4 px-6 sm:px-9 py-4" style={{ borderBottom: `1px solid ${colors.line}` }}>
       <span style={{ fontFamily: D, fontWeight: 600, fontSize: 20, letterSpacing: "-0.01em" }}>{brand}</span>
       <div className="hidden sm:flex items-center gap-6" style={{ fontSize: 14, color: colors.muted }}>
         {pages.map((p, i) => (
           <button key={i} type="button" onClick={() => onNav(i)} style={{ color: i === active ? colors.ink : colors.muted, fontWeight: i === active ? 600 : 400 }} className="transition hover:opacity-70">{p.type}</button>
         ))}
-        <span className="px-4 py-2 rounded-full" style={{ background: colors.accent, color: colors.onAccent, fontWeight: 600, fontSize: 14 }}>{cta}</span>
+        {cta && <span className="px-4 py-2 rounded-full" style={{ background: colors.accent, color: colors.onAccent, fontWeight: 600, fontSize: 14 }}>{cta}</span>}
       </div>
-      <span className="sm:hidden px-3.5 py-1.5 rounded-full" style={{ background: colors.accent, color: colors.onAccent, fontWeight: 600, fontSize: 13 }}>{cta}</span>
+      {cta && <span className="sm:hidden px-3.5 py-1.5 rounded-full whitespace-nowrap" style={{ background: colors.accent, color: colors.onAccent, fontWeight: 600, fontSize: 13 }}>{cta}</span>}
     </div>
   );
 }
@@ -102,10 +98,10 @@ function Footer({ brand, sub, colors, D }: { brand: string; sub: string; colors:
 
 function CtaButtons({ page, colors, big }: { page: Page; colors: Colors; big?: boolean }) {
   const pad = big ? "14px 28px" : "11px 22px";
+  if (!page.cta) return null;
   return (
     <div className="flex items-center gap-3 flex-wrap">
-      <span style={{ background: colors.accent, color: colors.onAccent, fontWeight: 600, padding: pad, borderRadius: 999, fontSize: big ? 16 : 14 }}>{page.cta || "Get started"}</span>
-      <span style={{ border: `1.5px solid ${colors.line}`, color: colors.ink, fontWeight: 500, padding: pad, borderRadius: 999, fontSize: big ? 16 : 14 }}>See pricing</span>
+      <span style={{ background: colors.accent, color: colors.onAccent, fontWeight: 600, padding: pad, borderRadius: 999, fontSize: big ? 16 : 14 }}>{page.cta}</span>
     </div>
   );
 }
@@ -153,7 +149,7 @@ function SitePage({ page, brand, colors, fonts }: { page: Page; brand: string; c
     return (
       <div style={{ background: "#fff", color: colors.ink, fontFamily: fonts.body }}>
         <div className="px-7 sm:px-10 pt-12 pb-8 text-center" style={{ background: colors.cream }}>
-          <span style={{ color: colors.accent, fontWeight: 600, fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase" }}>Services & pricing</span>
+          <span style={{ color: colors.accent, fontWeight: 600, fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase" }}>{page.type}</span>
           <div className="mt-3"><Hd font={D} size={38}>{page.headline}</Hd></div>
           {page.subhead && <p className="mx-auto" style={{ maxWidth: 560, marginTop: 12, color: colors.muted, fontSize: 16, lineHeight: 1.6 }}>{page.subhead}</p>}
         </div>
@@ -161,62 +157,54 @@ function SitePage({ page, brand, colors, fonts }: { page: Page; brand: string; c
           <div className="px-7 sm:px-10 py-11">
             <div className="grid sm:grid-cols-3 gap-4">
               {prices.map((p, i) => (
-                <div key={i} className="rounded-2xl p-6 text-center" style={{ background: "#fff", border: i === 1 ? `2px solid ${colors.accent}` : `1px solid ${colors.line}` }}>
-                  {i === 1 && <span style={{ background: colors.accent, color: colors.onAccent, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999 }}>Most booked</span>}
-                  <p style={{ fontFamily: D, fontWeight: 600, fontSize: 18, marginTop: i === 1 ? 10 : 0 }}>{p.name}</p>
+                <div key={i} className="rounded-2xl p-6 text-center" style={{ background: "#fff", border: `1px solid ${colors.line}` }}>
+                  <p style={{ fontFamily: D, fontWeight: 600, fontSize: 18 }}>{p.name}</p>
                   <p style={{ fontFamily: D, fontWeight: 700, fontSize: 40, color: colors.accent, margin: "6px 0" }}>{p.price}</p>
-                  <span style={{ display: "inline-block", marginTop: 8, background: i === 1 ? colors.accent : colors.cream, color: i === 1 ? colors.onAccent : colors.ink, fontWeight: 600, padding: "10px 20px", borderRadius: 999, fontSize: 14 }}>{page.cta || "Book"}</span>
+                  {page.cta && <span style={{ display: "inline-block", marginTop: 8, background: colors.cream, color: colors.ink, fontWeight: 600, padding: "10px 20px", borderRadius: 999, fontSize: 14 }}>{page.cta}</span>}
                 </div>
               ))}
             </div>
           </div>
         )}
-        <div className="px-7 sm:px-10 pb-12">
-          <p style={{ fontFamily: D, fontWeight: 600, fontSize: 20, marginBottom: 12 }}>Every groom includes</p>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {(proof.length ? proof : ["Bath, blow-dry and brush-out", "Nails, ears and sanitary trim"]).map((p, i) => (
-              <p key={i} style={{ fontSize: 15, lineHeight: 1.5, display: "flex", gap: 10 }}><span style={{ color: colors.accent, fontWeight: 700 }}>✓</span>{p}</p>
-            ))}
+        {proof.length > 0 && (
+          <div className="px-7 sm:px-10 pb-12">
+            <p style={{ fontFamily: D, fontWeight: 600, fontSize: 20, marginBottom: 12 }}>What&apos;s included</p>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {proof.map((p, i) => (
+                <p key={i} style={{ fontSize: 15, lineHeight: 1.5, display: "flex", gap: 10 }}><span style={{ color: colors.accent, fontWeight: 700 }}>✓</span>{p}</p>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         <Footer brand={brand} sub={brand.toLowerCase()} colors={colors} D={D} />
       </div>
     );
   }
 
-  // ---------- BOOK ----------
-  if (type === "book") {
+  // ---------- BOOK / CONTACT / CTA page ----------
+  if (type === "book" || type === "contact") {
+    const prices = parsePrices(page);
     return (
       <div style={{ background: colors.cream, color: colors.ink, fontFamily: fonts.body }}>
         <div className="px-7 sm:px-10 pt-12 pb-6 text-center">
-          <span style={{ color: colors.accent, fontWeight: 600, fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase" }}>Book in 60 seconds</span>
+          <span style={{ color: colors.accent, fontWeight: 600, fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase" }}>{page.type}</span>
           <div className="mt-3"><Hd font={D} size={36}>{page.headline}</Hd></div>
           {page.subhead && <p className="mx-auto" style={{ maxWidth: 520, marginTop: 12, color: colors.muted, fontSize: 16, lineHeight: 1.6 }}>{page.subhead}</p>}
         </div>
         <div className="px-7 sm:px-10 pb-12">
-          <div className="mx-auto rounded-3xl p-6 sm:p-8" style={{ maxWidth: 520, background: "#fff", border: `1px solid ${colors.line}`, boxShadow: "0 20px 50px rgba(0,0,0,0.06)" }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: colors.muted }}>Your dog&apos;s size</p>
-            <div className="flex gap-2 mt-2 mb-5">
-              {["Small", "Medium", "Large"].map((s, i) => (
-                <span key={s} style={{ flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 12, fontSize: 14, fontWeight: 600, background: i === 1 ? colors.accent : colors.cream, color: i === 1 ? colors.onAccent : colors.ink }}>{s}</span>
-              ))}
-            </div>
-            <p style={{ fontSize: 13, fontWeight: 600, color: colors.muted }}>Package</p>
-            <div className="flex gap-2 mt-2 mb-5 flex-wrap">
-              {parsePrices(page).map((p) => (
-                <span key={p.name} style={{ padding: "8px 14px", borderRadius: 999, fontSize: 13, fontWeight: 600, border: `1px solid ${colors.line}` }}>{p.name} · {p.price}</span>
-              ))}
-            </div>
-            <p style={{ fontSize: 13, fontWeight: 600, color: colors.muted }}>When works?</p>
-            <div className="flex gap-2 mt-2 mb-6">
-              {["Tue AM", "Wed PM", "Fri AM"].map((s, i) => (
-                <span key={s} style={{ flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 12, fontSize: 13, fontWeight: 600, background: i === 0 ? colors.ink : "#fff", color: i === 0 ? "#fff" : colors.ink, border: `1px solid ${colors.line}` }}>{s}</span>
-              ))}
-            </div>
-            <div style={{ background: colors.accent, color: colors.onAccent, fontWeight: 700, textAlign: "center", padding: "14px 0", borderRadius: 999, fontSize: 16 }}>{page.cta || "Reserve my appointment"}</div>
-            <div className="mt-4 flex flex-col gap-1.5">
-              {proof.slice(0, 3).map((p, i) => <p key={i} style={{ fontSize: 13, color: colors.muted, display: "flex", gap: 8 }}><span style={{ color: colors.accent }}>✓</span>{p}</p>)}
-            </div>
+          <div className="mx-auto rounded-3xl p-6 sm:p-8" style={{ maxWidth: 540, background: "#fff", border: `1px solid ${colors.line}`, boxShadow: "0 20px 50px rgba(0,0,0,0.06)" }}>
+            {page.value_prop && <p style={{ fontSize: 16, lineHeight: 1.65, marginBottom: prices.length || proof.length ? 20 : 24 }}>{page.value_prop}</p>}
+            {prices.length > 0 && (
+              <div className="flex gap-2 mb-5 flex-wrap">
+                {prices.map((p) => <span key={p.name} style={{ padding: "8px 14px", borderRadius: 999, fontSize: 13, fontWeight: 600, border: `1px solid ${colors.line}` }}>{p.name} · {p.price}</span>)}
+              </div>
+            )}
+            {proof.length > 0 && (
+              <div className="flex flex-col gap-2 mb-6">
+                {proof.slice(0, 3).map((p, i) => <p key={i} style={{ fontSize: 14, color: colors.muted, display: "flex", gap: 8 }}><span style={{ color: colors.accent, fontWeight: 700 }}>✓</span>{p}</p>)}
+              </div>
+            )}
+            {page.cta && <div style={{ background: colors.accent, color: colors.onAccent, fontWeight: 700, textAlign: "center", padding: "15px 0", borderRadius: 999, fontSize: 16 }}>{page.cta}</div>}
           </div>
         </div>
         <Footer brand={brand} sub={brand.toLowerCase()} colors={colors} D={D} />
@@ -229,18 +217,25 @@ function SitePage({ page, brand, colors, fonts }: { page: Page; brand: string; c
   return (
     <div style={{ background: "#fff", color: colors.ink, fontFamily: fonts.body }}>
       {/* image hero with overlaid copy */}
-      <div style={{ position: "relative" }}>
-        <div style={{ minHeight: 380 }}><Hero src={page.image} alt={brand} colors={colors} minH={380} /></div>
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.42) 45%, rgba(0,0,0,0.85) 100%)" }} />
-        <div style={{ position: "absolute", inset: 0, padding: "40px 28px", display: "flex", flexDirection: "column", justifyContent: "flex-end", color: "#fff", textShadow: "0 2px 20px rgba(0,0,0,0.6)" }}>
-          <span style={{ fontWeight: 700, fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: "#fff", opacity: 0.85 }}>{brand}</span>
-          <h1 style={{ fontFamily: D, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.05, fontSize: "clamp(28px, 4.6vw, 46px)", maxWidth: 620, marginTop: 10, color: "#fff" }}>{page.headline}</h1>
-          {page.subhead && <p style={{ fontSize: 16, lineHeight: 1.55, maxWidth: 520, marginTop: 12, opacity: 0.95, color: "#fff" }}>{page.subhead}</p>}
-          <div style={{ marginTop: 18 }}>
-            <span style={{ background: colors.accent, color: colors.onAccent, fontWeight: 700, padding: "14px 28px", borderRadius: 999, fontSize: 16 }}>{page.cta || "Book now"}</span>
+      {page.image ? (
+        <div style={{ position: "relative" }}>
+          <div style={{ minHeight: 380 }}><Hero src={page.image} alt={brand} colors={colors} minH={380} /></div>
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.42) 45%, rgba(0,0,0,0.85) 100%)" }} />
+          <div style={{ position: "absolute", inset: 0, padding: "40px 28px", display: "flex", flexDirection: "column", justifyContent: "flex-end", color: "#fff", textShadow: "0 2px 20px rgba(0,0,0,0.6)" }}>
+            <span style={{ fontWeight: 700, fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: "#fff", opacity: 0.85 }}>{brand}</span>
+            <h1 style={{ fontFamily: D, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.05, fontSize: "clamp(28px, 4.6vw, 46px)", maxWidth: 620, marginTop: 10, color: "#fff" }}>{page.headline}</h1>
+            {page.subhead && <p style={{ fontSize: 16, lineHeight: 1.55, maxWidth: 520, marginTop: 12, opacity: 0.95, color: "#fff" }}>{page.subhead}</p>}
+            {page.cta && <div style={{ marginTop: 18 }}><span style={{ background: colors.accent, color: colors.onAccent, fontWeight: 700, padding: "14px 28px", borderRadius: 999, fontSize: 16 }}>{page.cta}</span></div>}
           </div>
         </div>
-      </div>
+      ) : (
+        <div style={{ background: colors.ink, color: "#fff", padding: "64px 28px", textAlign: "center" }}>
+          <span style={{ fontWeight: 700, fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", opacity: 0.75 }}>{brand}</span>
+          <h1 style={{ fontFamily: D, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.06, fontSize: "clamp(28px, 4.4vw, 44px)", maxWidth: 640, margin: "12px auto 0", color: "#fff" }}>{page.headline}</h1>
+          {page.subhead && <p style={{ fontSize: 16, lineHeight: 1.55, maxWidth: 540, margin: "14px auto 0", opacity: 0.92, color: "#fff" }}>{page.subhead}</p>}
+          {page.cta && <span style={{ display: "inline-block", marginTop: 22, background: colors.accent, color: colors.onAccent, fontWeight: 700, padding: "14px 28px", borderRadius: 999, fontSize: 16 }}>{page.cta}</span>}
+        </div>
+      )}
 
       {/* value prop */}
       {page.value_prop && (
@@ -249,27 +244,28 @@ function SitePage({ page, brand, colors, fonts }: { page: Page; brand: string; c
         </div>
       )}
 
-      {/* review wall from proof */}
+      {/* why choose — proof as honest trust points */}
       {proof.length > 0 && (
         <div className="px-7 sm:px-10 py-11" style={{ background: colors.cream }}>
+          <p style={{ fontFamily: D, fontWeight: 600, fontSize: 20, textAlign: "center", marginBottom: 18 }}>Why {brand}</p>
           <div className="grid sm:grid-cols-3 gap-4">
             {proof.slice(0, 3).map((p, i) => (
               <div key={i} className="rounded-2xl p-5" style={{ background: "#fff", border: `1px solid ${colors.line}` }}>
-                <Stars color={colors.accent} />
-                <p style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5 }}>{p}</p>
+                <span style={{ display: "grid", placeItems: "center", width: 32, height: 32, borderRadius: 999, background: colors.accent, color: colors.onAccent, fontWeight: 700 }}>✓</span>
+                <p style={{ fontSize: 14, marginTop: 10, lineHeight: 1.5 }}>{p}</p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* pricing teaser */}
+      {/* pricing (only if the copy carries prices) */}
       {prices.length > 0 && (
         <div className="px-7 sm:px-10 py-11">
-          <p style={{ fontFamily: D, fontWeight: 600, fontSize: 22, textAlign: "center", marginBottom: 16 }}>Simple, flat pricing</p>
+          <p style={{ fontFamily: D, fontWeight: 600, fontSize: 22, textAlign: "center", marginBottom: 16 }}>Pricing</p>
           <div className="grid sm:grid-cols-3 gap-4">
             {prices.map((p, i) => (
-              <div key={i} className="rounded-2xl p-5 text-center" style={{ border: i === 1 ? `2px solid ${colors.accent}` : `1px solid ${colors.line}` }}>
+              <div key={i} className="rounded-2xl p-5 text-center" style={{ border: `1px solid ${colors.line}` }}>
                 <p style={{ fontFamily: D, fontWeight: 600, fontSize: 16 }}>{p.name}</p>
                 <p style={{ fontFamily: D, fontWeight: 700, fontSize: 34, color: colors.accent }}>{p.price}</p>
               </div>
@@ -278,11 +274,13 @@ function SitePage({ page, brand, colors, fonts }: { page: Page; brand: string; c
         </div>
       )}
 
-      {/* final CTA */}
-      <div className="px-7 sm:px-10 py-14 text-center" style={{ background: colors.ink, color: "#fff" }}>
-        <p style={{ fontFamily: D, fontWeight: 600, fontSize: "clamp(22px, 3vw, 32px)", maxWidth: 560, margin: "0 auto" }}>Your dog&apos;s best groom is one tap away.</p>
-        <span style={{ display: "inline-block", marginTop: 18, background: colors.accent, color: colors.onAccent, fontWeight: 700, padding: "14px 30px", borderRadius: 999, fontSize: 16 }}>{page.cta || "Book now"}</span>
-      </div>
+      {/* final CTA — restates the site's own promise */}
+      {page.cta && (
+        <div className="px-7 sm:px-10 py-14 text-center" style={{ background: colors.ink, color: "#fff" }}>
+          <p style={{ fontFamily: D, fontWeight: 600, fontSize: "clamp(20px, 2.8vw, 30px)", maxWidth: 620, margin: "0 auto", color: "#fff" }}>{page.headline}</p>
+          <span style={{ display: "inline-block", marginTop: 18, background: colors.accent, color: colors.onAccent, fontWeight: 700, padding: "14px 30px", borderRadius: 999, fontSize: 16 }}>{page.cta}</span>
+        </div>
+      )}
       <Footer brand={brand} sub={brand.toLowerCase()} colors={colors} D={D} />
     </div>
   );
