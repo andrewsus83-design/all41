@@ -378,3 +378,18 @@ h2 {
 @keyframes slideFade { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
 .slide-fade { animation: slideFade 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
 @media (prefers-reduced-motion: reduce) { .slide-in-right, .slide-fade { animation: none; } }
+
+/* ---- dark theme (warm charcoal) — toggled via [data-theme="dark"] on <html> ---- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #171410; --bg-elev: #211d17; --bg-elev-2: #2a251d; --sunken: #100e0a;
+  --line: #332d23; --line-strong: #473e30;
+  --fg: #f7f3ea; --body: #d9d3c7; --fg-muted: #a69f92; --fg-faint: #767065;
+  --coral: #ff7a6e; --coral-soft: #3a201c; --coral-solid: #ff6b5e;
+  --amber: #ffc062; --amber-soft: #382c15; --amber-solid: #ffb020;
+  --green: #4fd394; --green-soft: #143122; --green-solid: #2fbe7e;
+  --violet: #a998ff; --violet-soft: #241f3a; --violet-solid: #7c6aef;
+  --sky: #66bcff; --sky-soft: #16283a; --sky-solid: #3ba8f5;
+  --red: #ff7a6e; --red-soft: #3a201c;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45); --shadow-md: 0 12px 30px rgba(0, 0, 0, 0.55);
+}

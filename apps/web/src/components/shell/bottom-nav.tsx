@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { ThemeToggle } from "./theme-toggle";
+import { ReportButton } from "./report-button";
 
 function HomeIcon() {
   return (
@@ -34,29 +36,43 @@ const ITEMS = [
   { href: "/settings", label: "Settings", Icon: GearIcon },
 ] as const;
 
-/** The whole app chrome — a floating dock of 3 round icons. No sidebar. */
+/** The whole app chrome — a full-width bar stuck to the bottom: logo · 3 icons (center) · theme + report. */
 export function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Main" className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-full border border-line bg-bg-elev/90 backdrop-blur px-2.5 py-2 shadow-lift">
-      {ITEMS.map(({ href, label, Icon }) => {
-        const active = pathname === href || pathname.startsWith(href + "/");
-        return (
-          <Link
-            key={href}
-            href={href}
-            aria-label={label}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "flex items-center gap-2 h-12 rounded-full transition",
-              active ? "bg-fg text-bg pl-3.5 pr-4" : "text-fg-muted hover:text-fg hover:bg-bg-elev-2 w-12 justify-center",
-            )}
-          >
-            <Icon />
-            {active && <span className="font-title font-medium text-sm whitespace-nowrap">{label}</span>}
-          </Link>
-        );
-      })}
+    <nav aria-label="Main" className="fixed bottom-0 inset-x-0 z-50 h-16 border-t border-line bg-bg-elev/95 backdrop-blur">
+      <div className="relative h-full max-w-7xl mx-auto flex items-center justify-between px-4 md:px-6">
+        {/* left: logo */}
+        <Link href="/home" className="font-title text-xl font-semibold tracking-tight shrink-0">all41</Link>
+
+        {/* center: the 3 icons */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+          {ITEMS.map(({ href, label, Icon }) => {
+            const active = pathname === href || pathname.startsWith(href + "/");
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-label={label}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-2 h-11 rounded-full transition",
+                  active ? "bg-fg text-bg pl-3.5 pr-4" : "text-fg-muted hover:text-fg hover:bg-bg-elev-2 w-11 justify-center",
+                )}
+              >
+                <Icon />
+                {active && <span className="font-title font-medium text-sm whitespace-nowrap">{label}</span>}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* right: theme + report */}
+        <div className="flex items-center gap-1 shrink-0">
+          <ThemeToggle />
+          <ReportButton />
+        </div>
+      </div>
     </nav>
   );
 }
