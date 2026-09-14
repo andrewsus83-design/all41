@@ -5,6 +5,7 @@ import { ProposalReport } from "@/components/apps/proposal-report";
 import { ClipReport } from "@/components/apps/clip-report";
 import { WebsiteReport } from "@/components/apps/website-report";
 import { ContentReport } from "@/components/apps/content-report";
+import { CompetitorReport } from "@/components/apps/competitor-report";
 
 type Source = { ref: string; quote: string };
 type AnyOutput = Record<string, unknown> & { title?: string; sources?: Source[]; confidence?: number };
@@ -64,6 +65,10 @@ export function ResultView({ output, schema, isMock, modelsUsed, verification }:
   // Content Pipeline gets its own renderer (core piece, channel-native repurposes, schedule).
   if (schema === "content_report" || "repurposes" in o) {
     return <ContentReport report={output} isMock={isMock} verification={verification} />;
+  }
+  // Competitor Intelligence gets its own renderer (changes, intel, battlecards, trends).
+  if (schema === "competitor_report" || "battlecards" in o) {
+    return <CompetitorReport report={output} isMock={isMock} verification={verification} />;
   }
   const sources = Array.isArray(o.sources) ? o.sources : [];
   return (

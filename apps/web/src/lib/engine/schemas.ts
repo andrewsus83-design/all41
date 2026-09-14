@@ -283,6 +283,49 @@ export const OUTPUT_SCHEMAS = {
       },
     },
   },
+  competitor_report: {
+    name: "competitor_report",
+    schema: {
+      type: "object", additionalProperties: false,
+      required: ["summary", "baseline", "changes", "intel", "battlecards", "trends", "filtered_noise_count", "flags", "sources", "confidence"],
+      properties: {
+        summary: { type: "string" },
+        baseline: { type: "boolean" },
+        changes: {
+          type: "array",
+          items: {
+            type: "object", additionalProperties: false, required: ["competitor", "signal", "what_changed", "significance", "why_it_matters"],
+            properties: {
+              competitor: { type: "string" }, signal: { type: "string" }, what_changed: { type: "string" },
+              significance: { type: "string", enum: ["high", "medium", "low"] }, why_it_matters: { type: "string" },
+            },
+          },
+        },
+        intel: {
+          type: "array",
+          items: {
+            type: "object", additionalProperties: false, required: ["competitor", "meaning", "threat_or_opportunity"],
+            properties: { competitor: { type: "string" }, meaning: { type: "string" }, likely_reason: { type: "string" }, threat_or_opportunity: { type: "string" } },
+          },
+        },
+        battlecards: {
+          type: "array",
+          items: {
+            type: "object", additionalProperties: false, required: ["competitor", "strengths", "weaknesses", "how_to_win"],
+            properties: {
+              competitor: { type: "string" }, strengths: { type: "array", items: { type: "string" } }, weaknesses: { type: "array", items: { type: "string" } },
+              pricing: { type: "string" }, positioning: { type: "string" }, how_to_win: { type: "array", items: { type: "string" } },
+            },
+          },
+        },
+        trends: { type: "array", items: { type: "string" } },
+        filtered_noise_count: { type: "number" },
+        flags: { type: "array", items: { type: "string" } },
+        sources: { type: "array", items: source },
+        confidence: { type: "number" },
+      },
+    },
+  },
   verification: {
     name: "verification",
     schema: {

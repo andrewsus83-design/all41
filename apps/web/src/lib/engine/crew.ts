@@ -1107,6 +1107,190 @@ const contentRunner: Runner = async (ctx, step, _depth, runId) => {
   return { output: report, schema: "content_report", modelsUsed: [...models], agents: trail, verification, isMock: assemblerMock || trail.some((t) => t.isMock), billedUsd: billed };
 };
 
+// ---------- Competitor Intelligence crew (App #6 — CI methodology, docs App#6 build package) ----------
+// Monitor (live crawl) → Change Detector → Significance Classifier → Intel Analyst → Battlecard Writer → Verifier.
+// The graph (ctx.groundingCtx) holds the last snapshot + the user's positioning + past intel — so recurring runs
+// diff-only (cheaper) and surface trends (the moat). Signal-vs-noise filtering is the core value.
+const METHOD_COMPETITOR = {
+  monitor: `You are a tireless competitive-intelligence monitor. From the crawled pages, capture each competitor's CURRENT state across the signals professionals track: homepage/messaging (how they position, their value prop), pricing/packaging, products/features, blog/news, job postings (a leading indicator — hiring engineers = building, sales = scaling, a new exec = strategic shift), and social presence. Capture facts only — no interpretation. Structure it cleanly so it can be diffed next run. If a signal isn't visible in the crawl, say "not captured" rather than guessing.`,
+  change_detector: `You are a precise diff analyst. Compare each competitor's NEW state to their LAST known state (provided from memory). Identify exactly what changed since last time — new / removed / modified — per signal. If there is no prior state for a competitor, mark it a BASELINE (no diff, just record). Report the before/after for each change. Never invent a change that isn't supported by the two states.`,
+  classifier: `You are a signal-vs-noise judge — the most important filter in competitive intelligence. Classify each change by significance and DROP the noise (a CSS tweak, a blog typo, a reworded sentence with the same meaning) from what is MATERIAL (a pricing/packaging change, a new product or feature, a key executive hire, a positioning/messaging shift, funding). Weight the user's focus areas. Only material changes proceed; count the rest as filtered noise. Assign each surfaced change a significance of high / medium / low. Drowning the user in noise is the #1 CI-tool failure — be strict.`,
+  analyst: `You are a sharp competitive analyst. For each material change, produce insight, not a restatement: what it MEANS, the likely reason ("cut price = pressure or a land-grab"), what it signals about their strategy, and the concrete threat or opportunity to the USER — framed against the user's own positioning. If a competitive history is provided, surface TRENDS across it ("third price cut this quarter", "5 engineering hires = building something"). Raw change → strategic insight.`,
+  battlecard: `You are a sales/positioning strategist. Produce or refresh a dynamic battlecard per competitor: strengths, weaknesses, pricing/packaging, positioning, and concrete "how to win against them" moves — in plain, immediately actionable language for a non-enterprise user. Base every point on the captured snapshot + intel; keep it simple and current, never a stale quarterly doc.`,
+  verifier: `You are a skeptical fact-checker. Wrong competitor intel causes wrong business decisions, so this gate is strict. Check every change, intel point and battlecard claim against the captured sources; flag anything you cannot confirm from what was actually captured rather than asserting it. Never fabricate a change or invent a competitor fact.`,
+};
+
+const COMPETITOR_SCHEMAS = {
+  monitor: { name: "ci_snapshot", schema: { type: "object", additionalProperties: false, required: ["snapshots", "notes"], properties: {
+    snapshots: { type: "array", items: { type: "object", additionalProperties: false, required: ["competitor", "messaging", "pricing", "products", "news", "jobs", "social"], properties: {
+      competitor: { type: "string" }, messaging: { type: "string" }, pricing: { type: "string" }, products: { type: "string" },
+      news: { type: "array", items: { type: "string" } }, jobs: { type: "array", items: { type: "string" } }, social: { type: "string" } } } },
+    notes: { type: "string" } } } },
+  change_detector: { name: "ci_changes", schema: { type: "object", additionalProperties: false, required: ["baseline", "changes", "notes"], properties: {
+    baseline: { type: "boolean" },
+    changes: { type: "array", items: { type: "object", additionalProperties: false, required: ["competitor", "signal", "type", "before", "after"], properties: {
+      competitor: { type: "string" }, signal: { type: "string" }, type: { type: "string" }, before: { type: "string" }, after: { type: "string" } } } },
+    notes: { type: "string" } } } },
+  classifier: { name: "ci_material", schema: { type: "object", additionalProperties: false, required: ["material_changes", "filtered_noise_count", "notes"], properties: {
+    material_changes: { type: "array", items: { type: "object", additionalProperties: false, required: ["competitor", "signal", "what_changed", "significance", "why_it_matters"], properties: {
+      competitor: { type: "string" }, signal: { type: "string" }, what_changed: { type: "string" }, significance: { type: "string", enum: ["high", "medium", "low"] }, why_it_matters: { type: "string" } } } },
+    filtered_noise_count: { type: "number" }, notes: { type: "string" } } } },
+  analyst: { name: "ci_intel", schema: { type: "object", additionalProperties: false, required: ["intel", "trends", "notes"], properties: {
+    intel: { type: "array", items: { type: "object", additionalProperties: false, required: ["competitor", "meaning", "threat_or_opportunity"], properties: {
+      competitor: { type: "string" }, meaning: { type: "string" }, likely_reason: { type: "string" }, threat_or_opportunity: { type: "string" } } } },
+    trends: { type: "array", items: { type: "string" } }, notes: { type: "string" } } } },
+  battlecard: { name: "ci_battlecards", schema: { type: "object", additionalProperties: false, required: ["battlecards", "notes"], properties: {
+    battlecards: { type: "array", items: { type: "object", additionalProperties: false, required: ["competitor", "strengths", "weaknesses", "how_to_win"], properties: {
+      competitor: { type: "string" }, strengths: { type: "array", items: { type: "string" } }, weaknesses: { type: "array", items: { type: "string" } },
+      pricing: { type: "string" }, positioning: { type: "string" }, how_to_win: { type: "array", items: { type: "string" } } } } },
+    notes: { type: "string" } } } },
+} as const;
+
+type CompetitorRef = { name: string; url: string };
+type CIChangeJson = { competitor?: string; signal?: string; what_changed?: string; significance?: string; why_it_matters?: string };
+type CIIntelJson = { competitor?: string; meaning?: string; likely_reason?: string; threat_or_opportunity?: string };
+type CIBattlecardJson = { competitor?: string; strengths?: string[]; weaknesses?: string[]; pricing?: string; positioning?: string; how_to_win?: string[] };
+
+function parseCompetitors(raw: string): CompetitorRef[] {
+  return raw.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean).slice(0, 5).map((c) => {
+    const isUrl = /\.[a-z]{2,}/i.test(c);
+    return { name: isUrl ? c.replace(/^https?:\/\//, "").replace(/\/.*$/, "") : c, url: isUrl ? guessUrl(c) : "" };
+  });
+}
+
+function mockCompetitorReport(competitors: CompetitorRef[], depth: string) {
+  const first = competitors[0]?.name || "Competitor A";
+  const wantsCard = /battlecard|beat/i.test(depth);
+  return {
+    summary: `Baseline captured for ${competitors.length || 1} competitor${competitors.length === 1 ? "" : "s"}. On the next run we'll report only what changed. (Demo run — add real competitors and connect an AI key in /admin for live intel.)`,
+    baseline: true,
+    changes: [
+      { competitor: first, signal: "pricing", what_changed: "Baseline pricing captured (no prior run to diff against).", significance: "low" as const, why_it_matters: "Sets the reference point; next run flags any change." },
+    ],
+    intel: [
+      { competitor: first, meaning: "First snapshot — positioning and pricing recorded.", likely_reason: "n/a (baseline)", threat_or_opportunity: "Watch for pricing or product moves against your positioning." },
+    ],
+    battlecards: wantsCard ? [
+      { competitor: first, strengths: ["Established brand", "Broad feature set"], weaknesses: ["Higher price point", "Slower to ship"], pricing: "Captured on the pricing page", positioning: "Enterprise-leaning", how_to_win: ["Lead on price-to-value", "Emphasize speed and support", "Target the segment they underserve"] },
+    ] : [],
+    trends: [],
+    filtered_noise_count: 0,
+    flags: ["Demo run on placeholder data. Add real competitors and connect an AI key in /admin for live, verified intel.", "Every change and battlecard point is checked against captured sources before delivery."],
+    sources: [{ ref: "C1", quote: competitors[0]?.url ? `Captured ${competitors[0].url}` : "Placeholder — add a competitor URL for a sourced run." }],
+    confidence: 0.4,
+  };
+}
+
+const competitorRunner: Runner = async (ctx, step, _depth, runId) => {
+  const { config, tools } = ctx;
+  const competitors = parseCompetitors(pick(config, "competitors", "competitor_urls") || "");
+  const focus = pick(config, "focus") || "everything";
+  const positioning = pick(config, "positioning", "business") || "(not provided)";
+  const depth = pick(config, "output_depth") || "changes_only";
+  const wantsCard = /battlecard|beat|yes/i.test(depth);
+  const priorCtx = (ctx.groundingCtx || "").slice(0, 3000); // last snapshot + positioning + past intel from the graph
+
+  const trail: CrewAgentTrail[] = [];
+  const models = new Set<string>();
+  let billed = 0;
+  const soFar = () => billed;
+  const rec = (id: string, name: string, r: { model: string; billedUsd: number; findings: number; isMock: boolean }) => {
+    trail.push({ id, name, model: r.model, billedUsd: r.billedUsd, findings: r.findings, status: "ok", isMock: r.isMock }); models.add(r.model); billed += r.billedUsd;
+  };
+
+  // 1. Monitor — crawl each competitor (parallel, live Firecrawl), then structure into snapshots (Part 3.A)
+  ctx.onEvent?.({ step: "crew.agent", id: "monitor", name: "Monitor", label: "Scanning competitors", phase: "running", billedSoFar: soFar() });
+  const crawls = await Promise.all(competitors.filter((c) => c.url).map((c) => tools.crawl(c.url)));
+  for (const c of crawls) billed += c.billedUsd;
+  const capturedText = competitors.map((c) => {
+    const cr = crawls.find((x) => x.url === c.url);
+    return `## ${c.name} ${c.url ? `(${c.url})` : "(name only — no URL to crawl)"}\n${cr ? cr.markdown.slice(0, 4000) : "(no crawl — analyse from name/known info only)"}`;
+  }).join("\n\n");
+  const monitor = await agentCall(ctx, runId, { id: "monitor", name: "Monitor", taskType: "reasoning", system: METHOD_COMPETITOR.monitor,
+    context: `COMPETITORS: ${competitors.map((c) => c.name).join(", ") || "(none given)"}\nFOCUS: ${focus}\nCAPTURED PAGES:\n${capturedText || "(nothing captured)"}`,
+    schema: COMPETITOR_SCHEMAS.monitor, label: "Scanning competitors" }, soFar);
+  rec("monitor", "Monitor", monitor);
+
+  // 2. Change Detector — diff vs last snapshot from the graph (Part 3.B)
+  const detector = await agentCall(ctx, runId, { id: "change_detector", name: "Change Detector", taskType: "reasoning", system: METHOD_COMPETITOR.change_detector,
+    context: `NEW SNAPSHOT:\n${JSON.stringify(monitor.json.snapshots).slice(0, 6000)}\n\nLAST KNOWN STATE (from memory — empty ⇒ baseline):\n${priorCtx || "(no prior state — this is the baseline run)"}`,
+    schema: COMPETITOR_SCHEMAS.change_detector, label: "Detecting what changed" }, soFar);
+  rec("change_detector", "Change Detector", detector);
+  const isBaseline = detector.json.baseline === true || !priorCtx;
+
+  // 3. Significance Classifier — filter noise, keep material only (Part 3.B — the core value)
+  const classifier = await agentCall(ctx, runId, { id: "classifier", name: "Significance Classifier", taskType: "reasoning", system: METHOD_COMPETITOR.classifier,
+    context: `USER FOCUS: ${focus}\nCHANGES:\n${JSON.stringify(detector.json.changes).slice(0, 6000)}${isBaseline ? "\n(BASELINE run — treat the initial capture as low-significance reference points.)" : ""}`,
+    schema: COMPETITOR_SCHEMAS.classifier, label: "Filtering noise" }, soFar);
+  rec("classifier", "Significance Classifier", classifier);
+  const material = (classifier.json.material_changes as CIChangeJson[]) ?? [];
+
+  // 4. Intel Analyst — what it means + trends (Part 3.C/E)
+  const analyst = await agentCall(ctx, runId, { id: "analyst", name: "Intel Analyst", taskType: "reasoning", system: METHOD_COMPETITOR.analyst,
+    context: `USER POSITIONING: ${positioning}\nMATERIAL CHANGES:\n${JSON.stringify(material).slice(0, 5000)}\nPAST INTEL / HISTORY (for trends):\n${priorCtx || "(no history yet)"}`,
+    schema: COMPETITOR_SCHEMAS.analyst, label: "Analysing the intel" }, soFar);
+  rec("analyst", "Intel Analyst", analyst);
+
+  // 5. Battlecard Writer — dynamic battlecard (Part 3.D), only if chosen
+  let battlecards: CIBattlecardJson[] = [];
+  if (wantsCard) {
+    const bc = await agentCall(ctx, runId, { id: "battlecard", name: "Battlecard Writer", taskType: "content", system: METHOD_COMPETITOR.battlecard,
+      context: `USER POSITIONING: ${positioning}\nINTEL:\n${JSON.stringify(analyst.json.intel).slice(0, 4000)}\nSNAPSHOTS:\n${JSON.stringify(monitor.json.snapshots).slice(0, 4000)}`,
+      schema: COMPETITOR_SCHEMAS.battlecard, label: "Writing the battlecard" }, soFar);
+    rec("battlecard", "Battlecard Writer", bc);
+    battlecards = (bc.json.battlecards as CIBattlecardJson[]) ?? [];
+  }
+
+  // 6. Assemble competitor_report. Mock → a realistic demo.
+  const { isMock: assemblerMock } = await routeTask(step.task_type);
+  let report: unknown;
+  if (assemblerMock) {
+    report = mockCompetitorReport(competitors, depth);
+  } else {
+    const intel = (analyst.json.intel as CIIntelJson[]) ?? [];
+    const flags: string[] = [];
+    if (!competitors.some((c) => c.url)) flags.push("No competitor URLs given — add URLs so the Monitor can capture live signals (names alone limit accuracy).");
+    if (isBaseline) flags.push("Baseline run — the next run will report only what changed. Turn on a weekly watch to track them over time.");
+    report = {
+      summary: isBaseline
+        ? `Baseline captured for ${competitors.length} competitor${competitors.length === 1 ? "" : "s"} — next run reports only what changed.`
+        : `${material.length} material change${material.length === 1 ? "" : "s"} across ${competitors.length} competitor${competitors.length === 1 ? "" : "s"} (${Number(classifier.json.filtered_noise_count) || 0} noise item(s) filtered out).`,
+      baseline: isBaseline,
+      changes: material.map((c) => ({
+        competitor: String(c.competitor ?? ""), signal: String(c.signal ?? ""), what_changed: String(c.what_changed ?? ""),
+        significance: (["high", "medium", "low"].includes(String(c.significance)) ? c.significance : "medium") as string, why_it_matters: String(c.why_it_matters ?? ""),
+      })),
+      intel: intel.map((x) => ({ competitor: String(x.competitor ?? ""), meaning: String(x.meaning ?? ""), likely_reason: String(x.likely_reason ?? ""), threat_or_opportunity: String(x.threat_or_opportunity ?? "") })),
+      battlecards: battlecards.map((b) => ({
+        competitor: String(b.competitor ?? ""), strengths: Array.isArray(b.strengths) ? b.strengths.map(String) : [], weaknesses: Array.isArray(b.weaknesses) ? b.weaknesses.map(String) : [],
+        pricing: String(b.pricing ?? ""), positioning: String(b.positioning ?? ""), how_to_win: Array.isArray(b.how_to_win) ? b.how_to_win.map(String) : [],
+      })),
+      trends: Array.isArray(analyst.json.trends) ? (analyst.json.trends as string[]).map(String) : [],
+      filtered_noise_count: Number(classifier.json.filtered_noise_count) || 0,
+      flags: flags.slice(0, 8),
+      sources: competitors.filter((c) => c.url).map((c, i) => ({ ref: `C${i + 1}`, quote: `Captured ${c.url}` })),
+      confidence: material.length || isBaseline ? 0.7 : 0.5,
+    };
+  }
+
+  // Verifier gate (Quality Layer 1) — wrong intel = wrong decisions; claims must trace to captured sources.
+  let verification: Verification | undefined;
+  try {
+    verification = await verifyOutput({ userId: ctx.userId, taskId: ctx.taskId, output: report, context: `CAPTURED SNAPSHOTS:\n${JSON.stringify(monitor.json.snapshots).slice(0, 6000)}` });
+    billed += verification.billedUsd ?? 0;
+    if (verification.model) models.add(verification.model);
+    if (verification.verdict !== "supported" && report && typeof report === "object") {
+      const r = report as { flags?: string[] };
+      r.flags = [...(r.flags ?? []), ...verification.conflicts.map((c) => `Unconfirmed change: ${c}`), ...verification.unsupported_claims.map((c) => `No source: ${c}`)].slice(0, 14);
+    }
+    ctx.onEvent?.({ step: "crew.gate", verdict: verification.verdict, conflicts: verification.conflicts.length });
+  } catch {
+    ctx.onEvent?.({ step: "crew.gate", verdict: "skipped", conflicts: 0 });
+  }
+
+  return { output: report, schema: "competitor_report", modelsUsed: [...models], agents: trail, verification, isMock: assemblerMock || trail.some((t) => t.isMock), billedUsd: billed };
+};
+
 type CrewDef = {
   label: string; describe: string[]; agents: string[]; run: Runner;
   stepsTable: string;
@@ -1289,6 +1473,35 @@ export const CREWS: Record<string, CrewDef> = {
       }).eq("id", runId);
     },
     failRun: async (runId) => { await adminClient().from("content_runs").update({ status: "failed" }).eq("id", runId); },
+  },
+  competitor_intel: {
+    label: "Competitor Intelligence",
+    describe: [
+      "Scans each competitor across their site, pricing, products, news, jobs and social",
+      "Diffs against last time — so it only reports what's actually new",
+      "Filters the noise and keeps only what materially matters",
+      "Explains what each change means and the threat or opportunity to you",
+      "Writes a dynamic battlecard, then fact-checks every claim",
+    ],
+    agents: ["Monitor", "Change Detector", "Significance Classifier", "Intel Analyst", "Battlecard Writer", "Verifier"],
+    run: competitorRunner,
+    stepsTable: "competitor_run_steps",
+    createRun: async (ctx) => {
+      const { data } = await adminClient().from("competitor_runs").insert({
+        user_id: ctx.userId, account_id: ctx.userId, task_id: ctx.taskId, status: "running",
+      }).select("id").single();
+      return data?.id as string | undefined;
+    },
+    finishRun: async (runId, out, taskId) => {
+      const db = adminClient();
+      const rep = out.output as { changes?: unknown; battlecards?: unknown; intel?: unknown; trends?: unknown } | null;
+      const { data: usage } = await db.from("api_usage_log").select("cost_usd").eq("task_id", taskId);
+      await db.from("competitor_runs").update({
+        status: "done", changes: (rep?.changes ?? null) as unknown as Json, intel: (out.output ?? null) as unknown as Json,
+        total_cost: (usage ?? []).reduce((n, r) => n + Number(r.cost_usd), 0),
+      }).eq("id", runId);
+    },
+    failRun: async (runId) => { await adminClient().from("competitor_runs").update({ status: "failed" }).eq("id", runId); },
   },
 };
 

@@ -81,6 +81,7 @@ export const SCHEMA_WORDS: Record<OutputSchemaKey, string> = {
   clip_report: "ready-to-post vertical clips, each with a virality score, hook type, caption and why it was chosen — plus the moments that were dropped",
   website_report: "a live, conversion-optimized website — pages with a benefit-led headline, value prop, proof and one CTA, the style, an SEO/GEO baseline, and what to check",
   content_report: "a week of content from one idea — a core piece plus channel-native repurposes with hook options, a posting schedule, and sources",
+  competitor_report: "what changed per competitor (noise filtered) with why it matters, intel on what it signals, dynamic battlecards, trends over time, and sources",
 };
 
 /** Roadmap apps from Master Plan §11 — not available yet. */

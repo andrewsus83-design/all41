@@ -931,6 +931,151 @@ export type Database = {
         }
         Relationships: []
       }
+      competitor_watches: {
+        Row: {
+          account_id: string | null
+          competitors: Json | null
+          created_at: string
+          focus: string[]
+          id: string
+          output_depth: string | null
+          positioning: string | null
+          schedule: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          competitors?: Json | null
+          created_at?: string
+          focus?: string[]
+          id?: string
+          output_depth?: string | null
+          positioning?: string | null
+          schedule?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          competitors?: Json | null
+          created_at?: string
+          focus?: string[]
+          id?: string
+          output_depth?: string | null
+          positioning?: string | null
+          schedule?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      competitor_runs: {
+        Row: {
+          account_id: string | null
+          changes: Json | null
+          created_at: string
+          id: string
+          intel: Json | null
+          snapshot: Json | null
+          status: string
+          task_id: string | null
+          total_cost: number
+          user_id: string
+          watch_id: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          changes?: Json | null
+          created_at?: string
+          id?: string
+          intel?: Json | null
+          snapshot?: Json | null
+          status?: string
+          task_id?: string | null
+          total_cost?: number
+          user_id: string
+          watch_id?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          changes?: Json | null
+          created_at?: string
+          id?: string
+          intel?: Json | null
+          snapshot?: Json | null
+          status?: string
+          task_id?: string | null
+          total_cost?: number
+          user_id?: string
+          watch_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_runs_watch_id_fkey"
+            columns: ["watch_id"]
+            isOneToOne: false
+            referencedRelation: "competitor_watches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitor_run_steps: {
+        Row: {
+          account_id: string | null
+          agent: string
+          cost_usd: number
+          created_at: string
+          id: string
+          input: Json | null
+          model_used: string | null
+          output: Json | null
+          run_id: string
+          status: string
+          tokens_in: number
+          tokens_out: number
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          agent: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          run_id: string
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          agent?: string
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          input?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          run_id?: string
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_run_steps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "competitor_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_runs: {
         Row: {
           account_id: string | null

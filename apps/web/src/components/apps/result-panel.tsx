@@ -23,8 +23,9 @@ export function ResultPanel({ result, billedUsd, modelsUsed, title }: { result: 
   const isClip = r.schema === "clip_report" || (hasOutput && "clips" in (r.output as object));
   const isWebsite = r.schema === "website_report" || (hasOutput && "live_url" in (r.output as object));
   const isContent = r.schema === "content_report" || (hasOutput && "repurposes" in (r.output as object));
-  // SEO and Proposal have dedicated detail pages; Clip, Web Builder and Content render fully inline (no separate page).
-  const detailHref = runId && !isClip && !isWebsite && !isContent ? (isProposal ? `/my-apps/proposal/${runId}` : `/my-apps/audit/${runId}`) : null;
+  const isCompetitor = r.schema === "competitor_report" || (hasOutput && "battlecards" in (r.output as object));
+  // SEO and Proposal have dedicated detail pages; the newer crews render fully inline (no separate page).
+  const detailHref = runId && !isClip && !isWebsite && !isContent && !isCompetitor ? (isProposal ? `/my-apps/proposal/${runId}` : `/my-apps/audit/${runId}`) : null;
   return (
     <div className="space-y-3">
       {title && <p className="text-xs uppercase tracking-wide text-fg-faint">{title}</p>}
