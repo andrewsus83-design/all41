@@ -604,6 +604,219 @@ export type Database = {
           },
         ]
       }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          plan: string
+          slug: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          plan?: string
+          slug?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          plan?: string
+          slug?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      org_members: {
+        Row: {
+          created_at: string
+          id: string
+          org_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          org_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          id: string
+          invited_by: string | null
+          org_id: string
+          role: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invited_by?: string | null
+          org_id: string
+          role?: string
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string | null
+          org_id?: string
+          role?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_invites_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      app_versions: {
+        Row: {
+          changelog: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          manifest: Json
+          mini_app_id: string | null
+          slug: string
+          version: number
+        }
+        Insert: {
+          changelog?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          manifest: Json
+          mini_app_id?: string | null
+          slug: string
+          version: number
+        }
+        Update: {
+          changelog?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          manifest?: Json
+          mini_app_id?: string | null
+          slug?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_versions_mini_app_id_fkey"
+            columns: ["mini_app_id"]
+            isOneToOne: false
+            referencedRelation: "mini_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbox_messages: {
+        Row: {
+          body: string | null
+          created_at: string
+          direction: string
+          from_email: string | null
+          id: string
+          meta: Json | null
+          status: string
+          subject: string | null
+          task_id: string | null
+          to_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          direction?: string
+          from_email?: string | null
+          id?: string
+          meta?: Json | null
+          status?: string
+          subject?: string | null
+          task_id?: string | null
+          to_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          direction?: string
+          from_email?: string | null
+          id?: string
+          meta?: Json | null
+          status?: string
+          subject?: string | null
+          task_id?: string | null
+          to_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          detail: Json | null
+          id: string
+          target: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          target?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          target?: string | null
+        }
+        Relationships: []
+      }
       mini_apps: {
         Row: {
           autonomy_level: number
@@ -620,6 +833,8 @@ export type Database = {
           slug: string
           sort_order: number
           tags: string[]
+          updated_at: string
+          version: number
           who_for: string | null
           workflow_def: Json
         }
@@ -638,6 +853,8 @@ export type Database = {
           slug: string
           sort_order?: number
           tags?: string[]
+          updated_at?: string
+          version?: number
           who_for?: string | null
           workflow_def?: Json
         }
@@ -656,6 +873,8 @@ export type Database = {
           slug?: string
           sort_order?: number
           tags?: string[]
+          updated_at?: string
+          version?: number
           who_for?: string | null
           workflow_def?: Json
         }

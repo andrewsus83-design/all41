@@ -80,7 +80,7 @@ function KeyRow({ name, label, source, masked, keysUrl, provider, hint }: { name
   );
 }
 
-function KeysSection({ data }: { data: AdminData }) {
+export function KeysSection({ data }: { data: AdminData }) {
   return (
     <section className="space-y-4">
       <h2 className="text-2xl">Provider keys</h2>
@@ -101,7 +101,7 @@ function KeysSection({ data }: { data: AdminData }) {
 }
 
 /* ---------------- Routing ---------------- */
-function RoutingSection({ data }: { data: AdminData }) {
+export function RoutingSection({ data }: { data: AdminData }) {
   const router = useRouter();
   const [res, setRes] = useState<Record<string, R>>({});
   const [pending, start] = useTransition();
@@ -156,7 +156,7 @@ function RoutingSection({ data }: { data: AdminData }) {
 }
 
 /* ---------------- Rates ---------------- */
-function RatesSection({ data }: { data: AdminData }) {
+export function RatesSection({ data }: { data: AdminData }) {
   const router = useRouter();
   const [res, setRes] = useState<Record<string, R>>({});
   const [pending, start] = useTransition();
@@ -212,7 +212,7 @@ function RatesSection({ data }: { data: AdminData }) {
 }
 
 /* ---------------- Settings ---------------- */
-function SettingsSection({ data }: { data: AdminData }) {
+export function SettingsSection({ data }: { data: AdminData }) {
   const router = useRouter();
   const [res, setRes] = useState<Record<string, R>>({});
   const [pending, start] = useTransition();
