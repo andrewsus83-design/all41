@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
 import { ConfidenceBadge } from "@/components/result-view";
@@ -65,7 +66,7 @@ function Hero({ src, alt, colors, radius = 0, minH = 260 }: { src?: string; alt:
 }
 
 function Hd({ font, size = 40, children }: { font: string; size?: number; children: React.ReactNode }) {
-  return <h1 style={{ fontFamily: font, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.08, fontSize: `clamp(26px, ${size / 12}vw, ${size}px)` }}>{children}</h1>;
+  return <h1 style={{ fontFamily: font, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.08, fontSize: `clamp(26px, ${size / 12}cqw, ${size}px)` }}>{children}</h1>;
 }
 
 function TopNav({ brand, pages, active, onNav, colors, D }: { brand: string; pages: Page[]; active: number; onNav: (i: number) => void; colors: Colors; D: string }) {
@@ -223,7 +224,7 @@ function SitePage({ page, brand, colors, fonts }: { page: Page; brand: string; c
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.42) 45%, rgba(0,0,0,0.85) 100%)" }} />
           <div style={{ position: "absolute", inset: 0, padding: "40px 28px", display: "flex", flexDirection: "column", justifyContent: "flex-end", color: "#fff", textShadow: "0 2px 20px rgba(0,0,0,0.6)" }}>
             <span style={{ fontWeight: 700, fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: "#fff", opacity: 0.85 }}>{brand}</span>
-            <h1 style={{ fontFamily: D, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.05, fontSize: "clamp(28px, 4.6vw, 46px)", maxWidth: 620, marginTop: 10, color: "#fff" }}>{page.headline}</h1>
+            <h1 style={{ fontFamily: D, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.05, fontSize: "clamp(28px, 4.6cqw, 46px)", maxWidth: 620, marginTop: 10, color: "#fff" }}>{page.headline}</h1>
             {page.subhead && <p style={{ fontSize: 16, lineHeight: 1.55, maxWidth: 520, marginTop: 12, opacity: 0.95, color: "#fff" }}>{page.subhead}</p>}
             {page.cta && <div style={{ marginTop: 18 }}><span style={{ background: colors.accent, color: colors.onAccent, fontWeight: 700, padding: "14px 28px", borderRadius: 999, fontSize: 16 }}>{page.cta}</span></div>}
           </div>
@@ -231,7 +232,7 @@ function SitePage({ page, brand, colors, fonts }: { page: Page; brand: string; c
       ) : (
         <div style={{ background: colors.ink, color: "#fff", padding: "64px 28px", textAlign: "center" }}>
           <span style={{ fontWeight: 700, fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", opacity: 0.75 }}>{brand}</span>
-          <h1 style={{ fontFamily: D, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.06, fontSize: "clamp(28px, 4.4vw, 44px)", maxWidth: 640, margin: "12px auto 0", color: "#fff" }}>{page.headline}</h1>
+          <h1 style={{ fontFamily: D, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.06, fontSize: "clamp(28px, 4.4cqw, 44px)", maxWidth: 640, margin: "12px auto 0", color: "#fff" }}>{page.headline}</h1>
           {page.subhead && <p style={{ fontSize: 16, lineHeight: 1.55, maxWidth: 540, margin: "14px auto 0", opacity: 0.92, color: "#fff" }}>{page.subhead}</p>}
           {page.cta && <span style={{ display: "inline-block", marginTop: 22, background: colors.accent, color: colors.onAccent, fontWeight: 700, padding: "14px 28px", borderRadius: 999, fontSize: 16 }}>{page.cta}</span>}
         </div>
@@ -240,7 +241,7 @@ function SitePage({ page, brand, colors, fonts }: { page: Page; brand: string; c
       {/* value prop */}
       {page.value_prop && (
         <div className="px-7 sm:px-10 py-11 text-center">
-          <p className="mx-auto" style={{ fontFamily: D, fontWeight: 600, maxWidth: 640, fontSize: "clamp(19px, 2.6vw, 26px)", lineHeight: 1.3 }}>{page.value_prop}</p>
+          <p className="mx-auto" style={{ fontFamily: D, fontWeight: 600, maxWidth: 640, fontSize: "clamp(19px, 2.6cqw, 26px)", lineHeight: 1.3 }}>{page.value_prop}</p>
         </div>
       )}
 
@@ -277,7 +278,7 @@ function SitePage({ page, brand, colors, fonts }: { page: Page; brand: string; c
       {/* final CTA — restates the site's own promise */}
       {page.cta && (
         <div className="px-7 sm:px-10 py-14 text-center" style={{ background: colors.ink, color: "#fff" }}>
-          <p style={{ fontFamily: D, fontWeight: 600, fontSize: "clamp(20px, 2.8vw, 30px)", maxWidth: 620, margin: "0 auto", color: "#fff" }}>{page.headline}</p>
+          <p style={{ fontFamily: D, fontWeight: 600, fontSize: "clamp(20px, 2.8cqw, 30px)", maxWidth: 620, margin: "0 auto", color: "#fff" }}>{page.headline}</p>
           <span style={{ display: "inline-block", marginTop: 18, background: colors.accent, color: colors.onAccent, fontWeight: 700, padding: "14px 30px", borderRadius: 999, fontSize: 16 }}>{page.cta}</span>
         </div>
       )}
@@ -327,6 +328,14 @@ function doubleChecked(v: Verdict) {
 /** Web Builder result — leads with a real, flagship-grade rendered site (browser frame, per-page), then the detail. */
 export function WebsiteReport({ report, isMock, verification }: { report: unknown; isMock?: boolean; verification?: Verdict }) {
   const [active, setActive] = useState(0);
+  const [full, setFull] = useState(false);
+
+  useEffect(() => {
+    if (!full) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); setFull(false); } };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, [full]);
 
   useEffect(() => {
     const id = "all41-preview-fonts";
@@ -363,6 +372,12 @@ export function WebsiteReport({ report, isMock, verification }: { report: unknow
   const fonts = { display: style.fonts?.display || "Fraunces", body: style.fonts?.body || "Inter" };
   const idx = Math.min(active, Math.max(0, pages.length - 1));
   const page = pages[idx];
+  const siteEl = (
+    <>
+      <TopNav brand={brand} pages={pages} active={idx} onNav={setActive} colors={colors} D={fonts.display} />
+      {page && <SitePage page={page} brand={brand} colors={colors} fonts={fonts} />}
+    </>
+  );
 
   return (
     <div className="space-y-8">
@@ -399,12 +414,41 @@ export function WebsiteReport({ report, isMock, verification }: { report: unknow
                 ))}
               </div>
             )}
+            <button type="button" onClick={() => setFull(true)} aria-label="Open full preview" title="Open full preview" className="shrink-0 size-8 rounded-full grid place-items-center text-fg-muted hover:text-fg hover:bg-bg-elev transition">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M15 3h6v6" /><path d="M9 21H3v-6" /><path d="M21 3l-7 7" /><path d="M3 21l7-7" /></svg>
+            </button>
           </div>
-          <div className="max-h-[600px] overflow-y-auto" style={{ background: "#fff" }}>
-            <TopNav brand={brand} pages={pages} active={idx} onNav={setActive} colors={colors} D={fonts.display} />
-            {page && <SitePage page={page} brand={brand} colors={colors} fonts={fonts} />}
+          <div className="max-h-[600px] overflow-y-auto cursor-zoom-in" style={{ background: "#fff", containerType: "inline-size" }} onClick={() => setFull(true)}>
+            {siteEl}
+          </div>
+          <div className="px-4 py-2.5 border-t border-line bg-bg-elev-2 text-center">
+            <button type="button" onClick={() => setFull(true)} className="text-sm font-title font-medium text-green hover:underline">Open the full site experience →</button>
           </div>
         </div>
+      )}
+
+      {/* FULL WEB EXPERIENCE — portal, above the sample sheet */}
+      {full && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[95] bg-bg flex flex-col scene-in" role="dialog" aria-modal="true" aria-label={`${brand} — full preview`}>
+          <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 border-b border-line bg-bg-elev">
+            <div className="hidden sm:flex gap-1.5"><span className="size-3 rounded-full bg-red/60" /><span className="size-3 rounded-full bg-amber/60" /><span className="size-3 rounded-full bg-green/60" /></div>
+            <div className="flex-1 flex items-center gap-2 rounded-full bg-bg border border-line px-3 py-1.5 text-xs text-fg-muted min-w-0">
+              <span aria-hidden>🔒</span><span className="num truncate">{urlText}{page?.slug && page.slug !== "/" ? page.slug : ""}</span>
+            </div>
+            {pages.length > 1 && (
+              <div className="flex items-center gap-1 overflow-x-auto">
+                {pages.map((p, i) => (
+                  <button key={i} type="button" onClick={() => setActive(i)} className={cn("shrink-0 px-3 py-1.5 rounded-full text-sm font-title font-medium transition", i === idx ? "bg-fg text-bg" : "text-fg-muted hover:text-fg hover:bg-bg-elev-2")}>{p.type || `Page ${i + 1}`}</button>
+                ))}
+              </div>
+            )}
+            <button type="button" onClick={() => setFull(false)} aria-label="Close full preview" className="size-10 rounded-full grid place-items-center text-fg-muted hover:text-fg bg-bg-elev border border-line hover:bg-bg-elev-2 transition text-lg shrink-0">✕</button>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto" style={{ background: "#fff" }}>
+            <div className="mx-auto" style={{ maxWidth: 1100, containerType: "inline-size" }}>{siteEl}</div>
+          </div>
+        </div>,
+        document.body,
       )}
 
       {/* mobile page switcher */}
