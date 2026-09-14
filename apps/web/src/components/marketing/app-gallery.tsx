@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LiveBriefingDemo } from "./live-briefing-demo";
+import { AppDemo, hasDemo } from "./app-demo";
 import type { GalleryApp } from "@/content/gallery";
 import { cn } from "@/lib/cn";
 
@@ -150,8 +151,8 @@ function AppModal({ app, onClose }: { app: GalleryApp; onClose: () => void }) {
           </div>
 
           <div className="space-y-3">
-            <p className="text-xs uppercase tracking-[0.18em] text-fg-faint">Live demo</p>
-            <LiveBriefingDemo />
+            <p className="text-xs uppercase tracking-[0.18em] text-fg-faint">Live demo · try it with dummy data</p>
+            {hasDemo(app.slug) ? <AppDemo app={app} /> : <LiveBriefingDemo />}
           </div>
 
           {app.useCases.length ? (
