@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { ThemeToggle } from "./theme-toggle";
 import { ReportButton } from "./report-button";
@@ -36,14 +37,36 @@ const ITEMS = [
   { href: "/settings", label: "Settings", Icon: GearIcon },
 ] as const;
 
-/** The whole app chrome — a full-width bar stuck to the bottom: logo · 3 icons (center) · theme + report. */
+/** The whole app chrome — a full-width bar stuck to the bottom: logo · 3 icons (center) · theme + report.
+ * Hides when scrolling down; reappears when scrolling up or when scrolling stops. */
 export function BottomNav() {
   const pathname = usePathname();
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
+  const idle = useRef<number | null>(null);
+
+  useEffect(() => {
+    lastY.current = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y > lastY.current + 4 && y > 48) setHidden(true);   // scrolling down → hide
+      else if (y < lastY.current - 4) setHidden(false);        // scrolling up → show
+      lastY.current = y;
+      if (idle.current) clearTimeout(idle.current);
+      idle.current = window.setTimeout(() => setHidden(false), 900); // came to rest → show
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); if (idle.current) clearTimeout(idle.current); };
+  }, []);
+
   return (
-    <nav aria-label="Main" className="fixed bottom-0 inset-x-0 z-50 h-16 border-t border-line bg-bg-elev/95 backdrop-blur">
+    <nav aria-label="Main" className={cn("fixed bottom-0 inset-x-0 z-50 h-16 border-t border-line bg-bg-elev/95 backdrop-blur transition-transform duration-300", hidden && "translate-y-full")}>
       <div className="relative h-full max-w-7xl mx-auto flex items-center justify-between px-4 md:px-6">
         {/* left: logo */}
-        <Link href="/home" className="font-title text-xl font-semibold tracking-tight shrink-0">all41</Link>
+        <Link href="/home" className="shrink-0" aria-label="all41 home">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="all41" className="h-8 w-auto" />
+        </Link>
 
         {/* center: the 3 icons */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5">

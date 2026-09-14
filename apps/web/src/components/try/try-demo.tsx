@@ -26,7 +26,8 @@ const NAV = [
 function DemoSidebar({ active }: { active: string }) {
   return (
     <aside className="w-60 shrink-0 border-r border-line flex-col p-6 gap-8 min-h-screen sticky top-0 hidden lg:flex">
-      <span className="font-title text-2xl font-semibold tracking-tight">all41</span>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo.svg" alt="all41" className="h-8 w-auto" />
       <nav className="flex flex-col gap-1">
         {NAV.map((n) => {
           const on = n.label === active;
