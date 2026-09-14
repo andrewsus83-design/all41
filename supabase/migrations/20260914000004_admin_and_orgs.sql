@@ -36,7 +36,7 @@ create table if not exists public.org_invites (
   org_id      uuid not null references public.organizations on delete cascade,
   email       text not null,
   role        text not null default 'member' check (role in ('owner','admin','member')),
-  token       text not null unique default encode(gen_random_bytes(18), 'hex'),
+  token       text not null unique default (replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '')),
   invited_by  uuid references auth.users on delete set null,
   accepted_at timestamptz,
   created_at  timestamptz not null default now()
