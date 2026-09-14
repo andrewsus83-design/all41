@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import type { Answers, CatalogApp } from "@/components/apps/types";
 
 type Draft = { instanceId: string; estimateUsd: number; balance: number };
 
-export function BuildClient({ apps, preselect, task, balance, basePath = "/build" }: { apps: CatalogApp[]; preselect: string | null; task: PastTask | null; balance: number; basePath?: string }) {
+export function BuildClient({ apps, preselect, task, balance, basePath = "/build", intro }: { apps: CatalogApp[]; preselect: string | null; task: PastTask | null; balance: number; basePath?: string; intro?: ReactNode }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(preselect && apps.some((a) => a.slug === preselect) ? preselect : null);
   const [answers, setAnswers] = useState<Answers | null>(null);
@@ -89,32 +89,26 @@ export function BuildClient({ apps, preselect, task, balance, basePath = "/build
   const insufficient = draft && !stream.running && !stream.result && draft.balance < draft.estimateUsd;
   const runFailed = draft && !stream.running && !stream.result && (stream.blocked || stream.error);
 
-  const backToApps = () => { resetAll(); setSelected(null); setShowTask(false); router.replace(basePath, { scroll: false }); };
-  const inApp = !!app || (showTask && !!task);
-
   return (
-    <div className="relative min-h-[55vh]">
-      {/* catalog — the apps you can build */}
-      {!inApp && (
-        <div key="catalog" className="slide-fade space-y-4">
-          <div className="space-y-1">
-            <h2 className="text-xl">Apps <span className="num text-fg-faint">{apps.filter((a) => !a.isCustom).length}</span></h2>
-            <p className="text-sm text-fg-muted">Tap one to build it — it opens full-screen. Credit: <Money usd={balance} className="text-fg" /></p>
-          </div>
-          <CatalogGrid apps={apps} selected={selected} onOpen={(slug) => pick(slug)} />
+    <div className="grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-6 lg:gap-8 items-start">
+      {/* LEFT — the apps you can use */}
+      <aside className="space-y-4 min-w-0 order-2 lg:order-1 lg:sticky lg:top-4 self-start">
+        <div className="space-y-1">
+          <h2 className="text-lg font-medium">What you can do</h2>
+          <p className="text-sm text-fg-muted">Tap one and I&apos;ll walk you through it. Credit: <Money usd={balance} className="text-fg" /></p>
         </div>
-      )}
+        <CatalogGrid apps={apps} selected={selected} onOpen={(slug) => pick(slug)} />
+      </aside>
 
-      {/* the chosen app, full-screen — slides in from the catalog */}
-      {inApp && (
-      <section className="slide-in-right max-w-4xl mx-auto space-y-6 min-w-0">
-        <button type="button" onClick={backToApps} className="inline-flex items-center gap-1.5 text-sm text-fg-muted hover:text-fg transition">← Apps</button>
+      {/* RIGHT — the chatroom */}
+      <section className="space-y-6 min-w-0 order-1 lg:order-2">
+        {intro}
         {showTask && task ? (
           <TaskView task={task} />
         ) : !app ? (
-          <Card className="space-y-3">
-            <CardTitle className="text-2xl">Pick an app on the left, or start from scratch.</CardTitle>
-            <CardHint>A consultant walks you through a few questions, runs it once so you can see the real thing, then you decide whether to keep it.</CardHint>
+          <Card className="space-y-2">
+            <CardTitle>Nothing picked yet</CardTitle>
+            <CardHint>Choose an app on the left — I&apos;ll ask a few quick questions, run it once so you can see the real thing, then you decide whether to keep it.</CardHint>
           </Card>
         ) : (
           <>
@@ -207,7 +201,6 @@ export function BuildClient({ apps, preselect, task, balance, basePath = "/build
         )}
         <div ref={bottomRef} />
       </section>
-      )}
     </div>
   );
 }
