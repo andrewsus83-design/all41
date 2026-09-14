@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Money } from "@/components/ui/money";
 import { cn } from "@/lib/cn";
-import { AppDetail } from "./app-detail";
 import { categoryLabel, costPrefix } from "@/components/build/catalog-copy";
 import type { CatalogApp } from "@/components/apps/types";
 
@@ -22,7 +21,6 @@ export function ExploreGallery({ apps }: { apps: CatalogApp[] }) {
   const custom = useMemo(() => apps.find((a) => a.isCustom) ?? null, [apps]);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string | null>(null);
-  const [active, setActive] = useState<CatalogApp | null>(null);
 
   const categories = useMemo(() => {
     const seen = new Map<string, { n: number; icon: string }>();
@@ -48,7 +46,8 @@ export function ExploreGallery({ apps }: { apps: CatalogApp[] }) {
   );
 
   const featured = real.slice(0, 5);
-  const open = (slug: string) => router.push(`/chat?app=${slug}`);
+  const open = (slug: string) => router.push(`/chat?app=${slug}`); // straight to the run flow (custom app)
+  const goApp = (slug: string) => router.push(`/a/${slug}`); // the app's own landing page
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-4">
@@ -60,7 +59,7 @@ export function ExploreGallery({ apps }: { apps: CatalogApp[] }) {
         <SearchBar value={q} onChange={setQ} />
       </header>
 
-      {featured.length > 0 && !needle && !cat && <Carousel apps={featured} onOpen={open} />}
+      {featured.length > 0 && !needle && !cat && <Carousel apps={featured} onOpen={goApp} />}
 
       {/* category bar — icon + label, active underline (Airbnb-style) */}
       {categories.length > 1 && (
@@ -82,7 +81,7 @@ export function ExploreGallery({ apps }: { apps: CatalogApp[] }) {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {shown.map((a) => (
-            <AppCard key={a.slug} app={a} onClick={() => setActive(a)} />
+            <AppCard key={a.slug} app={a} onClick={() => goApp(a.slug)} />
           ))}
           {custom && !cat && (
             <button type="button" onClick={() => open(custom.slug)} className="squircle text-left rounded-4 border border-dashed border-amber/50 bg-amber-soft/40 p-5 flex flex-col justify-center items-center gap-2 min-h-44 transition hover:bg-amber-soft">
@@ -94,7 +93,6 @@ export function ExploreGallery({ apps }: { apps: CatalogApp[] }) {
         </div>
       )}
 
-      {active && <AppDetail app={active} onClose={() => setActive(null)} onBuild={() => open(active.slug)} />}
     </div>
   );
 }

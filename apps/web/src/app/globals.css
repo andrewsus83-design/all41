@@ -393,3 +393,9 @@ h2 {
   --red: #ff7a6e; --red-soft: #3a201c;
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45); --shadow-md: 0 12px 30px rgba(0, 0, 0, 0.55);
 }
+
+/* Book-page pagination for report samples: content flows into page-width columns; flip with buttons. */
+.book-cols { scroll-behavior: smooth; }
+.book-cols > * > section,
+.book-cols > * > article,
+.book-cols > * > div { break-inside: avoid; }
