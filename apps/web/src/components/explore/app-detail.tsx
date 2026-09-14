@@ -38,14 +38,13 @@ export function AppDetail({ app, onClose, onBuild }: { app: CatalogApp; onClose:
   const cost = costPrefix(app.slug, app.steps);
   const cur = examples[Math.min(ex, Math.max(0, examples.length - 1))];
 
-  // shared modal frame: dimmed backdrop + centered sheet (full-screen on small phones)
-  const sheet = "relative w-full bg-bg border border-line shadow-lift flex flex-col overflow-hidden scene-in h-full sm:h-auto sm:squircle sm:rounded-5";
+  // shared modal frame: dimmed wrapper (click-outside closes) + centered sheet (full-screen on small phones)
+  const sheet = "relative w-full bg-bg border border-line shadow-lift flex flex-col overflow-hidden h-full sm:h-auto sm:squircle sm:rounded-5";
 
   if (view === "sample" && cur) {
     return (
-      <div className="fixed inset-0 z-[88] flex items-stretch sm:items-center justify-center p-0 sm:p-4 md:p-6">
-        <div className="absolute inset-0 bg-fg/50 backdrop-blur-sm scene-in" onClick={onClose} aria-hidden />
-        <div role="dialog" aria-modal="true" aria-label={`${app.name} samples`} className={cn(sheet, "max-w-5xl sm:h-[92vh]")}>
+      <div className="fixed inset-0 z-[88] flex items-stretch sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-fg/50 scene-in" onClick={onClose}>
+        <div role="dialog" aria-modal="true" aria-label={`${app.name} samples`} onClick={(e) => e.stopPropagation()} className={cn(sheet, "max-w-5xl sm:h-[92vh]")}>
           {/* top bar */}
           <div className="shrink-0 flex items-center justify-between gap-4 p-4 md:p-5 border-b border-line">
             <button type="button" onClick={() => setView("cover")} className="inline-flex items-center gap-2 text-sm text-fg-muted hover:text-fg transition">← Back</button>
@@ -101,9 +100,8 @@ export function AppDetail({ app, onClose, onBuild }: { app: CatalogApp; onClose:
 
   // ---- one-page cover ----
   return (
-    <div className="fixed inset-0 z-[88] flex items-stretch sm:items-center justify-center p-0 sm:p-4 md:p-6">
-      <div className="absolute inset-0 bg-fg/50 backdrop-blur-sm scene-in" onClick={onClose} aria-hidden />
-      <div role="dialog" aria-modal="true" aria-label={app.name} className={cn(sheet, "max-w-2xl sm:max-h-[92vh]")}>
+    <div className="fixed inset-0 z-[88] flex items-stretch sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-fg/50 scene-in" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-label={app.name} onClick={(e) => e.stopPropagation()} className={cn(sheet, "max-w-2xl sm:max-h-[92vh]")}>
         <div className="shrink-0 flex items-center justify-between gap-4 p-4 md:p-5">
           <span className="text-sm text-fg-faint font-title">{app.category ? categoryLabel(app.category) : "all41"}</span>
           <button type="button" onClick={onClose} aria-label="Close" className="size-12 rounded-full grid place-items-center text-fg-muted hover:text-fg bg-bg-elev border border-line hover:bg-bg-elev-2 transition text-xl shrink-0">✕</button>
