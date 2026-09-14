@@ -82,7 +82,7 @@ function isAnswered(q: ConfigQuestion, v: unknown) {
  * The consultant's fill-in-the-blanks brief: the template rendered as one readable sentence with inline blanks.
  * Keys the template doesn't mention are asked below. The pencil switches to "edit the whole brief as text" (optional).
  */
-export function BriefEditor({ app, initial, onSubmit, busy }: { app: CatalogApp; initial?: Answers; onSubmit: (answers: Answers) => void; busy?: boolean }) {
+export function BriefEditor({ app, initial, onSubmit, busy, submitLabel = "Build & try" }: { app: CatalogApp; initial?: Answers; onSubmit: (answers: Answers) => void; busy?: boolean; submitLabel?: string }) {
   const tpl = app.briefTemplate ?? "";
   const segments = useMemo(() => parseTemplate(tpl), [tpl]);
   const byKey = useMemo(() => Object.fromEntries(app.questions.map((q) => [q.key, q])), [app.questions]);
@@ -158,7 +158,7 @@ export function BriefEditor({ app, initial, onSubmit, busy }: { app: CatalogApp;
         )}
 
         <div className="flex items-center gap-4 flex-wrap">
-          <Button phase="green" size="lg" disabled={!complete || busy} onClick={() => onSubmit(answers)}>Build &amp; try</Button>
+          <Button phase="green" size="lg" disabled={!complete || busy} onClick={() => onSubmit(answers)}>{submitLabel}</Button>
           <CardHint><span className="num">{n}</span> of <span className="num">{app.questions.length}</span> blanks filled{complete ? " — this runs it once, for real, so you can see what you'd get." : ""}</CardHint>
         </div>
       </Card>

@@ -34,7 +34,7 @@ export function ChatShell({ apps, preselect, task, balance }: { apps: CatalogApp
   );
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full">
       <BuildClient apps={apps} preselect={preselect} task={task} balance={balance} basePath="/chat" intro={greeting} />
     </div>
   );
