@@ -21,7 +21,7 @@ import type { Answers, CatalogApp } from "@/components/apps/types";
 
 type Draft = { instanceId: string; estimateUsd: number; balance: number };
 
-export function BuildClient({ apps, preselect, task, balance, basePath = "/build", intro }: { apps: CatalogApp[]; preselect: string | null; task: PastTask | null; balance: number; basePath?: string; intro?: ReactNode }) {
+export function BuildClient({ apps, preselect, task, balance, basePath = "/build", intro, solo = false }: { apps: CatalogApp[]; preselect: string | null; task: PastTask | null; balance: number; basePath?: string; intro?: ReactNode; solo?: boolean }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(preselect && apps.some((a) => a.slug === preselect) ? preselect : null);
   const [answers, setAnswers] = useState<Answers | null>(null);
@@ -104,57 +104,16 @@ export function BuildClient({ apps, preselect, task, balance, basePath = "/build
   const insufficient = draft && !stream.running && !stream.result && draft.balance < draft.estimateUsd;
   const runFailed = draft && !stream.running && !stream.result && (stream.blocked || stream.error);
 
-  return (
-    <>
-      {/* the questions — a Typeform-style pop-up; submitting saves a draft */}
-      {briefOpen && app && (
-        <div className="fixed inset-0 z-[85] flex items-start justify-center overflow-y-auto p-4 sm:p-8" role="dialog" aria-modal="true" aria-label={app.name}>
-          <div className="fixed inset-0 bg-fg/40 backdrop-blur-sm" onClick={() => setBriefOpen(false)} aria-hidden />
-          <div className="relative w-full max-w-2xl my-4 squircle rounded-5 border border-line bg-bg shadow-lift p-6 md:p-8 space-y-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="text-3xl leading-none">{app.icon}</span>
-                <div className="min-w-0">
-                  <h2 className="font-title text-xl font-medium truncate">{app.isCustom ? "Your own app" : app.name}</h2>
-                  <p className="text-sm text-fg-muted">A few quick questions — we&apos;ll save them as a draft.</p>
-                </div>
-              </div>
-              <button type="button" onClick={() => setBriefOpen(false)} aria-label="Close" className="size-9 rounded-full grid place-items-center text-fg-faint hover:text-fg hover:bg-bg-elev-2 transition shrink-0">✕</button>
-            </div>
-            {app.briefTemplate
-              ? <BriefEditor key={editing ? "edit" : "new"} app={app} initial={answers ?? undefined} onSubmit={onAnswers} busy={pending} submitLabel="Save as draft →" />
-              : <Consultant key={editing ? "edit" : "new"} app={app} initial={answers ?? undefined} onComplete={onAnswers} busy={pending} />}
-          </div>
-        </div>
-      )}
-
-      <SplitPane
-        storageKey="all41-chat-split"
-        defaultPct={66}
-        min={24}
-        max={80}
-        fill
-        left={
-          /* LEFT — the apps you can use (2/3) */
-          <aside className="space-y-4 min-w-0 lg:h-full lg:overflow-y-auto lg:pr-1">
-            <div className="space-y-1">
-              <h2 className="text-lg font-medium">What you can do</h2>
-              <p className="text-sm text-fg-muted">Tap one and I&apos;ll walk you through it. Credit: <Money usd={balance} className="text-fg" /></p>
-            </div>
-            <CatalogGrid apps={apps} selected={selected} onOpen={(slug) => pick(slug)} />
-          </aside>
-        }
-        right={
-          /* RIGHT — the chatroom (1/3) */
-          <section className="flex flex-col min-w-0 gap-3 lg:h-full lg:min-h-0">
-            <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto space-y-4 pr-1">
+  const conversation = (
+          <section className={cn("flex flex-col min-w-0 gap-3", !solo && "lg:h-full lg:min-h-0")}>
+            <div className={cn("space-y-4 pr-1", !solo && "lg:flex-1 lg:min-h-0 lg:overflow-y-auto")}>
               {intro}
               {chatHint && <AIMsg className="text-fg-muted">{chatHint}</AIMsg>}
 
               {showTask && task ? (
                 <TaskView task={task} />
               ) : !app ? (
-                <AIMsg>Pick an app on the left, or tell me what you need below — I&apos;ll ask a few quick questions and run it for you.</AIMsg>
+                <AIMsg>Tell me what you need below — I&apos;ll ask a few quick questions and run it for you.</AIMsg>
               ) : (
                 <>
                   <AIMsg>Let&apos;s set up <span className="font-medium text-fg">{app.isCustom ? "your own app" : app.name}</span>.{(answers || draft) && !published ? <> <button type="button" className="text-green underline ml-1" onClick={() => { if (draft) discard(); else resetAll(); }}>start over</button></> : null}</AIMsg>
@@ -234,8 +193,66 @@ export function BuildClient({ apps, preselect, task, balance, basePath = "/build
 
             <ChatInput onSend={handleSend} />
           </section>
-        }
-      />
+  );
+
+  const briefModal = briefOpen && app && (
+    <div className="fixed inset-0 z-[85] flex items-start justify-center overflow-y-auto p-4 sm:p-8" role="dialog" aria-modal="true" aria-label={app.name}>
+      <div className="fixed inset-0 bg-fg/40 backdrop-blur-sm" onClick={() => setBriefOpen(false)} aria-hidden />
+      <div className="relative w-full max-w-2xl my-4 squircle rounded-5 border border-line bg-bg shadow-lift p-6 md:p-8 space-y-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="text-3xl leading-none">{app.icon}</span>
+            <div className="min-w-0">
+              <h2 className="font-title text-xl font-medium truncate">{app.isCustom ? "Your own app" : app.name}</h2>
+              <p className="text-sm text-fg-muted">A few quick questions — we&apos;ll save them as a draft.</p>
+            </div>
+          </div>
+          <button type="button" onClick={() => setBriefOpen(false)} aria-label="Close" className="size-9 rounded-full grid place-items-center text-fg-faint hover:text-fg hover:bg-bg-elev-2 transition shrink-0">✕</button>
+        </div>
+        {app.briefTemplate
+          ? <BriefEditor key={editing ? "edit" : "new"} app={app} initial={answers ?? undefined} onSubmit={onAnswers} busy={pending} submitLabel="Save as draft →" />
+          : <Consultant key={editing ? "edit" : "new"} app={app} initial={answers ?? undefined} onComplete={onAnswers} busy={pending} />}
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {briefModal}
+      {solo ? (
+        <div className="max-w-3xl mx-auto w-full space-y-5">
+          <div className="flex items-center justify-between gap-3">
+            {app ? (
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xl leading-none">{app.icon}</span>
+                <span className="font-title font-medium truncate">{app.isCustom ? "Your own app" : app.name}</span>
+              </div>
+            ) : (
+              <span className="font-title font-medium">{showTask ? "Your result" : "Set up"}</span>
+            )}
+            <Link href={basePath} className="text-sm text-fg-faint hover:text-fg transition shrink-0">← Explore</Link>
+          </div>
+          {conversation}
+        </div>
+      ) : (
+        <SplitPane
+          storageKey="all41-chat-split"
+          defaultPct={66}
+          min={24}
+          max={80}
+          fill
+          left={
+            <aside className="space-y-4 min-w-0 lg:h-full lg:overflow-y-auto lg:pr-1">
+              <div className="space-y-1">
+                <h2 className="text-lg font-medium">What you can do</h2>
+                <p className="text-sm text-fg-muted">Tap one and I&apos;ll walk you through it. Credit: <Money usd={balance} className="text-fg" /></p>
+              </div>
+              <CatalogGrid apps={apps} selected={selected} onOpen={(slug) => pick(slug)} />
+            </aside>
+          }
+          right={conversation}
+        />
+      )}
     </>
   );
 }

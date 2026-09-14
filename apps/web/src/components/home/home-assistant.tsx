@@ -2,22 +2,31 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
 
 export type MiniApp = { slug: string; name: string; icon: string; tags: string[] };
 type Msg = { who: "ai" | "me"; node: ReactNode };
 
-/** The right 1/3 of Home: an always-on personal assistant. It takes what you say and hands it to the run flow. */
+/** The right 1/3 of Home: an always-on personal assistant. Chat grows from the bottom up;
+ * the composer travels with the conversation unless the user pins it to the bottom. */
 export function HomeAssistant({ apps, name }: { apps: MiniApp[]; name: string }) {
   const router = useRouter();
   const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [pinned, setPinned] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const starters = apps.slice(0, 4);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    try { if (localStorage.getItem("all41-assistant-pin") === "1") setPinned(true); } catch { /* private mode */ }
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [msgs.length]);
 
   const go = (slug: string) => router.push(`/chat?app=${slug}`);
+  const togglePin = () => setPinned((v) => { const n = !v; try { localStorage.setItem("all41-assistant-pin", n ? "1" : "0"); } catch {} return n; });
 
   const send = (text: string) => {
     const t = text.trim();
@@ -35,21 +44,26 @@ export function HomeAssistant({ apps, name }: { apps: MiniApp[]; name: string })
   };
 
   return (
-    <section className="flex flex-col h-full min-h-0">
-      <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto space-y-4 pr-1">
-        <Bubble who="ai">
-          <p className="font-medium text-fg">Hi {name} — I&apos;m your assistant.</p>
-          <p className="mt-1 text-fg-muted">Tell me what you want done and I&apos;ll run it for you. The result lands in your journal on the left.</p>
-          <Picks starters={starters} onGo={go} />
-        </Bubble>
+    <section className="flex flex-col lg:h-full lg:min-h-0">
+      <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-1">
+        <div className="lg:min-h-full flex flex-col gap-4">
+          {/* spacer — pushes the whole conversation to the bottom on desktop */}
+          <div className="hidden lg:block mt-auto" aria-hidden />
 
-        {msgs.map((m, i) => (
-          <Bubble key={i} who={m.who}>{m.node}</Bubble>
-        ))}
-        <div ref={bottomRef} />
+          <Bubble who="ai">
+            <p className="font-medium text-fg">Hi {name} — I&apos;m your assistant.</p>
+            <p className="mt-1 text-fg-muted">Tell me what you want done and I&apos;ll run it for you. The result lands in your journal on the left.</p>
+            <Picks starters={starters} onGo={go} />
+          </Bubble>
+
+          {msgs.map((m, i) => (
+            <Bubble key={i} who={m.who}>{m.node}</Bubble>
+          ))}
+          <div ref={bottomRef} />
+
+          <Composer onSend={send} pinned={pinned} onTogglePin={togglePin} />
+        </div>
       </div>
-
-      <Composer onSend={send} />
     </section>
   );
 }
@@ -83,12 +97,30 @@ function Bubble({ who, children }: { who: "ai" | "me"; children: ReactNode }) {
   );
 }
 
-function Composer({ onSend }: { onSend: (text: string) => void }) {
+function PinIcon({ on }: { on: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill={on ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M9 3h6l-1.2 5.3 3.2 3.2H7l3.2-3.2L9 3Z" />
+      <path d="M12 14v7" />
+    </svg>
+  );
+}
+
+function Composer({ onSend, pinned, onTogglePin }: { onSend: (text: string) => void; pinned: boolean; onTogglePin: () => void }) {
   const [text, setText] = useState("");
   const submit = () => { if (text.trim()) { onSend(text); setText(""); } };
   return (
-    <div className="shrink-0 bg-bg/80 backdrop-blur pt-2 border-t border-line">
-      <div className="flex items-center gap-2 squircle rounded-full border border-line bg-bg-elev pl-4 pr-1.5 py-1.5">
+    <div className={cn("pt-1", pinned && "lg:sticky lg:bottom-0 lg:z-10 bg-bg/90 backdrop-blur")}>
+      <div className="flex items-center gap-1.5 squircle rounded-full border border-line bg-bg-elev pl-1.5 pr-1.5 py-1.5">
+        <button
+          type="button"
+          onClick={onTogglePin}
+          aria-pressed={pinned}
+          title={pinned ? "Unpin — let the box travel with the chat" : "Pin the box to the bottom"}
+          className={cn("size-8 rounded-full grid place-items-center shrink-0 transition", pinned ? "text-coral bg-coral-soft" : "text-fg-faint hover:text-fg hover:bg-bg-elev-2")}
+        >
+          <PinIcon on={pinned} />
+        </button>
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
