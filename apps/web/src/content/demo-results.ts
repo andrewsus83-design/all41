@@ -457,6 +457,7 @@ export const DEMO_RESULTS: Record<string, DemoResult> = {
         "pages": [
             {
                 "type": "Home",
+                "image": "/samples/pawsh-hero.webp",
                 "slug": "/",
                 "headline": "We groom your dog in your driveway — you never leave home",
                 "subhead": "Pawsh brings the full grooming salon to your curb across the Twin Cities metro. Book in 60 seconds, no cages, no car rides, no stress.",
@@ -472,6 +473,7 @@ export const DEMO_RESULTS: Record<string, DemoResult> = {
             },
             {
                 "type": "Services",
+                "image": "/samples/pawsh-dog.webp",
                 "slug": "/services",
                 "headline": "Flat-rate grooming priced by coat and size — no surprise add-ons",
                 "subhead": "Pick the package that fits your dog. Every visit is one-on-one in the van and includes the wash, dry, brush-out, nails, and ear cleaning.",
@@ -487,6 +489,7 @@ export const DEMO_RESULTS: Record<string, DemoResult> = {
             },
             {
                 "type": "About",
+                "image": "/samples/pawsh-groomer.webp",
                 "slug": "/about",
                 "headline": "Started by a groomer who was tired of dogs shaking in cages",
                 "subhead": "Maria Delgado spent nine years in high-volume salons before building Pawsh to do it the calm way — mobile, unhurried, one dog at a time.",

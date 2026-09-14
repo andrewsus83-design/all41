@@ -32,7 +32,7 @@ export function AppDetail({ app, onClose, onBuild }: { app: CatalogApp; onClose:
             <span className="font-title font-medium truncate">{app.name}</span>
             <span className="text-xs text-fg-faint hidden sm:inline">· sample · nothing charged</span>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" className="size-10 rounded-full grid place-items-center text-fg-faint hover:text-fg hover:bg-bg-elev-2 transition">✕</button>
+          <button type="button" onClick={onClose} aria-label="Close" className="size-12 rounded-full grid place-items-center text-fg-muted hover:text-fg bg-bg-elev border border-line hover:bg-bg-elev-2 transition text-xl shrink-0">✕</button>
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="max-w-2xl mx-auto px-6 py-6 pb-28 space-y-4">
