@@ -941,12 +941,11 @@ export const DEMO_EXAMPLES: Record<string, DemoExample[]> = {
       "label": "YC startup talk",
       "schema": "clip_report",
       "result": {
-        "summary": "4 clips from Michael Seibel's YC startup talk — the highest-signal moments, hook-scored, reframed vertical and caption-ready. Tap a timestamp to watch that moment.",
+        "summary": "4 clips from a founder keynote — the highest-signal moments, hook-scored, reframed vertical and caption-ready. Tap a clip to preview the reframe.",
         "source_video": {
-          "provider": "youtube",
-          "id": "Pg72m3CjuK4",
-          "title": "Everything We Teach at Y Combinator in 10 Minutes",
-          "author": "Startup Istanbul"
+          "src": "/samples/clip-source.mp4",
+          "title": "Founder keynote — how to actually start",
+          "author": "Startup Summit 2026"
         },
         "clips": [
           {
@@ -1057,7 +1056,8 @@ export const DEMO_EXAMPLES: Record<string, DemoExample[]> = {
             "quote": "Everything We Teach at Y Combinator in 10 Minutes — Startup Istanbul (youtu.be/Pg72m3CjuK4)"
           }
         ],
-        "confidence": 0.62
+        "confidence": 0.62,
+        "poster": "/samples/clip-poster.webp"
       }
     },
     {

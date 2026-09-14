@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 import { ConfidenceBadge } from "@/components/result-view";
 
 /** Client-safe shapes for the `clip_report` schema (see lib/engine/schemas.ts). All fields optional-guarded. */
-type SourceVideo = { provider?: string; id?: string; title?: string; author?: string };
+type SourceVideo = { provider?: string; id?: string; title?: string; author?: string; src?: string };
 type DimScores = { hook?: number; pacing?: number; engagement?: number };
 type Clip = {
   title?: string;
@@ -42,6 +42,8 @@ const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 const fmt = (sec: unknown) => { const s = Math.max(0, Math.round(Number(sec) || 0)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
 const scoreTone = (n: number): "green" | "amber" | "red" => (n >= 75 ? "green" : n >= 55 ? "amber" : "red");
 const scoreBand = (n: number) => (n >= 75 ? "Post first" : n >= 55 ? "Secondary" : "Review");
+
+const AR_LABELS: Record<string, string> = { "9:16": "Reels · Shorts · TikTok", "4:5": "Feed post", "1:1": "Square" };
 
 function doubleChecked(v: Verdict) {
   if (!v?.verdict) return null;
@@ -82,21 +84,81 @@ function DimBar({ label, value }: { label: string; value: number }) {
   );
 }
 
-/** Plain-language renderer for a Clip Video run — hero, per-clip cards, honest drops, render note, flags, sources. */
+/** Original → reframed clip: the raw upload (16:9) beside the vertical clip, with aspect-ratio options + caption overlay. */
+function ReframeStudio({ src, sv, active, ar, setAr, origRef, clipRef }: {
+  src: string; sv?: SourceVideo; active?: Clip; ar: "9:16" | "4:5" | "1:1"; setAr: (a: "9:16" | "4:5" | "1:1") => void;
+  origRef: React.RefObject<HTMLVideoElement | null>; clipRef: React.RefObject<HTMLVideoElement | null>;
+}) {
+  const score = Math.round(Number(active?.virality_score) || 0);
+  return (
+    <div className="grid sm:grid-cols-[1fr_auto] gap-6 items-start">
+      {/* The upload */}
+      <div className="space-y-2 min-w-0">
+        <p className="text-xs uppercase tracking-widest text-fg-faint font-medium">The upload · 16:9</p>
+        <div className="squircle rounded-4 overflow-hidden border border-line-strong bg-black" style={{ aspectRatio: "16 / 9" }}>
+          <video ref={origRef} src={src} muted loop playsInline autoPlay controls poster={sv?.src ? undefined : ""} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        </div>
+        <p className="text-xs text-fg-faint">{sv?.title}{sv?.author ? ` · ${sv.author}` : ""} — the raw video you dropped in. The crew finds the moments below.</p>
+      </div>
+      {/* The reframed clip */}
+      <div className="space-y-2 mx-auto">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs uppercase tracking-widest text-coral font-semibold">The clip</p>
+          <div className="flex gap-1">
+            {(["9:16", "4:5", "1:1"] as const).map((a) => (
+              <button key={a} type="button" onClick={() => setAr(a)} title={AR_LABELS[a]} className={cn("num text-xs px-2.5 py-1 rounded-full border transition", ar === a ? "bg-fg text-bg border-transparent" : "border-line-strong text-fg-muted hover:text-fg")}>{a}</button>
+            ))}
+          </div>
+        </div>
+        <div className="relative squircle rounded-4 overflow-hidden border-2 border-coral/40 bg-black shadow-lift mx-auto" style={{ aspectRatio: ar.replace(":", " / "), height: "min(58vh, 380px)", containerType: "inline-size" }}>
+          <video ref={clipRef} src={src} muted loop playsInline autoPlay style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          <span className="absolute top-2 left-2 num text-[11px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: "rgba(0,0,0,0.55)" }}>★ {score}</span>
+          <span className="absolute top-2 right-2 num text-[11px] font-semibold px-2 py-0.5 rounded-full text-white" style={{ background: "rgba(0,0,0,0.55)" }}>{ar}</span>
+          {active?.caption && (
+            <div className="absolute inset-x-0 bottom-0 px-3 pt-8 pb-3 text-center" style={{ background: "linear-gradient(180deg, transparent, rgba(0,0,0,0.8))" }}>
+              <p className="font-title font-bold text-white leading-tight" style={{ fontSize: "clamp(13px, 5cqw, 19px)", textShadow: "0 2px 10px rgba(0,0,0,0.6)" }}>{active.caption}</p>
+            </div>
+          )}
+        </div>
+        <p className="text-center text-xs text-fg-faint">{AR_LABELS[ar]} · same moment, reframed &amp; captioned</p>
+      </div>
+    </div>
+  );
+}
+
+/** Plain-language renderer for a Clip Video run — the reframe studio, per-clip cards, honest drops, flags, sources. */
 export function ClipReport({ report, isMock, verification }: { report: unknown; isMock?: boolean; verification?: Verdict }) {
   const [seek, setSeek] = useState<number | null>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [ar, setAr] = useState<"9:16" | "4:5" | "1:1">("9:16");
   const playerRef = useRef<HTMLDivElement>(null);
+  const clipRef = useRef<HTMLVideoElement>(null);
+  const origRef = useRef<HTMLVideoElement>(null);
+
   if (!report || typeof report !== "object") return null;
   const r = report as ClipReportData;
   const sv = r.source_video;
   const ytId = sv?.provider === "youtube" && sv.id ? sv.id : null;
-  const play = (start?: number) => { setSeek(Math.max(0, Math.round(Number(start) || 0))); playerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }); };
+  const srcUrl = sv?.src || null;
   const clips = arr<Clip>(r.clips).slice().sort((a, b) => (Number(b.virality_score) || 0) - (Number(a.virality_score) || 0));
+  const active = clips[Math.min(activeIdx, Math.max(0, clips.length - 1))];
+
+  const play = (i: number, start?: number) => {
+    setActiveIdx(i);
+    if (srcUrl) {
+      for (const v of [clipRef.current, origRef.current]) { if (v) { try { v.currentTime = 0; void v.play(); } catch {} } }
+    } else if (ytId) {
+      setSeek(Math.max(0, Math.round(Number(start) || 0)));
+    }
+    playerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
   const dropped = arr<Dropped>(r.dropped);
   const sources = arr<Source>(r.sources);
   const flags = arr<string>(r.flags);
   const dc = doubleChecked(verification);
   const brandedCount = clips.filter((c) => c.render_category === "B").length;
+  const seekable = Boolean(srcUrl || ytId);
 
   return (
     <div className="space-y-8">
@@ -131,8 +193,13 @@ export function ClipReport({ report, isMock, verification }: { report: unknown; 
         )}
       </div>
 
-      {/* SOURCE VIDEO — the real thing; clips seek into it */}
-      {ytId && (
+      {/* ORIGINAL → REFRAMED CLIP */}
+      {srcUrl ? (
+        <section ref={playerRef} className="space-y-3 scroll-mt-6">
+          <h3 className="font-title text-xl font-medium">Original → clip</h3>
+          <ReframeStudio src={srcUrl} sv={sv} active={active} ar={ar} setAr={setAr} origRef={origRef} clipRef={clipRef} />
+        </section>
+      ) : ytId ? (
         <section ref={playerRef} className="space-y-2 scroll-mt-6">
           <div className="squircle rounded-4 overflow-hidden border border-line-strong bg-black" style={{ aspectRatio: "16 / 9" }}>
             <iframe
@@ -148,7 +215,7 @@ export function ClipReport({ report, isMock, verification }: { report: unknown; 
             Source: <span className="text-fg-muted">{sv?.title}</span>{sv?.author ? <> · {sv.author}</> : null} — clip a moment below to jump to it{seek != null ? <> · playing from <span className="num">{fmt(seek)}</span></> : null}.
           </p>
         </section>
-      )}
+      ) : null}
 
       {/* CLIPS — one card each, best first */}
       {clips.length > 0 && (
@@ -158,8 +225,9 @@ export function ClipReport({ report, isMock, verification }: { report: unknown; 
             {clips.map((c, i) => {
               const score = Math.round(Number(c.virality_score) || 0);
               const ds = c.dimension_scores ?? {};
+              const isActive = seekable && i === Math.min(activeIdx, clips.length - 1);
               return (
-                <div key={i} className="squircle rounded-4 border border-line bg-bg-elev p-6">
+                <div key={i} className={cn("squircle rounded-4 border bg-bg-elev p-6 transition", isActive ? "border-coral/50 shadow-lift" : "border-line")}>
                   <div className="flex gap-5">
                     <ScoreDial score={score} />
                     <div className="min-w-0 flex-1 space-y-3">
@@ -170,8 +238,8 @@ export function ClipReport({ report, isMock, verification }: { report: unknown; 
                             <Badge tone={scoreTone(score)}>{scoreBand(score)}</Badge>
                             {c.hook_type && <span className="inline-flex items-center h-6 px-2 rounded-1 bg-bg-elev-2 text-fg-muted">{c.hook_type}</span>}
                             <Badge tone={c.render_category === "B" ? "violet" : undefined}>{c.render_category === "B" ? "Branded captions" : "Plain cut"}</Badge>
-                            {ytId ? (
-                              <button type="button" onClick={() => play(c.start_sec)} className="num inline-flex items-center gap-1 h-6 px-2 rounded-1 bg-coral-soft text-coral hover:bg-coral hover:text-white transition font-medium">▶ {fmt(c.start_sec)}–{fmt(c.end_sec)}</button>
+                            {seekable ? (
+                              <button type="button" onClick={() => play(i, c.start_sec)} className="num inline-flex items-center gap-1 h-6 px-2 rounded-1 bg-coral-soft text-coral hover:bg-coral hover:text-white transition font-medium">▶ {srcUrl ? "Preview" : `${fmt(c.start_sec)}–${fmt(c.end_sec)}`}</button>
                             ) : (
                               <span className="num">{fmt(c.start_sec)}–{fmt(c.end_sec)}</span>
                             )}

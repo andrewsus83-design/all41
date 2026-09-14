@@ -234,8 +234,8 @@ function WhatPage({ app, content }: { app: CatalogApp; content: AppDeckContent }
 
 /* ---------------- page 3 · Sample (banner slides → popup) ---------------- */
 function posterFor(slug: string, example: DemoExample): { image?: string; motif: string; ratio: string; tint: string } {
-  const r = example.result as { pages?: { image?: string }[] };
-  const img = (r.pages ?? [])[0]?.image;
+  const r = example.result as { pages?: { image?: string }[]; poster?: string };
+  const img = r.poster || (r.pages ?? [])[0]?.image;
   if (slug === "web-builder") return { image: img, motif: "Website", ratio: "16/10", tint: "var(--green-soft)" };
   const bySchema: Record<string, { motif: string; ratio: string; tint: string }> = {
     content_report: { motif: "Content board", ratio: "1/1", tint: "var(--coral-soft)" },
