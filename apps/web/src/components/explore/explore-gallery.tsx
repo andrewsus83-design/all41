@@ -54,8 +54,8 @@ export function ExploreGallery({ apps }: { apps: CatalogApp[] }) {
     <div className="max-w-6xl mx-auto space-y-8 pb-4">
       <header className="space-y-4">
         <div className="space-y-1">
-          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Explore</h1>
-          <p className="text-fg-muted text-lg">Everything all41 can do for you — pick one and it walks you through the rest.</p>
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Studio</h1>
+          <p className="text-fg-muted text-lg">Everything all41 can make for you — pick one and it walks you through the rest.</p>
         </div>
         <SearchBar value={q} onChange={setQ} />
       </header>

@@ -23,6 +23,15 @@ function CompassIcon() {
     </svg>
   );
 }
+function DataIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="m12 3 9 4.5-9 4.5-9-4.5L12 3Z" />
+      <path d="m3 12 9 4.5 9-4.5" />
+      <path d="m3 16.5 9 4.5 9-4.5" />
+    </svg>
+  );
+}
 function GearIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -34,7 +43,8 @@ function GearIcon() {
 
 const ITEMS = [
   { href: "/home", label: "Home", Icon: HomeIcon },
-  { href: "/chat", label: "Explore", Icon: CompassIcon },
+  { href: "/chat", label: "Studio", Icon: CompassIcon },
+  { href: "/data", label: "Data", Icon: DataIcon },
   { href: "/settings", label: "Settings", Icon: GearIcon },
 ] as const;
 
