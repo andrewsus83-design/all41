@@ -15,10 +15,11 @@ function HomeIcon() {
     </svg>
   );
 }
-function ChatIcon() {
+function CompassIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M21 11.5a8 8 0 0 1-11.5 7.2L4 20l1.3-4.5A8 8 0 1 1 21 11.5Z" />
+      <circle cx="12" cy="12" r="9" />
+      <path d="m15.5 8.5-2 5-5 2 2-5 5-2Z" />
     </svg>
   );
 }
@@ -33,7 +34,7 @@ function GearIcon() {
 
 const ITEMS = [
   { href: "/home", label: "Home", Icon: HomeIcon },
-  { href: "/chat", label: "Chat", Icon: ChatIcon },
+  { href: "/chat", label: "Explore", Icon: CompassIcon },
   { href: "/settings", label: "Settings", Icon: GearIcon },
 ] as const;
 

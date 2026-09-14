@@ -11,6 +11,7 @@ export function SplitPane({
   min = 24,
   max = 74,
   fill = false,
+  mobileFirst = "right",
 }: {
   left: ReactNode;
   right: ReactNode;
@@ -20,6 +21,8 @@ export function SplitPane({
   max?: number;
   /** Fill the viewport height (desktop) so each panel scrolls internally — for chat-style panes. */
   fill?: boolean;
+  /** Which panel stacks first on mobile. */
+  mobileFirst?: "left" | "right";
 }) {
   const [pct, setPct] = useState(defaultPct);
   const [dragging, setDragging] = useState(false);
@@ -56,10 +59,10 @@ export function SplitPane({
 
   return (
     <>
-      {/* mobile: stacked (chat first, then apps) */}
+      {/* mobile: stacked */}
       <div className="lg:hidden space-y-6">
-        {right}
-        {left}
+        {mobileFirst === "left" ? left : right}
+        {mobileFirst === "left" ? right : left}
       </div>
 
       {/* desktop: resizable split */}
