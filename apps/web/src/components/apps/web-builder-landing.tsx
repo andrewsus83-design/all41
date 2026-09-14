@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { WebsiteReport } from "@/components/apps/website-report";
+import { LandingTopBar } from "@/components/apps/landing-top-bar";
 import { DEMO_EXAMPLES } from "@/content/demo-results";
 import { cn } from "@/lib/cn";
 import type { CatalogApp } from "@/components/apps/types";
@@ -77,11 +78,8 @@ export function WebBuilderLanding({ app }: { app: CatalogApp }) {
 
   return (
     <div className="pb-24">
-      {/* nav */}
-      <div className="max-w-6xl mx-auto px-5 md:px-8 flex items-center justify-between gap-3 py-5">
-        <Link href="/chat" className="inline-flex items-center gap-2 text-sm text-fg-muted hover:text-fg transition">← Studio</Link>
-        <Link href={run}><Button phase="green" size="sm">Create my website →</Button></Link>
-      </div>
+      {/* sticky nav — Back + CTA, just left of the shell's Credit chip */}
+      <LandingTopBar ctaHref={run} ctaLabel="Create my website →" ctaShort="Create →" />
 
       {/* HERO — bold, centered, device fan below */}
       <section className="relative overflow-hidden">
@@ -120,7 +118,7 @@ export function WebBuilderLanding({ app }: { app: CatalogApp }) {
 
       {/* INDUSTRY SHOWCASE — templates for any industry */}
       {cur && (
-        <section id="showcase" className="bg-bg-elev border-y border-line scroll-mt-6">
+        <section id="showcase" className="bg-bg-elev border-y border-line scroll-mt-20">
           <div className="max-w-5xl mx-auto px-5 md:px-8 py-16 md:py-20">
             <div className="text-center mb-8 space-y-2">
               <h2 className="font-title text-3xl md:text-5xl font-semibold tracking-tight">A site for any business</h2>

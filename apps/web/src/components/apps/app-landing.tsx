@@ -6,6 +6,7 @@ import { Money } from "@/components/ui/money";
 import { ResultView } from "@/components/result-view";
 import { DEMO_EXAMPLES } from "@/content/demo-results";
 import { autonomyLine, categoryLabel, costPrefix, whoFor } from "@/components/build/catalog-copy";
+import { LandingTopBar } from "@/components/apps/landing-top-bar";
 import { cn } from "@/lib/cn";
 import type { CatalogApp } from "@/components/apps/types";
 
@@ -18,13 +19,11 @@ export function AppLanding({ app }: { app: CatalogApp }) {
   const run = `/chat?app=${app.slug}`;
 
   return (
-    <div className="max-w-5xl mx-auto px-5 md:px-8 pb-24">
-      {/* top nav */}
-      <div className="flex items-center justify-between gap-3 py-5">
-        <Link href="/chat" className="inline-flex items-center gap-2 text-sm text-fg-muted hover:text-fg transition">← Studio</Link>
-        <span className="text-sm text-fg-faint font-title">{app.category ? categoryLabel(app.category) : "all41"}</span>
-      </div>
+    <div className="pb-24">
+      {/* sticky nav — Back + CTA, just left of the shell's Credit chip */}
+      <LandingTopBar ctaHref={run} ctaLabel="Use now →" />
 
+      <div className="max-w-5xl mx-auto px-5 md:px-8">
       {/* hero */}
       <header className="text-center space-y-6 pt-8 pb-14 max-w-2xl mx-auto">
         <span className="grid place-items-center size-24 mx-auto rounded-4 bg-bg-elev-2 text-6xl leading-none shadow-sm">{app.icon}</span>
@@ -68,7 +67,7 @@ export function AppLanding({ app }: { app: CatalogApp }) {
 
       {/* samples */}
       {cur && (
-        <section id="samples" className="py-12 border-t border-line scroll-mt-6">
+        <section id="samples" className="py-12 border-t border-line scroll-mt-20">
           <div className="text-center mb-8 space-y-2">
             <h2 className="font-title text-2xl md:text-3xl font-semibold tracking-tight">See exactly what you get</h2>
             <p className="text-fg-muted">Real examples — canned demo data, nothing charged.</p>
@@ -94,6 +93,7 @@ export function AppLanding({ app }: { app: CatalogApp }) {
           <Link href={run}><Button phase="green" size="lg" className="glow-coral">Use now →</Button></Link>
         </div>
       </section>
+      </div>
     </div>
   );
 }
