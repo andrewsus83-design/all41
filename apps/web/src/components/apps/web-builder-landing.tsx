@@ -71,7 +71,7 @@ export function WebBuilderLanding({ app }: { app: CatalogApp }) {
   const examples = DEMO_EXAMPLES["web-builder"] ?? [];
   const [ex, setEx] = useState(0);
   const cur = examples[Math.min(ex, Math.max(0, examples.length - 1))];
-  const run = `/chat?app=${app.slug}`;
+  const run = `/a/${app.slug}/create`;
   const cards = cardsFrom();
   const industries = ["Local services", "Coffee & food", "Coaching", "Ecommerce", "Portfolio", "Restaurants"];
 
