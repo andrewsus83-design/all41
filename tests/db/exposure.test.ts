@@ -54,7 +54,7 @@ describe('what anon can reach', () => {
     const { rows } = await db.query<{ name: string }>(
       `select p.proname as name
        from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-       where n.nspname = 'a41_private' and p.prorettype <> 'trigger'::regtype
+       where n.nspname = 'a41_private'
          and has_function_privilege('anon', p.oid, 'execute')`,
     );
     expect(names(rows)).toEqual([...STORAGE_POLICY_HELPERS].sort());
