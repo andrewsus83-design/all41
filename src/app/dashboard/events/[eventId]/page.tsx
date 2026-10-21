@@ -14,7 +14,7 @@ import { eventUrl } from "@/lib/guest/links";
 import { TIMEZONES } from "@/lib/events/time";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { getPackage } from "@/lib/pricing";
-import { PublishCard } from "./publish-card";
+import { PublishPanel } from "./publish-panel";
 
 export const metadata: Metadata = { title: "Overview" };
 
@@ -44,7 +44,7 @@ async function Overview({ params }: { params: PageProps<"/dashboard/events/[even
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="space-y-6">
-        <PublishCard eventId={event.id} status={event.status} link={publicLink} canPublish={canEdit} />
+        <PublishPanel eventId={event.id} status={event.status} link={publicLink} canPublish={canEdit} />
 
         <Card className="space-y-6 p-6 sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">

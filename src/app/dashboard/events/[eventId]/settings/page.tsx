@@ -39,7 +39,7 @@ async function Settings({ params }: { params: Props["params"] }) {
         <h2 className="font-display text-lg font-semibold">{archived ? "This event is archived" : "Archive this event"}</h2>
         <p className="text-muted">
           {archived
-            ? "Archived events are closed to guests and do not count toward your one active Free event. Restore it to open it again."
+            ? "Archived events are closed to guests and do not count toward your one active Free event. Restoring brings it back as a draft; publish it again from the overview when you are ready."
             : "Archiving closes the event to guests and frees your Free event slot. Nothing is deleted, and you can restore it later."}
         </p>
         <ArchiveForm eventId={event.id} archived={archived} />

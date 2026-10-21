@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FormError } from "@/components/ui/form";
 import type { FormState } from "@/lib/forms";
-import { setEventPublished } from "./publish-actions";
+import { setEventStatus } from "../../actions";
 
 /**
- * Whether guests can see the event, and the link to share. Owners publish and unpublish here;
- * staff see the state and the link.
+ * Whether guests can see the event, and the link to share. Guests can open the event page and their
+ * invitations only while the event is published. Owners publish and take it offline here; staff see the
+ * state and the link.
  */
-export function PublishCard({
+export function PublishPanel({
   eventId,
   status,
   link,
@@ -26,10 +27,13 @@ export function PublishCard({
   canPublish: boolean;
 }) {
   const published = status === "published";
-  const [state, action, pending] = useActionState<FormState, FormData>(setEventPublished.bind(null, eventId, !published), {});
+  const [state, action, pending] = useActionState<FormState, FormData>(
+    setEventStatus.bind(null, eventId, published ? "draft" : "published"),
+    {},
+  );
 
-  const confirmUnpublish = (event: React.FormEvent<HTMLFormElement>) => {
-    if (published && !window.confirm("Unpublish this event? Guests will no longer be able to open the event page or their invitations until you publish it again.")) {
+  const confirmOffline = (event: React.FormEvent<HTMLFormElement>) => {
+    if (published && !window.confirm("Take this event offline? Guests will not be able to open the event page or their invitations until you publish it again.")) {
       event.preventDefault();
     }
   };
@@ -45,12 +49,12 @@ export function PublishCard({
       </div>
 
       {published ? (
-        <p className="text-muted">Guests can open this page, and their personal invitations. Share the link below.</p>
+        <p className="text-muted">Guests can open this page and their personal invitations. Take it offline to close those links again; nothing is deleted.</p>
       ) : status === "archived" ? (
         <p className="text-muted">Archived events are closed to guests. Restore the event in Settings, then publish it.</p>
       ) : (
         <p className="text-muted">
-          Only your team can see this event for now. Guests cannot open the event page or their invitations until you publish it.
+          Guests cannot open their invitation links or the event page yet. Add your guests and check the details, then publish.
         </p>
       )}
 
@@ -70,14 +74,14 @@ export function PublishCard({
       </div>
 
       {canPublish && status !== "archived" && (
-        <form action={action} onSubmit={confirmUnpublish} className="space-y-3">
+        <form action={action} onSubmit={confirmOffline} className="space-y-3">
           <FormError>{state.error}</FormError>
           <Button type="submit" variant={published ? "secondary" : "primary"} disabled={pending}>
-            {published ? (pending ? "Unpublishing…" : "Unpublish") : pending ? "Publishing…" : "Publish event"}
+            {published ? (pending ? "Taking offline…" : "Take offline") : pending ? "Publishing…" : "Publish event"}
           </Button>
         </form>
       )}
-      {!canPublish && <p className="text-sm text-subtle">Only an owner can publish or unpublish the event.</p>}
+      {!canPublish && <p className="text-sm text-subtle">Only an owner can publish an event or take it offline.</p>}
     </Card>
   );
 }
