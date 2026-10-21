@@ -13,6 +13,8 @@ export const metadata: Metadata = {
 const CALLBACK_ERROR =
   "That confirmation link could not be used here. If you already confirmed your email, sign in below.";
 
+export const instant = true;
+
 export default function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <AuthCard
