@@ -24,10 +24,13 @@ export function QrScanner({
   onScan,
   paused = false,
   cooldownMs = 3000,
+  frame = true,
 }: {
   onScan: (text: string) => void;
   paused?: boolean;
   cooldownMs?: number;
+  /** Draws the plain white viewfinder. Pass false to draw your own over the camera. */
+  frame?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const onScanRef = useRef(onScan);
@@ -118,7 +121,7 @@ export function QrScanner({
     <div className="space-y-3">
       <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-line bg-black">
         <video ref={videoRef} muted playsInline aria-label="Camera view" className="size-full object-cover" />
-        {status === "scanning" && (
+        {status === "scanning" && frame && (
           <div aria-hidden="true" className="pointer-events-none absolute inset-[14%] rounded-3xl border-2 border-white/70" />
         )}
         {status === "starting" && !paused && (
