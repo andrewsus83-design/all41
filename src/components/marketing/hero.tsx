@@ -12,7 +12,7 @@ export function Hero() {
             For corporate events and weddings
           </p>
           <h1 className="mt-6 font-display text-5xl leading-[1.03] font-semibold tracking-tight text-balance sm:text-6xl lg:text-7xl">
-            Everything you need for <span className="text-neon">your event.</span>
+            Everything you need for <span className="text-gold">your event.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-pretty text-muted">
             From the first invitation to the last photo. One page for your guests, one guest list for your team and

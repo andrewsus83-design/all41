@@ -17,8 +17,8 @@ export default function EventLayout(props: LayoutProps<"/dashboard/events/[event
 function EventSkeleton() {
   return (
     <div className="space-y-8" aria-hidden="true">
-      <div className="h-10 w-72 animate-pulse rounded-xl bg-panel-raised" />
-      <div className="h-11 w-full animate-pulse rounded-xl bg-panel" />
+      <div className="h-10 w-72 animate-pulse rounded-2xl bg-panel-raised" />
+      <div className="h-11 w-full animate-pulse rounded-2xl bg-panel" />
       <div className="h-64 animate-pulse rounded-2xl bg-panel" />
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { CloudUpload } from "lucide-react";
 import Link from "next/link";
 import { useId, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +24,7 @@ const number = (value: number) => value.toLocaleString("en-US");
 
 function Stat({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
-    <div className="rounded-xl border border-line bg-ink px-4 py-3">
+    <div className="rounded-2xl border border-line bg-ink px-4 py-3">
       <p className={`font-display text-2xl font-semibold tabular-nums ${tone}`}>{number(value)}</p>
       <p className="text-sm text-muted">{label}</p>
     </div>
@@ -31,14 +32,14 @@ function Stat({ label, value, tone }: { label: string; value: number; tone: stri
 }
 
 function RowStatus({ row }: { row: ImportRow }) {
-  if (row.status === "ready") return <Badge tone="lime">Ready</Badge>;
+  if (row.status === "ready") return <Badge tone="success">Ready</Badge>;
   if (row.status === "duplicate") {
     const where = row.duplicateOf.source === "event" ? "already on the list" : "repeated in the file";
     return <Badge tone="gold">Skipped: {row.duplicateOf.field} {where}</Badge>;
   }
   return (
     <span className="text-sm text-danger">
-      <Badge tone="pink">Needs attention</Badge> <span className="ml-1">{row.errors.join(" ")}</span>
+      <Badge tone="danger">Needs attention</Badge> <span className="ml-1">{row.errors.join(" ")}</span>
     </span>
   );
 }
@@ -125,9 +126,12 @@ export function ImportWizard({
         <div>
           <label
             htmlFor={inputId}
-            className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-dashed border-line px-6 py-10 text-center transition-colors hover:border-neon-violet has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neon-cyan"
+            className="group flex cursor-pointer flex-col items-center gap-2 rounded-[2.5rem] border-2 border-dashed border-line bg-surface px-6 py-10 text-center transition-colors hover:border-gold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neon-cyan"
           >
-            <span className="font-medium">Click to choose a file</span>
+            <span className="mb-2 flex size-16 items-center justify-center rounded-full bg-panel text-gold transition-transform group-hover:scale-110">
+              <CloudUpload aria-hidden="true" className="size-7" />
+            </span>
+            <span className="font-display text-lg font-medium">Click to choose a file</span>
             <span className="text-sm text-muted">CSV, up to 2 MB and {number(MAX_IMPORT_ROWS)} guests</span>
             <input
               id={inputId}
@@ -191,19 +195,19 @@ export function ImportWizard({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <Stat label="Ready to add" value={counts.ready} tone="text-neon-lime" />
+          <Stat label="Ready to add" value={counts.ready} tone="text-success" />
           <Stat label="Skipped as duplicates" value={counts.duplicates} tone="text-gold" />
-          <Stat label="Need attention" value={counts.invalid} tone={counts.invalid ? "text-neon-pink" : "text-muted"} />
+          <Stat label="Need attention" value={counts.invalid} tone={counts.invalid ? "text-danger" : "text-muted"} />
         </div>
 
         {stage.garbled && (
-          <p role="alert" className="rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">
+          <p role="alert" className="rounded-2xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">
             Some characters in the file could not be read, so a few names may look wrong. Save the sheet as &ldquo;CSV UTF-8&rdquo; and
             choose it again to fix that.
           </p>
         )}
         {tooMany && (
-          <p role="alert" className="rounded-xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
+          <p role="alert" className="rounded-2xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
             {remaining === 0
               ? "The guest list is full, so nobody can be added."
               : `Only ${number(remaining)} more ${remaining === 1 ? "guest fits" : "guests fit"} on the list, but ${number(counts.ready)} are ready to add. Remove rows from the file, or add capacity, and choose it again.`}

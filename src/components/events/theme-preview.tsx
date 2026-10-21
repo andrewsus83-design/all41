@@ -2,7 +2,7 @@ import { THEME_PRESETS, readableTextOn, resolveAccent, type EventTheme } from "@
 
 /** The font stack a theme's headings use. Guest pages read the same table. */
 export const HEADING_FONT: Record<EventTheme["font"], string> = {
-  modern: "var(--font-grotesk), var(--font-inter), ui-sans-serif, system-ui, sans-serif",
+  modern: "var(--font-outfit), var(--font-manrope), ui-sans-serif, system-ui, sans-serif",
   classic: "ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif",
 };
 
@@ -51,17 +51,17 @@ export function ThemePreview({
         </p>
       </div>
       <div className="px-6 pb-6">
-        <div className="rounded-xl p-4" style={{ background: preset.surface }}>
+        <div className="rounded-2xl p-4" style={{ background: preset.surface }}>
           <p className="text-sm font-medium">Will you join us?</p>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             <span
-              className="inline-flex h-9 items-center rounded-full px-5 text-sm font-medium"
+              className="inline-flex h-10 items-center rounded-2xl px-4 text-sm font-bold whitespace-nowrap"
               style={{ background: accent, color: readableTextOn(accent) }}
             >
               Yes, I will be there
             </span>
             <span
-              className="inline-flex h-9 items-center rounded-full border px-5 text-sm"
+              className="inline-flex h-10 items-center rounded-2xl border px-4 text-sm whitespace-nowrap"
               style={{ borderColor: preset.muted, color: preset.muted }}
             >
               Can&apos;t make it

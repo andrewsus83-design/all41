@@ -35,8 +35,8 @@ function Choice({
 }) {
   return (
     <label
-      className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neon-cyan ${
-        checked ? "border-neon-violet bg-panel-raised" : "border-line hover:border-neon-violet/60"
+      className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neon-cyan ${
+        checked ? "border-gold bg-panel-raised" : "border-line hover:border-gold/60"
       } ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
     >
       <input
@@ -305,7 +305,7 @@ export function EventForm({
                 aria-label="Accent color"
                 value={values.themeAccent || presetAccent(values.themePreset)}
                 onChange={(event) => set("themeAccent", event.target.value)}
-                className="h-12 w-16 cursor-pointer rounded-xl border border-line bg-ink p-1"
+                className="h-12 w-16 cursor-pointer rounded-2xl border border-line bg-ink p-1"
               />
               <span className="text-sm text-muted">
                 {values.themeAccent ? values.themeAccent.toUpperCase() : "The theme's own accent"}
@@ -341,7 +341,7 @@ export function EventForm({
         <div className="space-y-4">
           <FormError>{state.error}</FormError>
           {state.saved && (
-            <p role="status" className="rounded-xl border border-neon-lime/40 bg-neon-lime/10 px-4 py-3 text-sm text-neon-lime">
+            <p role="status" className="rounded-2xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">
               Changes saved.
             </p>
           )}
