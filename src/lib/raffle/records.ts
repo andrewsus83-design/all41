@@ -98,3 +98,53 @@ export function nextPrize(prizes: RafflePrize[], after?: string): RafflePrize | 
   }
   return open[0];
 }
+
+/** A winner as the stage lists them: a draw that has not been marked absent. */
+export interface StageWinner {
+  drawId: string;
+  prizeId: string;
+  prizeName: string;
+  name: string;
+  tableNo: string | null;
+  drawnAt: string;
+}
+
+/** The winners in the log, newest first as the log is. */
+export const winnersOf = (entries: RaffleLogEntry[]): StageWinner[] =>
+  entries
+    .filter((entry) => entry.status === "won")
+    .map((entry) => ({
+      drawId: entry.id,
+      prizeId: entry.prizeId,
+      prizeName: entry.prizeName,
+      name: entry.guestName,
+      tableNo: entry.guestTableNo,
+      drawnAt: entry.drawnAt,
+    }));
+
+/** What the stage shows: the prizes, the pool and who has won. */
+export interface StageState {
+  prizes: RafflePrize[];
+  remaining: number;
+  winners: StageWinner[];
+}
+
+/**
+ * A request can reach the server and commit while its answer is lost on the way back.
+ * Given the winners the screen already knows, finds the newest one the server recorded
+ * that the screen never heard about, as a draw it can reveal like any other. The log
+ * does not keep a winner's tags, so none are shown for it.
+ */
+export function unseenDraw(shown: string[], state: StageState): DrawResult | undefined {
+  const winner = state.winners.find((candidate) => !shown.includes(candidate.drawId));
+  const prize = winner && state.prizes.find((candidate) => candidate.id === winner.prizeId);
+  if (!winner || !prize) return undefined;
+  return {
+    drawId: winner.drawId,
+    drawnAt: winner.drawnAt,
+    winner: { name: winner.name, tableNo: winner.tableNo, tags: [] },
+    prize,
+    remaining: state.remaining,
+    decoys: [],
+  };
+}

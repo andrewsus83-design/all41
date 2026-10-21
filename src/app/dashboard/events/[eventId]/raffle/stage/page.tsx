@@ -5,6 +5,7 @@ import { getEventRole } from "@/lib/checkin/queries";
 import { getEvent } from "@/lib/events/queries";
 import { THEME_PRESETS, resolveAccent } from "@/lib/events/theme";
 import { loadLog, loadSummary } from "@/lib/raffle/queries";
+import { winnersOf } from "@/lib/raffle/records";
 import { createClient } from "@/lib/supabase/server";
 import { RaffleStage } from "./raffle-stage";
 
@@ -51,9 +52,7 @@ async function Stage({ params }: { params: Props["params"] }) {
       backHref={`/dashboard/events/${event.id}/raffle`}
       prizes={summary.value.prizes}
       remaining={summary.value.remaining}
-      winners={log.value
-        .filter((entry) => entry.status === "won")
-        .map((entry) => ({ drawId: entry.id, prizeId: entry.prizeId, prizeName: entry.prizeName, name: entry.guestName, tableNo: entry.guestTableNo }))}
+      winners={winnersOf(log.value)}
     />
   );
 }

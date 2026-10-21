@@ -306,6 +306,18 @@ describe('drawing a winner', () => {
       await db.exec('rollback');
     }
   });
+
+  it('locks the prize it draws for, so an owner lowering the quantity cannot slip in between', async () => {
+    // One in-memory database has one connection, so two sessions cannot race here (the
+    // inserted draw also row-locks its prize, so a lock held afterwards proves nothing).
+    // This pins the lock in the function. The race itself was reproduced on a real
+    // Postgres with two sessions: without the lock a prize ended with more winners than
+    // its quantity, with it the draw is refused or the owner is.
+    const { rows } = await db.query<{ definition: string }>(
+      `select pg_get_functiondef('public.a41_draw_raffle_winner(uuid)'::regprocedure) as definition`,
+    );
+    expect(rows[0].definition).toMatch(/from public\.a41_raffle_prizes p where p\.id = p_prize for no key update/);
+  });
 });
 
 describe('fairness', () => {
