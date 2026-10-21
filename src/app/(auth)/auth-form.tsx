@@ -25,7 +25,7 @@ export function AuthForm({
 
   if (state.notice) {
     return (
-      <div role="status" className="space-y-4 rounded-xl border border-neon-cyan/30 bg-neon-cyan/10 p-5 text-sm">
+      <div role="status" className="space-y-4 rounded-2xl border border-neon-cyan/30 bg-neon-cyan/10 p-5 text-sm">
         <p>{state.notice}</p>
         <p className="text-muted">
           Already confirmed?{" "}

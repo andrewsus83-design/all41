@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+import { controlStyles } from "./form";
 
 /** A labelled text input. Pass `error` to mark it invalid. */
 export function TextField({
@@ -10,15 +11,13 @@ export function TextField({
 }: Omit<ComponentProps<"input">, "id"> & { id: string; label: string; error?: string }) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium">
+      <label htmlFor={id} className="block text-sm font-bold text-zinc-400">
         {label}
       </label>
       <input
         id={id}
         aria-invalid={error ? true : undefined}
-        className={`mt-2 block h-12 w-full rounded-xl border bg-ink px-4 text-base placeholder:text-muted/60 focus:border-neon-violet ${
-          error ? "border-danger" : "border-line"
-        } ${className}`}
+        className={`mt-2 h-12 ${controlStyles(Boolean(error))} ${className}`}
         {...props}
       />
     </div>

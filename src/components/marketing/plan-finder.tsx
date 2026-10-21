@@ -71,7 +71,7 @@ export function PlanFinder() {
           value={raw}
           onChange={(event) => setRaw(event.target.value)}
           aria-describedby={`${inputId}-result`}
-          className="mt-2 block h-12 w-full rounded-xl border border-line bg-ink px-4 text-lg tabular-nums focus:border-neon-violet sm:w-56"
+          className="mt-2 block h-12 w-full rounded-2xl border border-line bg-surface px-5 text-lg tabular-nums outline-none focus:border-gold sm:w-56"
         />
       </div>
       <div id={`${inputId}-result`} aria-live="polite">

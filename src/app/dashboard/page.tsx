@@ -24,7 +24,7 @@ export default function DashboardPage() {
 function EventsSkeleton() {
   return (
     <div className="space-y-8" aria-hidden="true">
-      <div className="h-10 w-48 animate-pulse rounded-xl bg-panel-raised" />
+      <div className="h-10 w-48 animate-pulse rounded-2xl bg-panel-raised" />
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {[0, 1, 2].map((key) => (
           <div key={key} className="h-48 animate-pulse rounded-2xl bg-panel" />
@@ -87,7 +87,7 @@ async function Events() {
 function EventCard({ event }: { event: EventSummary }) {
   return (
     <Link href={`/dashboard/events/${event.id}`} className="group block h-full">
-      <Card className="flex h-full flex-col p-6 transition-colors group-hover:border-neon-violet">
+      <Card className="flex h-full flex-col p-6 transition-colors group-hover:border-gold">
         <div className="flex items-start justify-between gap-3">
           <h2 className="font-display text-lg leading-snug font-semibold break-words">{event.name}</h2>
           <EventStatusBadge status={event.status} />

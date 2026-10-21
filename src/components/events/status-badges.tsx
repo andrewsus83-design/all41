@@ -5,7 +5,7 @@ import { GUEST_STATUS_LABELS } from "@/lib/events/records";
 
 const EVENT_STATUS: Record<string, { label: string; tone: BadgeTone }> = {
   draft: { label: "Draft", tone: "neutral" },
-  published: { label: "Published", tone: "lime" },
+  published: { label: "Published", tone: "success" },
   archived: { label: "Archived", tone: "neutral" },
 };
 
@@ -20,10 +20,10 @@ export function PackageBadge({ tier }: { tier: PackageTier }) {
 
 const GUEST_TONES: Record<GuestStatus, BadgeTone> = {
   invited: "neutral",
-  sent: "violet",
+  sent: "gold",
   opened: "cyan",
-  rsvp: "pink",
-  checked_in: "lime",
+  rsvp: "warning",
+  checked_in: "success",
 };
 
 export function GuestStatusBadge({ status }: { status: GuestStatus }) {

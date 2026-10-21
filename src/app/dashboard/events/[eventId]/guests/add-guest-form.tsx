@@ -99,7 +99,7 @@ export function AddGuestForm({ eventId, disabledReason }: { eventId: string; dis
           {pending ? "Adding…" : "Add guest"}
         </Button>
         {state.saved && (
-          <p role="status" className="text-sm text-neon-lime">
+          <p role="status" className="text-sm text-success">
             Guest added.
           </p>
         )}
