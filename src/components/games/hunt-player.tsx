@@ -118,7 +118,7 @@ export function HuntPlayer({
   const done = board.missions.filter((mission) => mission.done).length;
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-5 pt-5 pb-6">
+    <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-5 pt-5 pb-32">
       <header>
         <p className="text-xs font-bold tracking-widest text-neon-cyan uppercase">Scavenger hunt</p>
         <p className="truncate font-display text-lg font-semibold">{eventName}</p>
