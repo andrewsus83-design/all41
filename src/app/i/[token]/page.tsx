@@ -24,9 +24,12 @@ export const metadata: Metadata = {
 
 type Props = PageProps<"/i/[token]">;
 
-// A link that does not work must answer 404, and the status is fixed by the first byte. Everything on this
-// page depends on one read (the guest's invitation), so the route waits for it instead of streaming a
-// placeholder first, and says so to Next with instant = false.
+// Everything on this page depends on one read of the guest's invitation, made fresh on every visit (opening
+// it is what marks the invitation as opened), so there is nothing to put in a static shell: the route waits
+// for the read and says so to Next with instant = false. Unlike the event page this one cannot be
+// prerendered, so in production Next sends its static shell first and a link that does not work gets the
+// not-found screen with status 200 and noindex (a soft 404). It never says whether a token exists, and
+// the page is never cached (private, no-store).
 export const instant = false;
 
 export default async function InvitationPage({ params }: Props) {

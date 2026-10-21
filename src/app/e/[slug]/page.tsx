@@ -33,10 +33,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// A made-up or unpublished address must answer 404, and the status is fixed by the first byte. So the check
-// happens before anything is sent: this route waits for the event (a cached read) instead of streaming a
-// placeholder first, and says so to Next with instant = false.
-export const instant = false;
+// A made-up or unpublished address must answer 404, and the status is fixed by the first byte. The page is
+// built from one cached read, so it is fully static: a slug nobody asked for yet is rendered once, on its
+// first request, which waits for the result (ensureStatic "navigation") instead of streaming a placeholder
+// first. That is what lets notFound() answer a real 404. Publishing, unpublishing and edits expire the cache
+// tag the read carries (see publicEventTag), and the stored page with it.
+export const ensureStatic = "navigation";
+
+// Next needs one sample address to build from. It is not a valid address on purpose, so building the site
+// never reads the database; the sample renders the not-found screen.
+export function generateStaticParams() {
+  return [{ slug: "-" }];
+}
 
 export default async function EventPage({ params }: Props) {
   const { slug } = await params;
