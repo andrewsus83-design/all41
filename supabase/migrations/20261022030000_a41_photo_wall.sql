@@ -477,6 +477,30 @@ begin
 end
 $$;
 
+-- Counts and storage for the dashboard. Security invoker: row level security
+-- shows the team their own event and a stranger zeros.
+create function public.a41_photo_stats(p_event_id uuid)
+returns table (
+  pending_count integer,
+  approved_count integer,
+  rejected_count integer,
+  removed_count integer,
+  stored_bytes bigint,
+  consent_count integer
+)
+language sql stable security invoker set search_path = ''
+as $$
+  select
+    (count(*) filter (where p.status = 'pending'))::integer,
+    (count(*) filter (where p.status = 'approved'))::integer,
+    (count(*) filter (where p.status = 'rejected'))::integer,
+    (count(*) filter (where p.status = 'removed'))::integer,
+    coalesce(sum(p.bytes) filter (where p.status <> 'removed'), 0)::bigint,
+    (select count(*)::integer from public.a41_photo_consents c where c.event_id = p_event_id)
+  from public.a41_photos p
+  where p.event_id = p_event_id
+$$;
+
 -- For the retention job, which runs with the service role: the files to delete
 -- from Storage. Expired photos, photos guests took down, and uploads that never
 -- became a photo (older than a day, no photo row, no open ticket). Removing the
@@ -506,6 +530,7 @@ revoke execute on function
   public.a41_album(text, integer, timestamptz, uuid),
   public.a41_wall_feed(text, text, integer),
   public.a41_regenerate_wall_key(uuid),
+  public.a41_photo_stats(uuid),
   public.a41_expired_photo_paths()
 from public;
 
@@ -519,8 +544,10 @@ grant execute on function
   public.a41_wall_feed(text, text, integer)
 to anon, authenticated;
 
-revoke execute on function public.a41_regenerate_wall_key(uuid), public.a41_expired_photo_paths() from anon;
-grant execute on function public.a41_regenerate_wall_key(uuid) to authenticated;
+revoke execute on function
+  public.a41_regenerate_wall_key(uuid), public.a41_photo_stats(uuid), public.a41_expired_photo_paths()
+from anon;
+grant execute on function public.a41_regenerate_wall_key(uuid), public.a41_photo_stats(uuid) to authenticated;
 revoke execute on function public.a41_expired_photo_paths() from authenticated;
 grant execute on function public.a41_expired_photo_paths() to service_role;
 

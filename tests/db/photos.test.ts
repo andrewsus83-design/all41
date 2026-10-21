@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import type { PGlite } from '@electric-sql/pglite';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { classifyPhotoError, type PhotoFailure } from '@/lib/photos/errors';
+import { photoUrl } from '@/lib/photos/urls';
 import {
   MAX_PHOTO_BYTES,
   MAX_PHOTOS_PER_GUEST,
@@ -1181,6 +1183,49 @@ describe('a41_wall_feed', () => {
   });
 });
 
+describe('a41_photo_stats', () => {
+  const stats = (user: string, eventId: string) =>
+    asUser(db, user, () =>
+      db.query<{
+        pending_count: number;
+        approved_count: number;
+        rejected_count: number;
+        removed_count: number;
+        stored_bytes: number;
+        consent_count: number;
+      }>('select * from a41_photo_stats($1)', [eventId]),
+    );
+
+  it('counts the photos of an event by status and adds up the stored bytes', async () => {
+    const fx = await newFixture();
+    await requestUpload(fx.token); // gives consent
+    await seedPhoto(fx, 'pending');
+    await seedPhoto(fx, 'approved');
+    await seedPhoto(fx, 'approved');
+    await seedPhoto(fx, 'rejected');
+    await seedPhoto(fx, 'removed');
+    const other = await newFixture();
+    await seedPhoto(other, 'approved');
+
+    for (const user of [fx.owner, fx.staff]) {
+      const { rows } = await stats(user, fx.eventId);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({ pending_count: 1, approved_count: 2, rejected_count: 1, removed_count: 1, consent_count: 1 });
+      // the removed photo's bytes are no longer stored
+      expect(Number(rows[0].stored_bytes)).toBe(400_000);
+    }
+  });
+
+  it('shows a stranger nothing', async () => {
+    const fx = await newFixture();
+    await seedPhoto(fx, 'approved');
+    const stranger = await newUser();
+    const { rows } = await stats(stranger, fx.eventId);
+    expect(rows[0]).toMatchObject({ pending_count: 0, approved_count: 0, stored_bytes: 0, consent_count: 0 });
+    await expectRejected(asAnon(db, () => db.query('select * from a41_photo_stats($1)', [fx.eventId])), /permission denied/);
+  });
+});
+
 describe('retention', () => {
   const pathsToDelete = async () =>
     (await asService(db, () => db.query<{ storage_path: string; reason: string }>('select * from a41_expired_photo_paths()'))).rows;
@@ -1245,6 +1290,58 @@ describe('retention', () => {
 });
 
 describe('the app and the database agree', () => {
+  /** What the app would see: the code and message the database raised. */
+  async function failureOf(run: () => Promise<unknown>): Promise<PhotoFailure> {
+    try {
+      await run();
+    } catch (error) {
+      const raised = error as { code?: string; message?: string };
+      return classifyPhotoError({ code: raised.code, message: raised.message });
+    }
+    throw new Error('The statement was expected to fail');
+  }
+
+  it('on the name of every refusal a guest or host can meet', async () => {
+    const fx = await newFixture();
+    const off = await newFixture({ enabled: false });
+    const over = await newFixture({ endedHoursAgo: UPLOAD_GRACE_HOURS + 1 });
+    const consentless = await newFixture();
+    const full = await newFixture();
+    for (let i = 0; i < MAX_PHOTOS_PER_GUEST; i++) await requestUpload(full.token);
+
+    const unissued = newPath(fx.eventId);
+    const missing = await requestUpload(fx.token);
+    const big = await requestUpload(fx.token);
+    await putObject(big.upload_path, { size: MAX_PHOTO_BYTES + 1 }, 'service');
+    const wrongType = await requestUpload(fx.token);
+    await putObject(wrongType.upload_path, { mimetype: 'text/plain' }, 'service');
+
+    const expectations: [PhotoFailure, () => Promise<unknown>][] = [
+      ['invitation_not_found', () => requestUpload('0'.repeat(64))],
+      ['photos_disabled', () => requestUpload(off.token)],
+      ['photos_closed', () => requestUpload(over.token)],
+      ['consent_required', () => requestUpload(consentless.token, 'webp', false)],
+      ['photo_limit_reached', () => requestUpload(full.token)],
+      ['invalid_photo_format', () => requestUpload(fx.token, 'png')],
+      ['upload_ticket_invalid', () => commit(fx.token, unissued)],
+      ['upload_missing', () => commit(fx.token, missing.upload_path)],
+      ['photo_too_large', () => commit(fx.token, big.upload_path)],
+      ['invalid_photo_type', () => commit(fx.token, wrongType.upload_path)],
+      [
+        'forbidden',
+        () => asUser(db, fx.staff, () => db.query('select a41_regenerate_wall_key($1)', [fx.eventId])),
+      ],
+    ];
+    for (const [expected, run] of expectations) expect(await failureOf(run), expected).toBe(expected);
+  });
+
+  it('on where a stored photo is served from', () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:54351/';
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_test';
+    expect(photoUrl('a/b.webp')).toBe(`http://127.0.0.1:54351/storage/v1/object/public/${PHOTO_BUCKET}/a/b.webp`);
+    expect(photoUrl('a/b.webp', { download: 'my photo.webp' })).toMatch(/\/a\/b\.webp\?download=my%20photo\.webp$/);
+  });
+
   it('on the quota, the limits and the retention period', async () => {
     const fx = await newFixture();
     const overview = await asAnon(db, () =>
