@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-// @ts-expect-error The local stack is plain JavaScript without types.
 import { parseMultipart } from "../../tools/local-stack/storage.mjs";
 
 type Part = { name: string; filename: string | null; contentType: string | null; data: Buffer };
