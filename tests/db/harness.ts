@@ -20,6 +20,34 @@ const SUPABASE_STUBS = `
   grant usage on schema public, auth to anon, authenticated, service_role;
   grant execute on function auth.uid() to anon, authenticated, service_role;
   alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+
+  -- Supabase Storage keeps its files in the bucket service and their metadata
+  -- in these two tables. Only the columns our policies and functions use matter.
+  create schema storage;
+  create table storage.buckets (
+    id text primary key,
+    name text not null unique,
+    public boolean default false,
+    file_size_limit bigint,
+    allowed_mime_types text[],
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+  );
+  create table storage.objects (
+    id uuid primary key default gen_random_uuid(),
+    bucket_id text references storage.buckets (id),
+    name text,
+    owner uuid,
+    metadata jsonb,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now(),
+    last_accessed_at timestamptz default now()
+  );
+  create unique index bucketid_objname on storage.objects (bucket_id, name);
+  alter table storage.buckets enable row level security;
+  alter table storage.objects enable row level security;
+  grant usage on schema storage to anon, authenticated, service_role;
+  grant all on storage.buckets, storage.objects to anon, authenticated, service_role;
 `;
 
 export async function createDb(): Promise<PGlite> {
