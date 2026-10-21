@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+/*
+ * all41 brand: a dark base with colourful neon accents and a touch of dark
+ * gold. Event themes belong to the client and live elsewhere; these tokens
+ * are the platform's own.
+ */
+@theme {
+  --color-ink: #07070d;
+  --color-panel: #0f0f19;
+  --color-panel-raised: #171726;
+  --color-line: #27273d;
+  --color-fg: #f3f3f8;
+  --color-muted: #a3a3ba;
+
+  --color-neon-pink: #ff3ecb;
+  --color-neon-cyan: #27e6ff;
+  --color-neon-lime: #b8ff3d;
+  --color-neon-violet: #8f6bff;
+
+  --color-gold: #d4af5f;
+  --color-gold-dark: #9c7a2f;
+
+  --color-danger: #ff6b7a;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-grotesk), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-ink);
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-neon-pink) 45%, transparent);
+  color: var(--color-fg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-neon-cyan);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Soft neon glow behind the top of a page. */
+.backdrop-glow {
+  background:
+    radial-gradient(60rem 28rem at 12% -8%, color-mix(in srgb, var(--color-neon-violet) 28%, transparent), transparent 70%),
+    radial-gradient(48rem 24rem at 88% -4%, color-mix(in srgb, var(--color-neon-pink) 20%, transparent), transparent 70%),
+    radial-gradient(40rem 20rem at 50% 6%, color-mix(in srgb, var(--color-neon-cyan) 12%, transparent), transparent 70%);
+}
+
+/*
+ * Text filled with a gradient. The extra padding keeps descenders, like the
+ * tail of a "y", inside the box the gradient is painted on.
+ */
+.text-neon,
+.text-gold-shine {
+  display: inline-block;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+.text-neon {
+  background-image: linear-gradient(100deg, var(--color-neon-pink), var(--color-neon-violet) 45%, var(--color-neon-cyan));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.text-gold-shine {
+  background-image: linear-gradient(100deg, var(--color-gold), #f1d88f 50%, var(--color-gold-dark));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
