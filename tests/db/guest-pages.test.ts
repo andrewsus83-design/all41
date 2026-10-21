@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { PGlite } from '@electric-sql/pglite';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { classifyDbError, type DbError } from '@/lib/db-errors';
+import { parseInvitation, parsePublicEvent, parseSubmitResult } from '@/lib/guest/records';
 import { asAnon, asService, asUser, createDb } from './harness';
 
 let db: PGlite;
@@ -559,5 +560,28 @@ describe('who can call what', () => {
       expect(row.prosecdef).toBe(true);
       expect(row.proconfig).toContain('search_path=""');
     }
+  });
+});
+
+describe('the app reads what the functions return', () => {
+  // The pages parse the functions' JSON with zod. These tests feed it the real output.
+  it('reads the public event, the invitation with and without an answer, and every kind of outcome', async () => {
+    const fixture = await newEvent('published');
+    const guest = await addGuest(fixture);
+
+    expect(parsePublicEvent(await publicEvent(fixture.slug))).toMatchObject({
+      slug: fixture.slug,
+      venueName: 'Grand Ballroom',
+      theme: { preset: 'gala', font: 'classic' },
+    });
+
+    expect(parseInvitation(await openInvitation(guest.token))).toMatchObject({ guestName: 'Dewi Lestari', tableNo: 'A7', rsvp: null, rsvpOpen: true });
+    expect(parseSubmitResult(await submit(guest.token, { partySize: 3, meal: 'Halal' }))).toMatchObject({ ok: true, rsvp: { partySize: 3 } });
+    expect(parseInvitation(await openInvitation(guest.token))).toMatchObject({ rsvp: { response: 'attending', mealPreference: 'Halal' } });
+
+    expect(parseSubmitResult(await submit(guest.token, { partySize: 99 }))).toEqual({ ok: false, reason: 'invalid', field: 'party_size' });
+    expect(parseSubmitResult(await submit('0'.repeat(64)))).toEqual({ ok: false, reason: 'not_found' });
+    await endEvent(fixture.eventId);
+    expect(parseSubmitResult(await submit(guest.token))).toEqual({ ok: false, reason: 'closed' });
   });
 });
