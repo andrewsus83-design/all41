@@ -8,6 +8,7 @@ const TABS = [
   { label: "Guests", path: "/guests" },
   { label: "Check-in", path: "/checkin" },
   { label: "Raffle", path: "/raffle" },
+  { label: "Photos", path: "/photos" },
   { label: "Settings", path: "/settings" },
 ] as const;
 
