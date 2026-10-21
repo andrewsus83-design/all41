@@ -9,6 +9,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import http from "node:http";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createStorage } from "./storage.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "../..");
@@ -183,6 +184,9 @@ async function handleAuth(request, response, url) {
   return authError(response, 404, "not_found", `No fake for ${request.method} ${route}`);
 }
 
+// Supabase Storage: bytes on disk, metadata in storage.objects, policies run as the caller.
+const storage = createStorage({ dbUrl: dbUrl(config.dbName), dataDir: config.dataDir, verify, cors: CORS });
+
 async function handleRest(request, response, url) {
   const headers = { ...request.headers, host: `127.0.0.1:${config.restPort}` };
   // The publishable key is not a token PostgREST can read; without a valid one the caller is anonymous.
@@ -237,6 +241,7 @@ function startFrontServer() {
       }
       if (url.pathname.startsWith("/auth/v1")) return await handleAuth(request, response, url);
       if (url.pathname.startsWith("/rest/v1")) return await handleRest(request, response, url);
+      if (url.pathname.startsWith("/storage/v1")) return await storage.handle(request, response, url);
       return sendJson(response, 404, { message: "Not part of the local stack" });
     } catch (error) {
       console.error(error);
@@ -275,6 +280,7 @@ prepareDatabase({ reset: process.argv.includes("--reset") });
 if (process.argv.includes("--reset")) {
   users.clear();
   saveUsers();
+  storage.reset();
 }
 ensureUser("owner@example.test", "password1234", "00000000-0000-4000-8000-0000000000a1");
 ensureUser("staff@example.test", "password1234", "00000000-0000-4000-8000-0000000000a2");

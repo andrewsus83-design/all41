@@ -6,10 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { buttonStyles } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CapacityMeter } from "@/components/events/capacity-meter";
+import { CheckinSummaryCard } from "./checkin/summary-card";
 import { capacityOf } from "@/lib/events/capacity";
 import { getEvent, getWorkspace, guestStatusCounts } from "@/lib/events/queries";
 import { GUEST_STATUSES, GUEST_STATUS_LABELS } from "@/lib/events/records";
 import { THEME_FONTS, THEME_PRESETS, resolveAccent } from "@/lib/events/theme";
+import { eventUrl } from "@/lib/guest/links";
 import { TIMEZONES } from "@/lib/events/time";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { getPackage } from "@/lib/pricing";
@@ -38,11 +40,12 @@ async function Overview({ params }: { params: PageProps<"/dashboard/events/[even
   const pkg = getPackage(event.package);
   const accent = resolveAccent(event.theme);
   const zone = TIMEZONES.find((candidate) => candidate.id === event.timezone)?.label ?? event.timezone;
+  const publicLink = eventUrl(event.slug);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="space-y-6">
-        {canEdit && event.status !== "archived" && <PublishPanel eventId={event.id} slug={event.slug} published={event.status === "published"} />}
+        <PublishPanel eventId={event.id} status={event.status} link={publicLink} canPublish={canEdit} />
 
         <Card className="space-y-6 p-6 sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -70,6 +73,10 @@ async function Overview({ params }: { params: PageProps<"/dashboard/events/[even
             ))}
           </dl>
         </Card>
+
+        <Suspense fallback={<div className="h-44 animate-pulse rounded-[2rem] bg-panel" aria-hidden="true" />}>
+          <CheckinSummaryCard eventId={event.id} />
+        </Suspense>
 
         {event.package === "free" && (
           <Card className="space-y-2 border-gold/30 p-6 sm:p-8">
@@ -103,7 +110,7 @@ async function Overview({ params }: { params: PageProps<"/dashboard/events/[even
           </div>
           <div>
             <dt className="text-muted">Event address</dt>
-            <dd className="break-all">all41.app/e/{event.slug}</dd>
+            <dd className="break-all">{publicLink.replace(/^https?:\/\//, "")}</dd>
           </div>
           <div>
             <dt className="text-muted">Time zone</dt>

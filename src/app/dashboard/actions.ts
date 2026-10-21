@@ -1,6 +1,6 @@
 "use server";
 
-import { refresh } from "next/cache";
+import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { classifyDbError, type DbFailure } from "@/lib/db-errors";
@@ -10,6 +10,7 @@ import { eventFormSchema } from "@/lib/events/schema";
 import { fieldErrorsOf, formObject, type FormState } from "@/lib/forms";
 import { MAX_IMPORT_ROWS, dedupeGuests } from "@/lib/guests/import";
 import { guestSchema, type GuestInput } from "@/lib/guests/input";
+import { publicEventTag } from "@/lib/guest/cached";
 import { createClient } from "@/lib/supabase/server";
 
 // Every action here checks who is asking itself: the proxy only redirects for
@@ -35,6 +36,8 @@ function describeFailure(failure: DbFailure, context: { code?: string; message?:
       return { error: "You already have an active Free event. Archive it, or upgrade it, before starting another." };
     case "forbidden":
       return { error: OWNER_ONLY };
+    case "archived_event_cannot_publish":
+      return { error: "An archived event cannot be published. Restore it in Settings first." };
     case "missing_parent":
       return { error: "That event no longer exists." };
     default:
@@ -117,6 +120,9 @@ export async function updateEvent(eventId: string, _previous: FormState, formDat
   if (!parsed.success) return { fieldErrors: fieldErrorsOf(parsed.error), values };
   const event = parsed.data;
 
+  // The address may change, and the page cached under the old one must go too.
+  const before = await getEvent(eventId);
+
   const supabase = await createClient();
   // The event type is chosen once, when the event is created.
   const { data, error } = await supabase
@@ -132,10 +138,13 @@ export async function updateEvent(eventId: string, _previous: FormState, formDat
       theme: event.theme,
     })
     .eq("id", eventId)
-    .select("id");
+    .select("id, slug");
   if (error) return { ...problemOf(error), values };
   if (data.length === 0) return { error: "That event no longer exists, or you cannot edit it.", values };
 
+  // The public event page is cached for a minute; this makes the edit show at once.
+  updateTag(publicEventTag(data[0].slug));
+  if (before && before.slug !== data[0].slug) updateTag(publicEventTag(before.slug));
   refresh();
   return { saved: true };
 }
@@ -153,10 +162,12 @@ export async function setEventStatus(eventId: string, status: string): Promise<F
   if (!workspace) return { error: OWNER_ONLY };
 
   const supabase = await createClient();
-  const { data, error } = await supabase.from("a41_events").update({ status: parsedStatus.data }).eq("id", eventId).select("id");
+  const { data, error } = await supabase.from("a41_events").update({ status: parsedStatus.data }).eq("id", eventId).select("id, slug");
   if (error) return problemOf(error);
   if (data.length === 0) return { error: "That event no longer exists, or you cannot edit it." };
 
+  // The public event page is cached for a minute; this makes the new state show at once.
+  updateTag(publicEventTag(data[0].slug));
   refresh();
   return { saved: true };
 }
