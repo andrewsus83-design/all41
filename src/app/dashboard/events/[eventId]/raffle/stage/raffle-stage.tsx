@@ -291,7 +291,10 @@ export function RaffleStage({
         </div>
       </header>
 
-      <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-[4vw] text-center">
+      <section
+        aria-label="Raffle draw"
+        className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-[4vw] text-center"
+      >
         {notice && (
           <p role="alert" className="absolute top-0 max-w-[70vw] rounded-2xl border border-danger/40 bg-danger/15 px-8 py-4 text-[2.4vh] font-bold text-danger">
             {notice}
@@ -378,23 +381,25 @@ export function RaffleStage({
                 />
               ))}
             </div>
-            <div role="status" aria-live="assertive" className="stage-pop relative flex flex-col items-center gap-[2.6vh]">
-              <p className="text-[3vh] font-bold tracking-[0.3em] text-(--stage-accent) uppercase">
-                Winner · {revealed.prize.name}
-                {revealed.prize.quantity > 1 ? ` (${revealed.prize.awarded} of ${revealed.prize.quantity})` : ""}
-              </p>
-              <h1 style={headingFont} className={`font-display max-w-[92vw] leading-none font-bold break-words text-(--stage-text) ${nameSize(revealed.winner.name)}`}>
-                {revealed.winner.name}
-              </h1>
-              <div className="flex flex-wrap items-center justify-center gap-4 text-[3.4vh] font-bold">
-                <span className="rounded-full border border-(--stage-accent)/60 bg-(--stage-accent)/15 px-[1.6vw] py-[0.8vh] text-(--stage-accent)">
-                  {revealed.winner.tableNo ? `Table ${revealed.winner.tableNo}` : "No table assigned"}
-                </span>
-                {revealed.winner.tags.map((tag) => (
-                  <span key={tag} className="rounded-full border border-white/20 px-[1.4vw] py-[0.8vh] text-(--stage-muted)">
-                    {tag}
+            <div className="stage-pop relative flex flex-col items-center gap-[2.6vh]">
+              <div role="status" aria-live="assertive" className="flex flex-col items-center gap-[2.6vh]">
+                <p className="text-[3vh] font-bold tracking-[0.3em] text-(--stage-accent) uppercase">
+                  Winner · {revealed.prize.name}
+                  {revealed.prize.quantity > 1 ? ` (${revealed.prize.awarded} of ${revealed.prize.quantity})` : ""}
+                </p>
+                <h1 style={headingFont} className={`font-display max-w-[92vw] leading-none font-bold break-words text-(--stage-text) ${nameSize(revealed.winner.name)}`}>
+                  {revealed.winner.name}
+                </h1>
+                <div className="flex flex-wrap items-center justify-center gap-4 text-[3.4vh] font-bold">
+                  <span className="rounded-full border border-(--stage-accent)/60 bg-(--stage-accent)/15 px-[1.6vw] py-[0.8vh] text-(--stage-accent)">
+                    {revealed.winner.tableNo ? `Table ${revealed.winner.tableNo}` : "No table assigned"}
                   </span>
-                ))}
+                  {revealed.winner.tags.map((tag) => (
+                    <span key={tag} className="rounded-full border border-white/20 px-[1.4vw] py-[0.8vh] text-(--stage-muted)">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
               <div className="mt-[2vh] flex flex-wrap items-center justify-center gap-5">
                 {confirming ? (
@@ -435,7 +440,7 @@ export function RaffleStage({
             </div>
           </>
         )}
-      </main>
+      </section>
 
       <footer className="relative z-10 px-[3vw] py-[2.2vh]">
         {prizes.length > 0 && (
