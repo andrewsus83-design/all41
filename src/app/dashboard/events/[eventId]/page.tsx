@@ -14,6 +14,7 @@ import { THEME_FONTS, THEME_PRESETS, resolveAccent } from "@/lib/events/theme";
 import { TIMEZONES } from "@/lib/events/time";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { getPackage } from "@/lib/pricing";
+import { PublishPanel } from "./publish-panel";
 
 export const metadata: Metadata = { title: "Overview" };
 
@@ -42,6 +43,8 @@ async function Overview({ params }: { params: PageProps<"/dashboard/events/[even
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="space-y-6">
+        {canEdit && event.status !== "archived" && <PublishPanel eventId={event.id} slug={event.slug} published={event.status === "published"} />}
+
         <Card className="space-y-6 p-6 sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <h2 className="font-display text-xl font-semibold">Guest list</h2>

@@ -191,6 +191,24 @@ describe('events', () => {
     expect(seenByStranger.rows).toHaveLength(0);
   });
 
+  it('can only be published, taken offline or archived by an owner', async () => {
+    const owner = await newUser();
+    const staff = await newUser();
+    const stranger = await newUser();
+    const orgId = await newOrg(owner);
+    await addMember(orgId, staff, 'staff');
+    const eventId = await newEvent(owner, orgId);
+    const publish = (user: string) =>
+      asUser(db, user, () => db.query(`update a41_events set status = 'published' where id = $1`, [eventId]));
+
+    expect((await publish(staff)).affectedRows).toBe(0);
+    expect((await publish(stranger)).affectedRows).toBe(0);
+    expect((await publish(owner)).affectedRows).toBe(1);
+
+    const { rows } = await db.query('select status from a41_events where id = $1', [eventId]);
+    expect(rows).toEqual([{ status: 'published' }]);
+  });
+
   it('can only be created by an owner of the organization', async () => {
     const owner = await newUser();
     const staff = await newUser();

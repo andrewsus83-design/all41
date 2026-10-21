@@ -43,6 +43,30 @@ describe('a41_private.guest_by_token', () => {
     expect(await lookup((await guestToken('archived')).token)).toEqual([]);
   });
 
+  it('finds the guest once an owner publishes the event, and nobody once it goes offline', async () => {
+    const owner = randomUUID();
+    await db.query('insert into auth.users (id, email) values ($1, $2)', [owner, `${owner}@example.test`]);
+    const eventId = await asUser(db, owner, async () => {
+      const { rows: orgs } = await db.query<{ id: string }>(`insert into a41_organizations (name) values ('Acme') returning id`);
+      const { rows } = await db.query<{ id: string }>(
+        `insert into a41_events (org_id, name, slug, type, starts_at, ends_at)
+         values ($1, 'Gala', $2, 'corporate', now() + interval '30 days', now() + interval '31 days') returning id`,
+        [orgs[0].id, `evt-${randomUUID().slice(0, 8)}`],
+      );
+      await db.query(`insert into a41_guests (event_id, name) values ($1, 'Dewi')`, [rows[0].id]);
+      return rows[0].id;
+    });
+    const { rows } = await asService(db, () => db.query<{ token: string }>('select token from a41_guests where event_id = $1', [eventId]));
+    const setStatus = (status: string) =>
+      asUser(db, owner, () => db.query('update a41_events set status = $2 where id = $1 returning id', [eventId, status]));
+
+    expect(await lookup(rows[0].token)).toEqual([]);
+    expect((await setStatus('published')).rows).toHaveLength(1);
+    expect(await lookup(rows[0].token)).toHaveLength(1);
+    expect((await setStatus('draft')).rows).toHaveLength(1);
+    expect(await lookup(rows[0].token)).toEqual([]);
+  });
+
   it('finds nobody for a token that does not exist', async () => {
     expect(await lookup('0'.repeat(64))).toEqual([]);
   });
