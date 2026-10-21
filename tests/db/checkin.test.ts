@@ -20,6 +20,8 @@ const scan = (user: string, eventId: string, token: string) =>
   rpc<Card>(db, user, 'a41_check_in_by_token($1, $2)', [eventId, token]);
 const checkIn = (user: string, eventId: string, guestId: string) =>
   rpc<Card>(db, user, 'a41_check_in_guest($1, $2)', [eventId, guestId]);
+const undo = (user: string, eventId: string, guestId: string) =>
+  rpc<boolean>(db, user, 'a41_undo_check_in($1, $2)', [eventId, guestId]);
 const stats = (user: string, eventId: string, recent = 8) =>
   rpc<{
     total_guests: number;
@@ -228,10 +230,7 @@ describe('undoing a check-in', () => {
     expect(await statusOf(silent.id)).toBe('checked_in');
 
     for (const guest of [responded, silent]) {
-      const { rows } = await asUser(db, f.owner, () =>
-        db.query('delete from a41_checkins where guest_id = $1 and event_id = $2 returning guest_id', [guest.id, f.eventId]),
-      );
-      expect(rows).toHaveLength(1);
+      expect(await undo(f.owner, f.eventId, guest.id)).toBe(true);
     }
 
     expect(await statusOf(responded.id)).toBe('rsvp');
@@ -247,7 +246,7 @@ describe('undoing a check-in', () => {
     await scan(f.staff, f.eventId, guest.token);
     await db.query(`insert into a41_rsvps (guest_id, event_id, response) values ($1, $2, 'attending')`, [guest.id, f.eventId]);
     expect(await statusOf(guest.id)).toBe('checked_in');
-    await asUser(db, f.owner, () => db.query('delete from a41_checkins where guest_id = $1', [guest.id]));
+    expect(await undo(f.owner, f.eventId, guest.id)).toBe(true);
     expect(await statusOf(guest.id)).toBe('rsvp');
   });
 
@@ -257,12 +256,41 @@ describe('undoing a check-in', () => {
     await scan(f.staff, f.eventId, f.guests[0].token);
 
     for (const user of [f.staff, other.owner]) {
-      const { rows } = await asUser(db, user, () => db.query('delete from a41_checkins where guest_id = $1 returning guest_id', [f.guests[0].id]));
-      expect(rows).toEqual([]);
+      expect(await failure(() => undo(user, f.eventId, f.guests[0].id))).toMatchObject({ code: '42501', message: 'forbidden' });
+    }
+    expect(await failure(() => asAnon(db, () => db.query('select a41_undo_check_in($1, $2)', [f.eventId, f.guests[0].id])))).toMatchObject({ code: '42501' });
+    expect(await checkinCount(f.eventId)).toBe(1);
+    expect(await statusOf(f.guests[0].id)).toBe('checked_in');
+  });
+
+  it('keeps the table closed: nobody deletes a check-in straight from it, not even the owner', async () => {
+    const f = await newFixture(db, 1);
+    await scan(f.staff, f.eventId, f.guests[0].token);
+
+    for (const user of [f.owner, f.staff]) {
+      expect(await failure(() => asUser(db, user, () => db.query('delete from a41_checkins where guest_id = $1', [f.guests[0].id])))).toMatchObject({
+        code: '42501',
+      });
     }
     expect(await failure(() => asAnon(db, () => db.query('delete from a41_checkins')))).toMatchObject({ code: '42501' });
     expect(await checkinCount(f.eventId)).toBe(1);
-    expect(await statusOf(f.guests[0].id)).toBe('checked_in');
+  });
+
+  it('says false when the guest is not checked in, and leaves other guests alone', async () => {
+    const f = await newFixture(db, 2);
+    await scan(f.staff, f.eventId, f.guests[0].token);
+    expect(await undo(f.owner, f.eventId, f.guests[1].id)).toBe(false);
+    expect(await undo(f.owner, f.eventId, f.guests[0].id)).toBe(true);
+    expect(await undo(f.owner, f.eventId, f.guests[0].id)).toBe(false);
+  });
+
+  it('only undoes the guest on the event it is asked about', async () => {
+    const f = await newFixture(db, 1);
+    const g = await newFixture(db, 1);
+    await scan(g.staff, g.eventId, g.guests[0].token);
+    // the owner of the first event names the guest of the second: nothing is removed
+    expect(await undo(f.owner, f.eventId, g.guests[0].id)).toBe(false);
+    expect(await checkinCount(g.eventId)).toBe(1);
   });
 
   it('is removed with the guest', async () => {

@@ -58,15 +58,10 @@ export async function searchGuests(supabase: SupabaseClient, eventId: string, qu
   return error ? failed(error) : { ok: true, value: parseSearchResults(data) };
 }
 
-/** Removes a check-in. Row level security lets only owners do it; no row removed means it was not allowed or not there. */
+/** Removes a check-in. Only owners may: the database refuses anyone else, and says false when the guest was not checked in. */
 export async function removeCheckin(supabase: SupabaseClient, eventId: string, guestId: string): Promise<Outcome<boolean>> {
-  const { data, error } = await supabase
-    .from("a41_checkins")
-    .delete()
-    .eq("guest_id", guestId)
-    .eq("event_id", eventId)
-    .select("guest_id");
-  return error ? failed(error) : { ok: true, value: (data ?? []).length > 0 };
+  const { data, error } = await supabase.rpc("a41_undo_check_in", { p_event: eventId, p_guest: guestId });
+  return error ? failed(error) : { ok: true, value: data === true };
 }
 
 export type EventRole = "owner" | "staff";

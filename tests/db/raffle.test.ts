@@ -215,7 +215,9 @@ describe('drawing a winner', () => {
     expect(await failure(() => draw(f.staff, prize))).toMatchObject({ message: 'no_eligible_guests' });
 
     await checkInAll(f);
-    await asUser(db, f.owner, () => db.query('delete from a41_checkins where event_id = $1', [f.eventId]));
+    for (const guest of f.guests) {
+      await rpc(db, f.owner, 'a41_undo_check_in($1, $2)', [f.eventId, guest.id]);
+    }
     expect(await failure(() => draw(f.staff, prize))).toMatchObject({ message: 'no_eligible_guests' });
     expect(await drawRows(f.eventId)).toEqual([]);
   });

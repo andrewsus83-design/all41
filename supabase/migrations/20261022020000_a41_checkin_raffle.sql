@@ -54,10 +54,8 @@ $$;
 create trigger a41_checkins_restore_guest after delete on public.a41_checkins
   for each row execute function a41_private.restore_guest_status();
 
--- Owners undo a check-in; staff cannot.
-grant delete on public.a41_checkins to authenticated;
-create policy checkins_delete on public.a41_checkins for delete to authenticated
-  using ((select a41_private.is_event_owner(event_id)));
+-- A check-in is a record: nobody can edit or delete it straight from the table.
+-- Owners take one back through a41_undo_check_in below; staff cannot.
 
 -- ---------------------------------------------------------------------------
 -- Check-in: functions (signed-in members only, they run with the caller's rights
@@ -154,6 +152,23 @@ begin
     raise exception 'forbidden' using errcode = '42501';
   end if;
   return a41_private.check_in(p_event, p_guest);
+end
+$$;
+
+-- Undo: an owner takes a check-in back (a mistaken scan). The guest returns to the
+-- status they had before. False when that guest is not checked in.
+create function public.a41_undo_check_in(p_event uuid, p_guest uuid) returns boolean
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_removed integer;
+begin
+  if not a41_private.is_event_owner(p_event) then
+    raise exception 'forbidden' using errcode = '42501';
+  end if;
+  delete from public.a41_checkins where guest_id = p_guest and event_id = p_event;
+  get diagnostics v_removed = row_count;
+  return v_removed > 0;
 end
 $$;
 
@@ -591,6 +606,7 @@ to authenticated;
 revoke execute on function
   public.a41_check_in_by_token(uuid, text),
   public.a41_check_in_guest(uuid, uuid),
+  public.a41_undo_check_in(uuid, uuid),
   public.a41_add_walk_in(uuid, text, text, text, text),
   public.a41_checkin_stats(uuid, integer),
   public.a41_search_checkin_guests(uuid, text),
@@ -603,6 +619,7 @@ from public, anon;
 grant execute on function
   public.a41_check_in_by_token(uuid, text),
   public.a41_check_in_guest(uuid, uuid),
+  public.a41_undo_check_in(uuid, uuid),
   public.a41_add_walk_in(uuid, text, text, text, text),
   public.a41_checkin_stats(uuid, integer),
   public.a41_search_checkin_guests(uuid, text),
