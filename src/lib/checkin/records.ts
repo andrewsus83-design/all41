@@ -32,7 +32,8 @@ const checkinResult = z.discriminatedUnion("outcome", [
 
 /** What the door shows after a scan or a tap. */
 export type CheckinResult =
-  | { outcome: "checked_in" | "already_checked_in"; checkedInAt: string; guest: GuestCard }
+  | { outcome: "checked_in"; checkedInAt: string; guest: GuestCard }
+  | { outcome: "already_checked_in"; checkedInAt: string; guest: GuestCard }
   | { outcome: "other_event"; eventName: string | null }
   | { outcome: "unknown" };
 
@@ -40,8 +41,9 @@ export function parseCheckinResult(value: unknown): CheckinResult {
   const parsed = checkinResult.parse(value);
   switch (parsed.outcome) {
     case "checked_in":
+      return { outcome: "checked_in", checkedInAt: parsed.checked_in_at, guest: parsed.guest };
     case "already_checked_in":
-      return { outcome: parsed.outcome, checkedInAt: parsed.checked_in_at, guest: parsed.guest };
+      return { outcome: "already_checked_in", checkedInAt: parsed.checked_in_at, guest: parsed.guest };
     case "other_event":
       return { outcome: "other_event", eventName: parsed.event_name };
     case "unknown":
