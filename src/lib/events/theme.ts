@@ -7,21 +7,21 @@ import { z } from "zod";
 export const THEME_PRESETS = {
   midnight: {
     name: "Midnight",
-    blurb: "Dark with neon accents",
-    background: "#07070d",
-    surface: "#0f0f19",
-    text: "#f3f3f8",
-    muted: "#a3a3ba",
-    accent: "#27e6ff",
+    blurb: "Dark with neon cyan",
+    background: "#09090b",
+    surface: "#18181b",
+    text: "#fafafa",
+    muted: "#a1a1aa",
+    accent: "#00f0ff",
   },
   gala: {
     name: "Gala",
     blurb: "Dark with gold, for a formal night",
-    background: "#0c0a08",
-    surface: "#16130f",
+    background: "#0f0f0f",
+    surface: "#1a1a1a",
     text: "#f6f1e7",
-    muted: "#b5ab97",
-    accent: "#d4af5f",
+    muted: "#a8a29e",
+    accent: "#c5a059",
   },
 } as const;
 

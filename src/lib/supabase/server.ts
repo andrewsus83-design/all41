@@ -2,6 +2,7 @@ import "server-only";
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { supabaseEnv } from "@/lib/env";
 
 /**
@@ -10,6 +11,10 @@ import { supabaseEnv } from "@/lib/env";
  */
 export async function createClient() {
   const cookieStore = await cookies();
+  // Everything this client does is request-time work for one person. Checking their
+  // session reads the clock, which Next would otherwise report as it prepares the
+  // shell it prefetches for a link, so say up front that the rest waits for the request.
+  await connection();
   const { url, publishableKey } = supabaseEnv();
 
   return createServerClient(url, publishableKey, {

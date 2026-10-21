@@ -60,7 +60,7 @@ async function Overview({ params }: { params: PageProps<"/dashboard/events/[even
 
           <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             {GUEST_STATUSES.map((status) => (
-              <div key={status} className="rounded-xl border border-line bg-ink px-4 py-3">
+              <div key={status} className="rounded-2xl border border-line bg-ink px-4 py-3">
                 <dd className="font-display text-2xl font-semibold tabular-nums">{counts[status].toLocaleString("en-US")}</dd>
                 <dt className="text-sm text-muted">{GUEST_STATUS_LABELS[status]}</dt>
               </div>

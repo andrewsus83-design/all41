@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 
 /** Class names shared by text inputs, selects and text areas. */
 export function controlStyles(invalid = false) {
-  return `block w-full rounded-xl border bg-ink px-4 text-base placeholder:text-muted/60 focus:border-neon-violet ${
-    invalid ? "border-danger" : "border-line"
+  return `block w-full rounded-2xl border bg-surface px-5 text-base outline-none placeholder:text-subtle focus:ring-1 ${
+    invalid ? "border-danger focus:border-danger focus:ring-danger/40" : "border-line focus:border-gold focus:ring-gold/40"
   }`;
 }
 
@@ -33,9 +33,9 @@ export function Field({
 }) {
   return (
     <div className={className}>
-      <label htmlFor={id} className="flex items-baseline justify-between gap-3 text-sm font-medium">
+      <label htmlFor={id} className="flex items-baseline justify-between gap-3 text-sm font-bold text-zinc-400">
         <span>{label}</span>
-        {optional && <span className="text-xs font-normal text-muted">Optional</span>}
+        {optional && <span className="text-xs font-normal text-subtle">Optional</span>}
       </label>
       <div className="mt-2">{children}</div>
       {error ? (
@@ -56,7 +56,7 @@ export function Field({
 /** A problem with a whole form, announced to screen readers. Renders nothing when there is none. */
 export function FormError({ children }: { children?: string }) {
   return (
-    <p role="alert" className="rounded-xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger empty:hidden">
+    <p role="alert" className="rounded-2xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger empty:hidden">
       {children}
     </p>
   );
