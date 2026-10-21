@@ -194,14 +194,40 @@ async function handleRest(request, response, url) {
   if (!verify(bearer)) delete headers.authorization;
   delete headers.apikey;
 
+  let answered = false;
   const upstream = http.request(
     { host: "127.0.0.1", port: config.restPort, method: request.method, path: url.pathname.replace("/rest/v1", "") + url.search, headers },
     (result) => {
+      if (result.statusCode === 416) {
+        // The PostgREST binary used here answers an out-of-range page with a Content-Length shorter than its
+        // body, which breaks HTTP clients. Production's does not, so send the body production sends.
+        answered = true;
+        const total = /\/(\d+)$/.exec(String(result.headers["content-range"] ?? ""))?.[1] ?? "0";
+        const offset = url.searchParams.get("offset") ?? "0";
+        response.writeHead(416, { "content-type": "application/json; charset=utf-8", "content-range": `*/${total}`, ...CORS });
+        response.end(
+          JSON.stringify({
+            code: "PGRST103",
+            details: `An offset of ${offset} was requested, but there are only ${total} rows.`,
+            hint: null,
+            message: "Requested range not satisfiable",
+          }),
+        );
+        result.destroy();
+        return;
+      }
       response.writeHead(result.statusCode ?? 502, { ...result.headers, ...CORS });
       result.pipe(response);
     },
   );
-  upstream.on("error", (error) => sendJson(response, 502, { message: `PostgREST is not reachable: ${error.message}` }));
+  upstream.on("error", (error) => {
+    if (answered) return;
+    // PostgREST can drop the connection after it started answering; the status line is out, so just end the response.
+    if (response.headersSent) return response.destroy();
+    sendJson(response, 502, { message: `PostgREST is not reachable: ${error.message}` });
+  });
+  // A caller that gives up (a navigation away, a closed tab) must not leave the upstream request hanging.
+  response.on("close", () => upstream.destroy());
   request.pipe(upstream);
 }
 
