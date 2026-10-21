@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { AnswerResult, QuizMe, QuizSession, QuizState } from "@/lib/games/schemas";
 import { ANSWER_STYLES } from "./answer-style";
 import { Leaderboard } from "./leaderboard";
+import { newerQuizState } from "./newer-state";
 import { postJson } from "./post-json";
 import { rememberGuest } from "./remember-guest";
 import { useCountdown } from "./use-countdown";
@@ -12,14 +13,6 @@ import { usePoll } from "./use-poll";
 import { useServerClock } from "./use-server-clock";
 
 type Sent = { sessionId: string; position: number; index: number; status: "sending" | "locked" | "refused"; reason?: string };
-
-/** Keeps the newer of two copies of the shared state, so a slow answer from the CDN never rewinds the screen. */
-function newer(previous: QuizState | null, next: QuizState): QuizState {
-  const before = previous?.session;
-  const after = next.session;
-  if (!before || !after || before.id !== after.id) return next;
-  return after.rev >= before.rev ? next : previous!;
-}
 
 const REFUSALS: Record<string, string> = {
   late: "Too late: the time was up before your answer arrived.",
@@ -63,7 +56,7 @@ export function QuizPlayer({ token, playKey, firstName, eventName }: { token: st
 
   usePoll<QuizState>(`/api/games/state/${playKey}/quiz`, {
     intervalMs: 1500,
-    onData: (next) => setState((previous) => newer(previous, next)),
+    onData: (next) => setState((previous) => newerQuizState(previous, next)),
     onReachable: setReachable,
   });
 
