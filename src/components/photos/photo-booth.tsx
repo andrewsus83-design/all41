@@ -352,10 +352,10 @@ function MyPhotoTile({
       {photo.status === "rejected" && <p className="text-xs text-zinc-400">The host did not approve this photo for the wall.</p>}
       {confirming ? (
         <div className="flex gap-2">
-          <Button variant="danger" className="h-10 flex-1 px-3" onClick={remove} disabled={busy}>
+          <Button variant="danger" className="h-10 flex-1 px-3!" onClick={remove} disabled={busy}>
             {busy ? "Removing…" : "Remove"}
           </Button>
-          <Button variant="ghost" className="h-10 px-3" onClick={() => setConfirming(false)} disabled={busy}>
+          <Button variant="ghost" className="h-10 px-3!" onClick={() => setConfirming(false)} disabled={busy}>
             Keep
           </Button>
         </div>

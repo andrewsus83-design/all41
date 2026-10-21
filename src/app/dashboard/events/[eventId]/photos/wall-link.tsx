@@ -24,8 +24,8 @@ export function WallLink({ eventId, address, canEdit }: { eventId: string; addre
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="min-w-0 flex-1">
+      <div className="space-y-3">
+        <div>
           <label htmlFor="wall-address" className="sr-only">
             Address of the wall
           </label>
@@ -37,7 +37,7 @@ export function WallLink({ eventId, address, canEdit }: { eventId: string; addre
             className={`${controlStyles()} h-11 text-sm`}
           />
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <CopyButton value={address} label="Copy the wall address" />
           <a href={address} target="_blank" rel="noreferrer" className={`${buttonStyles({ variant: "neon" })} shrink-0`}>
             <ExternalLink className="size-4" aria-hidden="true" />
