@@ -1,5 +1,6 @@
-import { CalendarPlus, ChevronRight, type LucideIcon } from "lucide-react";
+import { CalendarPlus, Camera, ChevronRight, Gamepad2, Images, QrCode, type LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import type { GuestFeatures } from "@/lib/guest/features";
 import { calendarPath } from "@/lib/guest/links";
 import type { PublicEvent } from "@/lib/guest/records";
 
@@ -17,12 +18,21 @@ export interface ActionCard {
 }
 
 /**
- * The cards the invitation shows under the pass. Features add theirs here, one entry each, for example
- * `/i/<token>/photos` (photo wall), `/i/<token>/play` (live quiz), `/i/<token>/hunt` (scavenger hunt)
- * and `/i/<token>/album` (photos after the event). Order is the order on screen. `ended` is true once the event
- * is over: a card that only makes sense before the event (the calendar entry) is left out then.
+ * The cards the invitation shows under the pass, in the order on screen. A card appears only when the host has
+ * switched its feature on. `ended` is true once the event is over: cards that only make sense before or during
+ * the event (the calendar entry, the live quiz, the hunt) are left out then, while the photos stay open.
  */
-export function invitationCards({ event, ended }: { token: string; event: PublicEvent; ended: boolean }): ActionCard[] {
+export function invitationCards({
+  token,
+  event,
+  ended,
+  features,
+}: {
+  token: string;
+  event: PublicEvent;
+  ended: boolean;
+  features: GuestFeatures;
+}): ActionCard[] {
   const cards: ActionCard[] = [];
 
   if (!ended) {
@@ -33,6 +43,46 @@ export function invitationCards({ event, ended }: { token: string; event: Public
       href: calendarPath(event.slug),
       icon: CalendarPlus,
       download: true,
+    });
+  }
+
+  if (features.quizLive && !ended) {
+    cards.push({
+      id: "quiz",
+      title: "Play the live quiz",
+      description: "It is on now. Join from your phone.",
+      href: `/i/${token}/play`,
+      icon: Gamepad2,
+      tone: "cyan",
+    });
+  }
+
+  if (features.hunt && !ended) {
+    cards.push({
+      id: "hunt",
+      title: "Scavenger hunt",
+      description: `Find the codes around the venue. You have found ${features.hunt.claimed} of ${features.hunt.total}.`,
+      href: `/i/${token}/hunt`,
+      icon: QrCode,
+      tone: "cyan",
+    });
+  }
+
+  if (features.photos) {
+    cards.push({
+      id: "photos",
+      title: "Share your photos",
+      description: "Take a photo and it can appear on the big screen.",
+      href: `/i/${token}/photos`,
+      icon: Camera,
+      tone: "cyan",
+    });
+    cards.push({
+      id: "album",
+      title: "Shared album",
+      description: "Every photo guests have shared. Download your favorites.",
+      href: `/i/${token}/album`,
+      icon: Images,
     });
   }
 
