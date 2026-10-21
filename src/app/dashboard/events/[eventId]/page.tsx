@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonStyles } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CapacityMeter } from "@/components/events/capacity-meter";
+import { CheckinSummaryCard } from "./checkin/summary-card";
 import { capacityOf } from "@/lib/events/capacity";
 import { getEvent, getWorkspace, guestStatusCounts } from "@/lib/events/queries";
 import { GUEST_STATUSES, GUEST_STATUS_LABELS } from "@/lib/events/records";
@@ -72,6 +73,10 @@ async function Overview({ params }: { params: PageProps<"/dashboard/events/[even
             ))}
           </dl>
         </Card>
+
+        <Suspense fallback={<div className="h-44 animate-pulse rounded-[2rem] bg-panel" aria-hidden="true" />}>
+          <CheckinSummaryCard eventId={event.id} />
+        </Suspense>
 
         {event.package === "free" && (
           <Card className="space-y-2 border-gold/30 p-6 sm:p-8">
