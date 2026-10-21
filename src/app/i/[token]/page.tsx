@@ -1,10 +1,12 @@
 import { Check, Hourglass, Heart } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { RememberGuest } from "@/components/games/remember-guest";
 import { EventFacts } from "@/components/guest/event-facts";
 import { GuestShell } from "@/components/guest/guest-shell";
 import { headingStyle } from "@/components/guest/theme-scope";
 import { Card } from "@/components/ui/card";
+import { loadGuestFeatures, type GuestFeatures } from "@/lib/guest/features";
 import { firstName, partyLabel } from "@/lib/guest/format";
 import { openInvitation } from "@/lib/guest/public";
 import type { Invitation } from "@/lib/guest/records";
@@ -38,11 +40,13 @@ export default async function InvitationPage({ params }: Props) {
   if (!invitation) notFound();
 
   const { event, rsvp } = invitation;
+  const features = await loadGuestFeatures(token);
   const attending = rsvp?.response === "attending";
   const name = firstName(invitation.guestName);
 
   return (
     <GuestShell theme={event.theme}>
+      {features.playKey ? <RememberGuest playKey={features.playKey} token={token} /> : null}
       <header className="space-y-3">
         {attending ? (
           <StatusChip tone="success" icon={<Check className="size-4" aria-hidden="true" />}>
@@ -68,9 +72,9 @@ export default async function InvitationPage({ params }: Props) {
       </header>
 
       <div className="mt-8 space-y-6">
-        {attending && rsvp ? <ConfirmedView invitation={invitation} token={token} /> : null}
+        {attending && rsvp ? <ConfirmedView invitation={invitation} token={token} features={features} /> : null}
         {rsvp && !attending ? <DeclinedView invitation={invitation} token={token} /> : null}
-        {!rsvp ? <NoAnswerYet invitation={invitation} token={token} /> : null}
+        {!rsvp ? <NoAnswerYet invitation={invitation} token={token} features={features} /> : null}
       </div>
     </GuestShell>
   );
@@ -104,7 +108,7 @@ function FactsCard({ invitation }: { invitation: Invitation }) {
   );
 }
 
-function ConfirmedView({ invitation, token }: { invitation: Invitation; token: string }) {
+function ConfirmedView({ invitation, token, features }: { invitation: Invitation; token: string; features: GuestFeatures }) {
   const { event, rsvp } = invitation;
   if (!rsvp) return null;
   return (
@@ -118,7 +122,7 @@ function ConfirmedView({ invitation, token }: { invitation: Invitation; token: s
         timeZone={event.timezone}
         checkedInAt={invitation.checkedInAt}
       />
-      <ActionCards cards={invitationCards({ token, event, ended: !invitation.rsvpOpen })} />
+      <ActionCards cards={invitationCards({ token, event, ended: !invitation.rsvpOpen, features })} />
       <FactsCard invitation={invitation} />
       {invitation.rsvpOpen ? <ChangeAnswer token={token} existing={rsvp} /> : <EndedNote />}
     </>
@@ -143,7 +147,7 @@ function DeclinedView({ invitation, token }: { invitation: Invitation; token: st
   );
 }
 
-function NoAnswerYet({ invitation, token }: { invitation: Invitation; token: string }) {
+function NoAnswerYet({ invitation, token, features }: { invitation: Invitation; token: string; features: GuestFeatures }) {
   return (
     <>
       <FactsCard invitation={invitation} />
@@ -154,7 +158,7 @@ function NoAnswerYet({ invitation, token }: { invitation: Invitation; token: str
       ) : (
         <EndedNote />
       )}
-      <ActionCards cards={invitationCards({ token, event: invitation.event, ended: !invitation.rsvpOpen })} />
+      <ActionCards cards={invitationCards({ token, event: invitation.event, ended: !invitation.rsvpOpen, features })} />
     </>
   );
 }
