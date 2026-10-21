@@ -1,12 +1,14 @@
 "use client";
 
 import { useActionState, useEffect, useId, useState, useTransition } from "react";
+import { CopyLinkButton } from "@/components/guest/copy-link-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FormError, controlStyles, describedBy } from "@/components/ui/form";
 import { GuestStatusBadge } from "@/components/events/status-badges";
 import type { GuestRecord } from "@/lib/events/records";
 import type { FormState } from "@/lib/forms";
+import { invitationUrl } from "@/lib/guest/links";
 import { PHONE_HINT } from "@/lib/guests/phone";
 import { deleteGuest, updateGuest } from "../../../actions";
 
@@ -48,16 +50,21 @@ export function GuestRow({ eventId, guest, canEdit }: { eventId: string; guest: 
           <GuestStatusBadge status={guest.status} />
         </div>
 
-        {canEdit && (
-          <div className="flex w-full gap-2 sm:w-auto">
-            <Button variant="secondary" onClick={() => setEditing(true)} aria-label={`Edit ${guest.name}`}>
-              Edit
-            </Button>
-            <Button variant="ghost" onClick={remove} disabled={removing} aria-label={`Remove ${guest.name}`}>
-              {removing ? "Removing…" : "Remove"}
-            </Button>
-          </div>
-        )}
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+          <CopyLinkButton value={invitationUrl(guest.token)} label={`Copy invitation link for ${guest.name}`} variant="ghost">
+            Copy invitation link
+          </CopyLinkButton>
+          {canEdit && (
+            <>
+              <Button variant="secondary" onClick={() => setEditing(true)} aria-label={`Edit ${guest.name}`}>
+                Edit
+              </Button>
+              <Button variant="ghost" onClick={remove} disabled={removing} aria-label={`Remove ${guest.name}`}>
+                {removing ? "Removing…" : "Remove"}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
       {removeError && (
         <p role="alert" className="mt-2 text-sm text-danger">

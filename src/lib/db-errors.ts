@@ -18,6 +18,7 @@ export type DbFailure =
   | "free_event_limit"
   | "capacity_cannot_decrease"
   | "extra_guests_not_available"
+  | "archived_event_cannot_publish"
   | "forbidden"
   | "missing_parent"
   | "unknown";
@@ -33,6 +34,7 @@ const RULES = new Set<DbFailure>([
   "free_event_limit",
   "capacity_cannot_decrease",
   "extra_guests_not_available",
+  "archived_event_cannot_publish",
 ]);
 
 export function classifyDbError(error: DbError): DbFailure {

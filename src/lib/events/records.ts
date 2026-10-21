@@ -47,7 +47,7 @@ export type EventRecord = z.output<typeof eventRow>;
 
 export const parseEventRow = (row: unknown): EventRecord => eventRow.parse(row);
 
-export const GUEST_COLUMNS = "id, name, email, phone, tags, table_no, status, created_at";
+export const GUEST_COLUMNS = "id, name, email, phone, tags, table_no, status, token, created_at";
 
 export const GUEST_STATUSES = ["invited", "sent", "opened", "rsvp", "checked_in"] as const;
 export type GuestStatus = (typeof GUEST_STATUSES)[number];
@@ -69,6 +69,7 @@ const guestRow = z
     tags: z.array(z.string()),
     table_no: z.string().nullable(),
     status: z.enum(GUEST_STATUSES),
+    token: z.string(),
     created_at: z.string(),
   })
   .transform((row) => ({
@@ -79,6 +80,7 @@ const guestRow = z
     tags: row.tags,
     tableNo: row.table_no,
     status: row.status,
+    token: row.token,
     createdAt: row.created_at,
   }));
 
