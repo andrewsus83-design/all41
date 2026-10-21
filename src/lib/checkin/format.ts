@@ -13,3 +13,10 @@ export function formatAgo(instant: Date | string | number, now: Date | number = 
   if (hours < 24) return `${hours} h ago`;
   return `${Math.round(hours / 24)} d ago`;
 }
+
+/** "21 Oct, 19:42" in the event's own time zone: a time for a log that may span days. */
+export function formatStamp(instant: Date | string, timeZone: string): string {
+  const date = new Date(instant);
+  const day = new Intl.DateTimeFormat("en-GB", { timeZone, day: "numeric", month: "short" }).format(date);
+  return `${day}, ${formatClock(date, timeZone)}`;
+}

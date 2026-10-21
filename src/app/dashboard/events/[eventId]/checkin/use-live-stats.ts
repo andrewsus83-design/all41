@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CheckinStats } from "@/lib/checkin/records";
 
-/** Every phone asks this often. 5 phones make about one request a second: nothing for the database. */
+/** Every phone asks about every 5 to 6.5 seconds (this plus up to 1.5 s of random spread). Five phones make about one request a second: nothing for the database. */
 const BASE_DELAY_MS = 5000;
 const MAX_DELAY_MS = 30_000;
 /** A phone that just checked someone in refreshes sooner, but never more often than this. */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatAgo, formatClock } from "./format";
+import { formatAgo, formatClock, formatStamp } from "./format";
 
 describe("formatClock", () => {
   it("shows the time in the event's time zone", () => {
@@ -21,5 +21,12 @@ describe("formatAgo", () => {
 
   it("never looks into the future", () => {
     expect(formatAgo("2026-12-05T12:05:00Z", now)).toBe("just now");
+  });
+});
+
+describe("formatStamp", () => {
+  it("shows the day and time in the event's time zone", () => {
+    expect(formatStamp("2026-12-05T12:42:00Z", "Asia/Jakarta")).toBe("5 Dec, 19:42");
+    expect(formatStamp("2026-12-05T18:30:00Z", "Asia/Jakarta")).toBe("6 Dec, 01:30");
   });
 });

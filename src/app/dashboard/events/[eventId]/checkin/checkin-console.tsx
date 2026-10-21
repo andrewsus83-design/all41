@@ -368,7 +368,7 @@ function LiveNumbers({ stats, updatedAt, status }: { stats: CheckinStats; update
             <Radio className="mr-1.5 size-3 animate-pulse" aria-hidden="true" /> Live
           </Badge>
         ) : status === "offline" ? (
-          <Badge tone="warning">Reconnecting · {formatAgo(updatedAt, now)}</Badge>
+          <Badge tone="warning">Offline · updated {formatAgo(updatedAt, now)}</Badge>
         ) : (
           <Badge tone="danger">Signed out</Badge>
         )}
