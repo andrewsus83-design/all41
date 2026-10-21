@@ -253,6 +253,11 @@ as $$
 declare
   cleaned text[];
 begin
+  -- deleting the whole quiz (or its event) takes its questions along
+  if tg_op = 'DELETE' and not exists (select 1 from public.a41_quizzes z where z.id = old.quiz_id) then
+    return old;
+  end if;
+
   if exists (
     select 1 from public.a41_quiz_sessions s
     where s.quiz_id = case when tg_op = 'DELETE' then old.quiz_id else new.quiz_id end
