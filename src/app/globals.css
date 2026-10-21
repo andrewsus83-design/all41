@@ -45,6 +45,19 @@
       transform: translateY(400%);
     }
   }
+
+  /* A new screen of the live quiz fades in and rises a little. */
+  --animate-stage-in: stage-in 450ms ease-out both;
+  @keyframes stage-in {
+    0% {
+      opacity: 0;
+      transform: translateY(1.5rem);
+    }
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
 
 @theme inline {
