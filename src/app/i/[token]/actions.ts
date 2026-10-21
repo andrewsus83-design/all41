@@ -7,10 +7,13 @@ import { FORM_FIELD_OF_DB_FIELD, parseRsvpForm } from "@/lib/guest/rsvp";
 
 // Guests are not signed in: the invitation token is their key, and the database
 // function checks it (and that the event is published and still running) itself.
+//
+// The token travels in a hidden field rather than as a bound argument
+// (`action.bind(null, token)`): in this version of Next a bound action used with
+// useActionState hangs the server when the form is posted without JavaScript.
 
-/** Bound to the guest's token and used as a form action: `submitRsvpAction.bind(null, token)`. */
-export async function submitRsvpAction(token: string, _previous: FormState, formData: FormData): Promise<FormState> {
-  const values = formObject(formData);
+export async function submitRsvpAction(_previous: FormState, formData: FormData): Promise<FormState> {
+  const { token = "", ...values } = formObject(formData);
   const parsed = parseRsvpForm(values);
   if (!parsed.ok) return { fieldErrors: parsed.fieldErrors, values };
 

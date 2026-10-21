@@ -1,7 +1,6 @@
 import { Check, Hourglass, Heart } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 import { EventFacts } from "@/components/guest/event-facts";
 import { GuestShell } from "@/components/guest/guest-shell";
 import { headingStyle } from "@/components/guest/theme-scope";
@@ -14,11 +13,13 @@ import { ChangeAnswer } from "./change-answer";
 import { Pass } from "./pass";
 import { RsvpForm } from "./rsvp-form";
 
-// A personal link: it names a guest, so it is never indexed and never leaks through a referrer.
+// A personal link: it names a guest, so it is never indexed and is never sent to another site as a referrer.
+// ("same-origin" rather than "no-referrer": with no-referrer a browser posts forms with the origin "null",
+// and Next rightly refuses such a Server Action request, which would break the form without JavaScript.)
 export const metadata: Metadata = {
   title: "Your invitation",
   robots: { index: false, follow: false },
-  referrer: "no-referrer",
+  referrer: "same-origin",
 };
 
 type Props = PageProps<"/i/[token]">;
@@ -30,8 +31,6 @@ export const instant = false;
 
 export default async function InvitationPage({ params }: Props) {
   const { token } = await params;
-  // Opening an invitation records that the guest opened it, so it is work for this request, never prepared ahead.
-  await connection();
   const invitation = await openInvitation(token);
   if (!invitation) notFound();
 

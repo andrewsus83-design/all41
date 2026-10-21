@@ -32,7 +32,7 @@ export function RsvpForm({
   submitLabel: string;
   onSaved?: () => void;
 }) {
-  const [state, action, pending] = useActionState<FormState, FormData>(submitRsvpAction.bind(null, token), {});
+  const [state, action, pending] = useActionState<FormState, FormData>(submitRsvpAction, {});
   const id = useId();
   const fieldId = (name: string) => `${id}-${name}`;
   const errorOf = (name: string) => state.fieldErrors?.[name]?.[0];
@@ -45,6 +45,7 @@ export function RsvpForm({
 
   return (
     <form action={action} className="space-y-6">
+      <input type="hidden" name="token" value={token} />
       <fieldset className="group space-y-5">
         <legend className="font-display text-lg font-semibold">Will you join us?</legend>
         <div className="grid grid-cols-2 gap-3">
