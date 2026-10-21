@@ -49,7 +49,7 @@ export function GuestRow({ eventId, guest, canEdit }: { eventId: string; guest: 
         </div>
 
         {canEdit && (
-          <div className="flex gap-2">
+          <div className="flex w-full gap-2 sm:w-auto">
             <Button variant="secondary" onClick={() => setEditing(true)} aria-label={`Edit ${guest.name}`}>
               Edit
             </Button>

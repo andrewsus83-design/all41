@@ -1,32 +1,55 @@
 @import "tailwindcss";
 
 /*
- * all41 brand: a dark base with colourful neon accents and a touch of dark
- * gold. Event themes belong to the client and live elsewhere; these tokens
+ * all41 brand (from the owner's UI kit, docs/brand/ui-kit.html): a near-black
+ * base, dark gold as the main accent and neon cyan for live, game and photo
+ * moments. Event themes belong to the client and live elsewhere; these tokens
  * are the platform's own.
  */
 @theme {
-  --color-ink: #07070d;
-  --color-panel: #0f0f19;
-  --color-panel-raised: #171726;
-  --color-line: #27273d;
-  --color-fg: #f3f3f8;
-  --color-muted: #a3a3ba;
+  --color-ink: #09090b;
+  --color-surface: #121214;
+  --color-panel: #18181b;
+  --color-panel-raised: #1f1f23;
+  --color-line: #27272a;
+  --color-line-strong: #3f3f46;
+  --color-fg: #fafafa;
+  --color-muted: #a1a1aa;
+  --color-subtle: #71717a;
 
-  --color-neon-pink: #ff3ecb;
-  --color-neon-cyan: #27e6ff;
-  --color-neon-lime: #b8ff3d;
-  --color-neon-violet: #8f6bff;
+  --color-gold: #c5a059;
+  --color-gold-hover: #d8b46d;
+  --color-neon-cyan: #00f0ff;
+  --color-neon-cyan-hover: #33f3ff;
+  --color-success: #00e676;
+  --color-warning: #f5a623;
+  --color-danger: #ff3366;
 
-  --color-gold: #d4af5f;
-  --color-gold-dark: #9c7a2f;
+  /* The old palette's names, kept so code written against them stays on brand. */
+  --color-neon-violet: var(--color-gold);
+  --color-neon-pink: var(--color-danger);
+  --color-neon-lime: var(--color-success);
 
-  --color-danger: #ff6b7a;
+  --shadow-gold: 0 0 20px rgb(197 160 89 / 0.15);
+  --shadow-neon: 0 0 25px rgb(0 240 255 / 0.25);
+  --shadow-danger: 0 0 25px rgb(255 51 102 / 0.25);
+
+  --radius-5xl: 2.5rem;
+
+  --animate-scan-line: scan-line 2s linear infinite;
+  @keyframes scan-line {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(400%);
+    }
+  }
 }
 
 @theme inline {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-grotesk), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-outfit), var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
@@ -42,11 +65,18 @@ body {
   color: var(--color-fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer components {
+  .font-display {
+    letter-spacing: -0.02em;
+  }
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--color-neon-pink) 45%, transparent);
-  color: var(--color-fg);
+  background: var(--color-gold);
+  color: #000;
 }
 
 :focus-visible {
@@ -55,37 +85,43 @@ body {
   border-radius: 4px;
 }
 
-/* Soft neon glow behind the top of a page. */
+/* A soft gold glow behind the top of a page, with a faint cyan one on the other side. */
 .backdrop-glow {
   background:
-    radial-gradient(60rem 28rem at 12% -8%, color-mix(in srgb, var(--color-neon-violet) 28%, transparent), transparent 70%),
-    radial-gradient(48rem 24rem at 88% -4%, color-mix(in srgb, var(--color-neon-pink) 20%, transparent), transparent 70%),
-    radial-gradient(40rem 20rem at 50% 6%, color-mix(in srgb, var(--color-neon-cyan) 12%, transparent), transparent 70%);
+    radial-gradient(56rem 26rem at 14% -10%, color-mix(in srgb, var(--color-gold) 20%, transparent), transparent 70%),
+    radial-gradient(44rem 22rem at 90% -6%, color-mix(in srgb, var(--color-neon-cyan) 9%, transparent), transparent 70%);
 }
 
-/*
- * Text filled with a gradient. The extra padding keeps descenders, like the
- * tail of a "y", inside the box the gradient is painted on.
- */
-.text-neon,
-.text-gold-shine {
-  display: inline-block;
-  padding-bottom: 0.14em;
-  margin-bottom: -0.14em;
+/* Pressing a control gives a little. */
+@utility scale-on-click {
+  &:active {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+  }
 }
 
-.text-neon {
-  background-image: linear-gradient(100deg, var(--color-neon-pink), var(--color-neon-violet) 45%, var(--color-neon-cyan));
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+/* Frosted bars and sheets that sit over content, such as a phone's bottom navigation. */
+@utility glass-panel {
+  background: rgb(24 24 27 / 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgb(255 255 255 / 0.1);
 }
 
-.text-gold-shine {
-  background-image: linear-gradient(100deg, var(--color-gold), #f1d88f 50%, var(--color-gold-dark));
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+/* The notches on both sides of a ticket. */
+@utility ticket-cutout {
+  mask-image: radial-gradient(circle at 0 50%, transparent 12px, black 13px), radial-gradient(circle at 100% 50%, transparent 12px, black 13px);
+  mask-size: 51% 100%;
+  mask-repeat: no-repeat;
+  mask-position:
+    left,
+    right;
+  -webkit-mask-image: radial-gradient(circle at 0 50%, transparent 12px, black 13px), radial-gradient(circle at 100% 50%, transparent 12px, black 13px);
+  -webkit-mask-size: 51% 100%;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position:
+    left,
+    right;
 }
 
 @media (prefers-reduced-motion: reduce) {
