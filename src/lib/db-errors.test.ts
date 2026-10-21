@@ -14,7 +14,7 @@ describe("classifyDbError", () => {
   });
 
   it("reads the rule a trigger raised", () => {
-    for (const rule of ["guest_capacity_exceeded", "free_event_limit", "capacity_cannot_decrease", "extra_guests_not_available"]) {
+    for (const rule of ["guest_capacity_exceeded", "free_event_limit", "capacity_cannot_decrease", "extra_guests_not_available", "archived_event_cannot_publish"]) {
       expect(classifyDbError({ code: "23514", message: rule })).toBe(rule);
     }
     expect(classifyDbError({ code: "23514", message: 'new row violates check constraint "a41_events_check"' })).toBe("unknown");
