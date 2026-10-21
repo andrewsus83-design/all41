@@ -140,18 +140,20 @@ export async function updateEvent(eventId: string, _previous: FormState, formDat
   return { saved: true };
 }
 
-/** Bound to an event and a direction, then used as a form action: `setEventArchived.bind(null, id, true)`. */
-export async function setEventArchived(eventId: string, archived: boolean): Promise<FormState> {
-  if (!isUuid(eventId)) return { error: "That event no longer exists." };
+const eventStatus = z.enum(["draft", "published", "archived"]);
+
+/**
+ * Bound to an event and a status, then used as a form action: `setEventStatus.bind(null, id, "published")`.
+ * Server Actions are public endpoints, so the status is checked here and not trusted from the bind.
+ */
+export async function setEventStatus(eventId: string, status: string): Promise<FormState> {
+  const parsedStatus = eventStatus.safeParse(status);
+  if (!isUuid(eventId) || !parsedStatus.success) return { error: "That event no longer exists." };
   const workspace = await ownerWorkspace();
   if (!workspace) return { error: OWNER_ONLY };
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("a41_events")
-    .update({ status: archived ? "archived" : "draft" })
-    .eq("id", eventId)
-    .select("id");
+  const { data, error } = await supabase.from("a41_events").update({ status: parsedStatus.data }).eq("id", eventId).select("id");
   if (error) return problemOf(error);
   if (data.length === 0) return { error: "That event no longer exists, or you cannot edit it." };
 
