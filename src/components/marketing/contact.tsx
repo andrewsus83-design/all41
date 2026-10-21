@@ -7,7 +7,7 @@ export function ContactBand() {
       <div className="relative overflow-hidden rounded-3xl border border-line bg-panel px-6 py-14 text-center sm:px-12">
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-0 bg-linear-to-br from-neon-violet/15 via-transparent to-neon-pink/15"
+          className="absolute inset-0 -z-0 bg-linear-to-br from-gold/15 via-transparent to-neon-cyan/10"
         />
         <div className="relative">
           <h2 className="font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">

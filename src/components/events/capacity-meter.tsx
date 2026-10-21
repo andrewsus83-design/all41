@@ -3,7 +3,7 @@ import type { Capacity } from "@/lib/events/capacity";
 /** How much of the guest list the package allows is used. */
 export function CapacityMeter({ capacity, compact = false }: { capacity: Capacity; compact?: boolean }) {
   const { used, total, remaining, fraction, full, nearlyFull } = capacity;
-  const fill = full ? "bg-neon-pink" : nearlyFull ? "bg-gold" : "bg-linear-to-r from-neon-violet to-neon-cyan";
+  const fill = full ? "bg-danger" : nearlyFull ? "bg-warning" : "bg-gold";
   // A sliver is always visible once anyone is on the list.
   const width = used === 0 ? 0 : Math.max(2, Math.round(fraction * 100));
 
@@ -15,7 +15,7 @@ export function CapacityMeter({ capacity, compact = false }: { capacity: Capacit
           <span className="text-muted"> of {total.toLocaleString("en-US")} guests</span>
         </span>
         {!compact && (
-          <span className={full ? "text-neon-pink" : "text-muted"}>
+          <span className={full ? "text-danger" : "text-muted"}>
             {full ? "List is full" : `${remaining.toLocaleString("en-US")} left`}
           </span>
         )}

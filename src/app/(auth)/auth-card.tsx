@@ -27,8 +27,8 @@ export function AuthCard({
 export function AuthFormSkeleton() {
   return (
     <div className="space-y-5" aria-hidden="true">
-      <div className="h-[5.25rem] animate-pulse rounded-xl bg-panel-raised" />
-      <div className="h-[5.25rem] animate-pulse rounded-xl bg-panel-raised" />
+      <div className="h-[5.25rem] animate-pulse rounded-2xl bg-panel-raised" />
+      <div className="h-[5.25rem] animate-pulse rounded-2xl bg-panel-raised" />
       <div className="h-12 animate-pulse rounded-full bg-panel-raised" />
     </div>
   );
