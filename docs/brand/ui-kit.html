@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="id" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>all41 - The Ultimate Master UI Kit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Manrope', 'sans-serif'], display: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        premium: {
+                            black: '#09090B', charcoal: '#18181B', surfaceDark: '#121214', borderDark: '#27272A',
+                            white: '#FFFFFF', gold: '#C5A059', goldHover: '#D8B46D', goldDim: 'rgba(197, 160, 89, 0.1)',
+                            neon: '#00F0FF', neonHover: '#33F3FF', neonDim: 'rgba(0, 240, 255, 0.15)',
+                            danger: '#FF3366', dangerDim: 'rgba(255, 51, 102, 0.1)', success: '#00E676', warning: '#F5A623'
+                        }
+                    },
+                    borderRadius: { '4xl': '2rem', '5xl': '2.5rem' },
+                    boxShadow: {
+                        'gold': '0 0 20px rgba(197, 160, 89, 0.15)', 'neon': '0 0 25px rgba(0, 240, 255, 0.25)', 'danger': '0 0 25px rgba(255, 51, 102, 0.25)'
+                    },
+                    animation: { 'scan-line': 'scan 2s linear infinite' },
+                    keyframes: { scan: { '0%': { transform: 'translateY(-100%)' }, '100%': { transform: 'translateY(400%)' } } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Manrope', sans-serif; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+        .font-display { font-family: 'Outfit', sans-serif; letter-spacing: -0.02em; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #27272A; border-radius: 4px; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-panel { background: rgba(24, 24, 27, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.1); }
+        .ticket-cutout { mask-image: radial-gradient(circle at 0 50%, transparent 12px, black 13px), radial-gradient(circle at 100% 50%, transparent 12px, black 13px); mask-size: 51% 100%; mask-repeat: no-repeat; mask-position: left, right; -webkit-mask-image: radial-gradient(circle at 0 50%, transparent 12px, black 13px), radial-gradient(circle at 100% 50%, transparent 12px, black 13px); -webkit-mask-size: 51% 100%; -webkit-mask-repeat: no-repeat; -webkit-mask-position: left, right; }
+        .bottom-sheet { transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1); }
+        .bottom-sheet.active { transform: translateY(0); }
+        .overlay-backdrop { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .overlay-backdrop.active { opacity: 1; pointer-events: auto; }
+        .scale-on-click:active { transform: scale(0.95); transition: transform 0.1s; }
+    </style>
+</head>
+<body class="bg-premium-black text-zinc-100 min-h-screen selection:bg-premium-gold selection:text-premium-black overflow-x-hidden">
+    <div id="global-backdrop" class="overlay-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]" onclick="closeAllModals()"></div>
+    
+    <nav class="fixed top-0 w-full bg-premium-black/80 backdrop-blur-xl border-b border-premium-borderDark z-50">
+        <div class="max-w-[1600px] mx-auto px-6 md:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-premium-gold rounded-full flex items-center justify-center text-premium-black font-display font-bold text-xl shadow-gold">41</div>
+                <div class="font-display font-semibold text-2xl tracking-tight">all41 The Ultimate Kit</div>
+            </div>
+            <div class="hidden lg:flex gap-6 text-sm font-medium text-zinc-400">
+                <a href="#brand" class="hover:text-premium-gold transition-colors">Brand</a>
+                <a href="#core-ui" class="hover:text-premium-gold transition-colors">Core UI</a>
+                <a href="#tables" class="hover:text-premium-gold transition-colors">Tables & Cards</a>
+                <a href="#overlays" class="hover:text-premium-gold transition-colors">Overlays</a>
+                <a href="#mobile-sandbox" class="hover:text-premium-neon transition-colors text-white">Mobile Sandbox</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex max-w-[1600px] mx-auto pt-20">
+        <aside class="hidden xl:block w-72 fixed h-[calc(100vh-5rem)] overflow-y-auto p-8 border-r border-premium-borderDark">
+            <nav class="space-y-8">
+                <div>
+                    <p class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">1. Brand Identity</p>
+                    <ul class="space-y-3">
+                        <li><a href="#brand" class="text-zinc-400 hover:text-white transition-colors">Colors & Typography</a></li>
+                        <li><a href="#design-tokens" class="text-zinc-400 hover:text-white transition-colors">Design Tokens</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">2. Core UI Elements</p>
+                    <ul class="space-y-3">
+                        <li><a href="#buttons" class="text-zinc-400 hover:text-white transition-colors">Buttons & Actions</a></li>
+                        <li><a href="#badges" class="text-zinc-400 hover:text-white transition-colors">Badges & Tags</a></li>
+                        <li><a href="#inputs" class="text-zinc-400 hover:text-white transition-colors">Inputs & Forms</a></li>
+                        <li><a href="#upload" class="text-zinc-400 hover:text-white transition-colors">File Upload (Dropzone)</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">3. Data & Content</p>
+                    <ul class="space-y-3">
+                        <li><a href="#tables" class="text-premium-gold hover:text-white transition-colors">Data Tables (Guestlist)</a></li>
+                        <li><a href="#cards" class="text-zinc-400 hover:text-white transition-colors">Invitations & Tickets</a></li>
+                        <li><a href="#news" class="text-zinc-400 hover:text-white transition-colors">News & Blogs</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">4. Advanced Modules</p>
+                    <ul class="space-y-3">
+                        <li><a href="#email-builder" class="text-zinc-400 hover:text-white transition-colors">Email Builder UI</a></li>
+                        <li><a href="#dialogs" class="text-zinc-400 hover:text-white transition-colors">Dialogs & Modals</a></li>
+                        <li><a href="#toasts" class="text-zinc-400 hover:text-white transition-colors">Toasts</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-premium-neon uppercase tracking-widest mb-4">5. Gamification</p>
+                    <ul class="space-y-3">
+                        <li><a href="#gamification" class="text-zinc-400 hover:text-white transition-colors">Leaderboard & Frames</a></li>
+                        <li><a href="#mobile-sandbox" class="text-premium-neon font-bold hover:text-white transition-colors flex items-center gap-2"><i data-lucide="smartphone" class="w-4 h-4"></i> Mobile Sandbox</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="xl:ml-72 flex-1 p-6 md:p-12 lg:p-16 space-y-32">
+            <header class="max-w-4xl">
+                <span class="px-3 py-1 text-xs font-bold bg-premium-gold/20 text-premium-gold border border-premium-gold/30 rounded-full mb-6 inline-block tracking-widest uppercase">The Ultimate Master File</span>
+                <h1 class="text-5xl md:text-7xl font-display font-medium leading-tight mb-6">100% Complete UI Kit.</h1>
+                <p class="text-xl text-zinc-400 font-light leading-relaxed">
+                    Tidak ada yang dipotong. Seluruh komponen (Tabel, Form, Builder, Kartu Berita, Dropzone, Modals, Gamifikasi, dan Sandbox Interaktif) tergabung di sini.
+                </p>
+            </header>
+
+            <!-- BRAND IDENTITY -->
+            <section id="brand" class="space-y-12 scroll-mt-32">
+                <div class="border-b border-premium-borderDark pb-4"><h2 class="text-3xl font-display font-medium">Brand Identity</h2></div>
+                <div>
+                    <h3 class="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-6">Color Palette</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div class="space-y-3"><div class="h-24 rounded-2xl bg-premium-gold shadow-gold"></div><div><p class="font-bold">Dark Gold</p><p class="text-xs text-zinc-500">#C5A059</p></div></div>
+                        <div class="space-y-3"><div class="h-24 rounded-2xl bg-premium-neon shadow-neon"></div><div><p class="font-bold">Neon Cyan</p><p class="text-xs text-zinc-500">#00F0FF</p></div></div>
+                        <div class="space-y-3"><div class="h-24 rounded-2xl bg-premium-charcoal border border-premium-borderDark"></div><div><p class="font-bold">Charcoal</p><p class="text-xs text-zinc-500">#18181B</p></div></div>
+                        <div class="space-y-3"><div class="h-24 rounded-2xl bg-premium-black border border-premium-borderDark"></div><div><p class="font-bold">Deep Black</p><p class="text-xs text-zinc-500">#09090B</p></div></div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="design-tokens" class="space-y-12 scroll-mt-32">
+                <div class="border-b border-premium-borderDark pb-4"><h2 class="text-3xl font-display font-medium text-premium-gold">Design Tokens</h2></div>
+                <div class="grid lg:grid-cols-2 gap-12">
+                    <div class="bg-premium-surfaceDark p-8 rounded-[2.5rem] border border-premium-borderDark space-y-6">
+                        <h3 class="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-4">Spacing System (4pt Grid)</h3>
+                        <div class="space-y-4 font-mono text-sm text-zinc-400">
+                            <div class="flex items-center gap-4"><div class="w-8 h-8 bg-premium-gold/20 border border-premium-gold/50 rounded flex items-center justify-center text-premium-gold text-xs">8</div> <span>p-2 / m-2 (8px) - Micro elements</span></div>
+                            <div class="flex items-center gap-4"><div class="w-16 h-8 bg-premium-gold/20 border border-premium-gold/50 rounded flex items-center justify-center text-premium-gold text-xs">16</div> <span>p-4 / m-4 (16px) - Button padding</span></div>
+                            <div class="flex items-center gap-4"><div class="w-24 h-8 bg-premium-gold/20 border border-premium-gold/50 rounded flex items-center justify-center text-premium-gold text-xs">24</div> <span>p-6 / m-6 (24px) - Card internal padding</span></div>
+                        </div>
+                    </div>
+                    <div class="bg-premium-surfaceDark p-8 rounded-[2.5rem] border border-premium-borderDark space-y-6">
+                        <h3 class="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-4">Border Radius</h3>
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="space-y-2"><div class="h-20 bg-premium-charcoal border border-premium-borderDark rounded-2xl flex items-center justify-center font-mono text-xs text-zinc-400">rounded-2xl</div><p class="text-xs text-zinc-500">16px - Buttons, Inputs</p></div>
+                            <div class="space-y-2"><div class="h-20 bg-premium-charcoal border border-premium-borderDark rounded-[2rem] flex items-center justify-center font-mono text-xs text-zinc-400">rounded-[2rem]</div><p class="text-xs text-zinc-500">32px - Cards</p></div>
+                            <div class="space-y-2"><div class="h-20 bg-premium-charcoal border border-premium-borderDark rounded-[2.5rem] flex items-center justify-center font-mono text-xs text-zinc-400">rounded-[2.5rem]</div><p class="text-xs text-zinc-500">40px - Modals/Sheets</p></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CORE UI (Buttons, Badges, Inputs, Dropzone) -->
+            <section id="core-ui" class="space-y-16 scroll-mt-32">
+                <div class="border-b border-premium-borderDark pb-4"><h2 class="text-3xl font-display font-medium">Core Components</h2></div>
+                
+                <div id="buttons" class="grid md:grid-cols-2 gap-12">
+                    <div class="space-y-6">
+                        <h3 class="text-sm font-bold text-zinc-500 uppercase tracking-widest">Buttons & Actions</h3>
+                        <div class="flex flex-wrap items-end gap-4">
+                            <button class="bg-premium-gold hover:bg-premium-goldHover text-black px-6 py-3 rounded-2xl font-bold transition-all shadow-gold scale-on-click">Primary Default</button>
+                            <button class="bg-premium-gold hover:bg-premium-goldHover text-black px-8 py-4 rounded-[1.5rem] text-lg font-bold transition-all shadow-gold scale-on-click">Large Action</button>
+                            <button class="bg-premium-neon hover:bg-premium-neonHover text-black px-6 py-4 rounded-2xl font-bold transition-all shadow-neon scale-on-click flex items-center gap-2"><i data-lucide="play" class="w-5 h-5"></i> Gamify</button>
+                            <button class="bg-transparent border border-zinc-700 hover:border-premium-gold text-white px-8 py-4 rounded-2xl font-bold transition-colors scale-on-click">Outline</button>
+                            <button class="bg-premium-danger/10 text-premium-danger border border-premium-danger/30 hover:bg-premium-danger hover:text-white px-6 py-3 rounded-2xl font-bold transition-colors scale-on-click">Destructive</button>
+                            <button class="w-12 h-12 bg-premium-charcoal border border-premium-borderDark hover:border-premium-gold rounded-2xl flex items-center justify-center transition-all"><i data-lucide="bookmark" class="w-5 h-5"></i></button>
+                        </div>
+                    </div>
+                    <div class="space-y-6" id="badges">
+                        <h3 class="text-sm font-bold text-zinc-500 uppercase tracking-widest">Badges & Indicators</h3>
+                        <div class="flex flex-wrap gap-4 items-center">
+                            <span class="px-4 py-1.5 bg-premium-gold/20 text-premium-gold rounded-full text-sm font-bold tracking-wide uppercase border border-premium-gold/30">VIP Guest</span>
+                            <span class="px-4 py-1.5 bg-premium-success/15 text-premium-success rounded-full text-sm font-bold tracking-wide uppercase border border-premium-success/30">Checked-in</span>
+                            <span class="px-4 py-1.5 bg-zinc-800 text-zinc-300 rounded-full text-sm font-bold tracking-wide uppercase border border-zinc-700">Regular</span>
+                            <span class="px-4 py-1.5 bg-premium-neon/15 text-premium-neon rounded-full text-sm font-bold tracking-wide uppercase border border-premium-neon/30 glow-neon">Winner</span>
+                            <span class="inline-flex items-center gap-2 text-premium-success font-medium"><span class="w-2.5 h-2.5 rounded-full bg-premium-success shadow-[0_0_8px_#00E676]"></span> Online</span>
+                            <span class="inline-flex items-center gap-2 text-premium-danger font-medium"><span class="w-2.5 h-2.5 rounded-full bg-premium-danger"></span> Offline</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="inputs" class="grid lg:grid-cols-2 gap-12">
+                    <div class="space-y-8 p-10 bg-premium-charcoal rounded-[2.5rem] border border-premium-borderDark">
+                        <h3 class="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-4">Text Fields & Toggles</h3>
+                        <div>
+                            <label class="block text-sm font-bold text-zinc-400 mb-3">Event Name (Uber-style)</label>
+                            <input type="text" placeholder="Global Summit 2026" class="w-full bg-premium-surfaceDark border border-premium-borderDark text-white px-6 py-5 rounded-2xl text-lg focus:border-premium-gold outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-zinc-400 mb-3">Email (Validated)</label>
+                            <div class="relative">
+                                <i data-lucide="mail" class="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-premium-success"></i>
+                                <input type="email" value="guest@studio.com" class="w-full bg-premium-surfaceDark border border-premium-success text-white pl-14 pr-6 py-5 rounded-2xl text-lg outline-none">
+                                <i data-lucide="check-circle-2" class="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-premium-success"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-4">
+                            <div><h4 class="text-lg font-display font-medium text-white">Require QR Check-in</h4><p class="text-zinc-500 text-sm">Guests must scan QR to enter.</p></div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" checked>
+                                <div class="w-14 h-8 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-premium-gold glow-gold"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="space-y-8">
+                        <div class="p-10 bg-premium-charcoal rounded-[2.5rem] border border-premium-borderDark">
+                            <h3 class="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-4">Pickers</h3>
+                            <label class="block text-sm font-bold text-zinc-400 mb-3">Event Duration (Range)</label>
+                            <div class="flex items-center gap-3 bg-premium-surfaceDark border border-premium-borderDark rounded-2xl p-2 mb-6">
+                                <input type="text" value="Oct 24, 2026" class="w-full bg-transparent text-white px-4 py-3 text-center outline-none font-medium cursor-pointer" readonly>
+                                <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center shrink-0"><i data-lucide="arrow-right" class="w-4 h-4 text-zinc-400"></i></div>
+                                <input type="text" value="Oct 26, 2026" class="w-full bg-transparent text-white px-4 py-3 text-center outline-none font-medium cursor-pointer" readonly>
+                            </div>
+                        </div>
+
+                        <!-- Dropzone included back -->
+                        <div id="upload" class="p-10 bg-premium-surfaceDark rounded-[2.5rem] border-2 border-dashed border-premium-borderDark flex flex-col items-center justify-center text-center hover:border-premium-gold transition-colors cursor-pointer group">
+                            <div class="w-20 h-20 rounded-full bg-premium-charcoal flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <i data-lucide="cloud-upload" class="w-8 h-8 text-premium-gold"></i>
+                            </div>
+                            <h4 class="text-xl font-display font-medium text-white mb-2">Upload Guest List (CSV)</h4>
+                            <p class="text-zinc-500">Drag and drop your file here, or click to browse. Max 5MB.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DATA TABLES & CONTENT CARDS -->
+            <section id="tables" class="space-y-16 scroll-mt-32">
+                <div class="border-b border-premium-borderDark pb-4"><h2 class="text-3xl font-display font-medium">Data Tables & Content</h2></div>
+
+                <!-- Missing Guestlist Table Added Back -->
+                <div class="bg-premium-charcoal rounded-[2.5rem] border border-premium-borderDark overflow-hidden">
+                    <div class="p-6 border-b border-premium-borderDark flex flex-wrap gap-4 items-center justify-between bg-premium-surfaceDark">
+                        <div class="relative max-w-md w-full">
+                            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500"></i>
+                            <input type="text" placeholder="Search guests..." class="w-full pl-12 pr-4 py-3 bg-premium-black border border-premium-borderDark rounded-xl text-sm outline-none focus:border-premium-gold text-white">
+                        </div>
+                        <button class="bg-premium-gold text-black px-6 py-3 rounded-xl font-bold hover:bg-premium-goldHover transition-colors flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Add Guest</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-premium-black text-zinc-500 font-bold uppercase tracking-widest text-xs">
+                                <tr><th class="px-8 py-5">Guest Name</th><th class="px-8 py-5">Tag</th><th class="px-8 py-5">Status</th><th class="px-8 py-5 text-right">Actions</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-premium-borderDark">
+                                <tr class="hover:bg-premium-surfaceDark transition-colors group">
+                                    <td class="px-8 py-6">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-12 h-12 rounded-full bg-premium-gold/10 text-premium-gold flex items-center justify-center font-display font-bold text-lg border border-premium-gold/30">AJ</div>
+                                            <div><div class="font-bold text-white text-base">Ahmad Julian</div><div class="text-zinc-500">ahmad@studio.com</div></div>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6"><span class="px-3 py-1 bg-premium-gold/20 text-premium-gold border border-premium-gold/30 rounded-full text-xs font-bold uppercase">VIP</span></td>
+                                    <td class="px-8 py-6"><span class="flex items-center gap-2 text-premium-success font-medium"><span class="w-2 h-2 rounded-full bg-premium-success"></span> Checked-in</span></td>
+                                    <td class="px-8 py-6 text-right"><button class="text-zinc-500 hover:text-white"><i data-lucide="more-horizontal" class="w-6 h-6"></i></button></td>
+                                </tr>
+                                <tr class="hover:bg-premium-surfaceDark transition-colors group">
+                                    <td class="px-8 py-6">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-12 h-12 rounded-full bg-zinc-800 text-zinc-400 flex items-center justify-center font-display font-bold text-lg">S</div>
+                                            <div><div class="font-bold text-white text-base">Susi Susanti</div><div class="text-zinc-500">+62 812-3456</div></div>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6"><span class="px-3 py-1 bg-zinc-800 text-zinc-300 rounded-full text-xs font-bold uppercase border border-zinc-700">Regular</span></td>
+                                    <td class="px-8 py-6"><span class="flex items-center gap-2 text-zinc-400 font-medium"><span class="w-2 h-2 rounded-full bg-zinc-600"></span> Pending</span></td>
+                                    <td class="px-8 py-6 text-right"><button class="text-zinc-500 hover:text-white"><i data-lucide="more-horizontal" class="w-6 h-6"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Cards & Invites -->
+                <div id="cards" class="grid xl:grid-cols-3 gap-8">
+                    <!-- Ticket Design -->
+                    <div class="bg-premium-charcoal rounded-[2.5rem] border border-premium-borderDark h-[450px] flex flex-col ticket-cutout shadow-2xl relative">
+                        <div class="p-8 flex-1 flex flex-col items-center justify-center text-center border-b-2 border-dashed border-zinc-800">
+                            <div class="w-16 h-16 rounded-full bg-premium-gold/10 flex items-center justify-center text-premium-gold mb-4"><i data-lucide="ticket" class="w-8 h-8"></i></div>
+                            <p class="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">VIP Access</p>
+                            <h3 class="text-2xl font-display font-medium text-white mb-1">Marcus Johnson</h3>
+                            <p class="text-zinc-400 text-sm">Table 04 • Seat 12</p>
+                        </div>
+                        <div class="p-8 bg-premium-surfaceDark rounded-b-[2.5rem] flex flex-col items-center justify-center">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=VIP" class="w-24 h-24 rounded-lg bg-white p-2 mb-3">
+                            <p class="text-zinc-500 text-xs">Scan at entrance</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Modern Corporate Invite -->
+                    <div class="bg-premium-charcoal border border-premium-borderDark rounded-[2.5rem] overflow-hidden flex flex-col h-[450px]">
+                        <div class="h-40 bg-[url('https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center relative">
+                            <div class="absolute inset-0 bg-gradient-to-t from-premium-charcoal to-transparent"></div>
+                            <div class="absolute top-4 left-4 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-xs font-bold text-white uppercase tracking-wider border border-white/10">Tech Summit</div>
+                        </div>
+                        <div class="p-6 flex-1 flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-2xl font-display font-medium text-white mb-2">Future of AI Conference</h3>
+                                <p class="text-zinc-400 text-sm leading-relaxed mb-4">Join industry leaders for an exclusive day of networking and innovation.</p>
+                            </div>
+                            <button class="w-full bg-premium-white text-black py-3 rounded-xl font-bold hover:bg-zinc-200 transition-colors">Register Attendance</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Elegant Portrait Invite -->
+                    <div class="bg-[#1A1A1A] border border-premium-gold/30 p-2 rounded-[2.5rem] relative overflow-hidden group h-[450px]">
+                        <div class="absolute inset-2 border border-premium-gold/20 rounded-[2rem] z-0 pointer-events-none"></div>
+                        <div class="bg-[#0F0F0F] rounded-[2rem] p-8 h-full flex flex-col items-center justify-between text-center relative z-10">
+                            <div>
+                                <p class="text-premium-gold tracking-[0.3em] text-xs font-bold uppercase mb-6 mt-4">You are invited</p>
+                                <h3 class="text-4xl font-display font-light text-white leading-tight mb-4">Gala <br> Dinner 2026</h3>
+                                <p class="text-zinc-400 text-sm">Saturday, Oct 24<br>Grand Ballroom, Ritz</p>
+                            </div>
+                            <div class="w-full">
+                                <button class="w-full bg-premium-gold text-black py-3 rounded-xl font-bold hover:bg-premium-goldHover transition-colors">RSVP Now</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Missing News & Blog Cards Added Back -->
+                <div id="news" class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-premium-charcoal border border-premium-borderDark rounded-[2rem] p-4 group cursor-pointer hover:border-premium-gold transition-colors">
+                        <div class="h-64 rounded-3xl bg-zinc-800 overflow-hidden mb-6 relative">
+                            <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=2000&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                            <div class="absolute bottom-4 left-4 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg text-xs font-bold text-premium-gold uppercase tracking-widest border border-white/10">Platform Update</div>
+                        </div>
+                        <div class="px-4 pb-4">
+                            <h3 class="text-2xl font-display font-medium text-white mb-3">Introducing Neon Gamification</h3>
+                            <p class="text-zinc-400 line-clamp-2 mb-6">Tingkatkan interaksi tamu dengan fitur Wheel of Spin dan Photo Wall yang kini hadir dengan tema Cyberpunk Neon.</p>
+                            <span class="text-sm font-bold text-white flex items-center gap-2 group-hover:text-premium-gold transition-colors">Read Article <i data-lucide="arrow-right" class="w-4 h-4"></i></span>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex gap-6 p-4 bg-premium-charcoal border border-premium-borderDark rounded-[2rem] group cursor-pointer hover:border-premium-gold transition-colors items-center">
+                            <div class="w-32 h-32 shrink-0 rounded-2xl bg-zinc-800 overflow-hidden"><img src="https://images.unsplash.com/photo-1551818255-e6e10975bc17?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                            <div><p class="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">Tutorial</p><h4 class="text-lg font-display font-medium text-white mb-2">How to setup Fonnte WhatsApp API</h4><span class="text-sm text-zinc-400">Oct 20, 2026</span></div>
+                        </div>
+                        <div class="flex gap-6 p-4 bg-premium-charcoal border border-premium-borderDark rounded-[2rem] group cursor-pointer hover:border-premium-gold transition-colors items-center">
+                            <div class="w-32 h-32 shrink-0 rounded-2xl bg-zinc-800 overflow-hidden"><img src="https://images.unsplash.com/photo-1522158637959-30385a09e0da?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                            <div><p class="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">Case Study</p><h4 class="text-lg font-display font-medium text-white mb-2">Handling 5,000 guests offline</h4><span class="text-sm text-zinc-400">Oct 18, 2026</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ADVANCED MODULES -->
+            <section id="overlays" class="space-y-16 scroll-mt-32">
+                <div class="border-b border-premium-borderDark pb-4"><h2 class="text-3xl font-display font-medium">Overlays & Builders</h2></div>
+                
+                <div id="dialogs" class="grid md:grid-cols-2 gap-12">
+                    <!-- Action Confirmation -->
+                    <div class="relative bg-[url('https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center h-[500px] rounded-[2.5rem] overflow-hidden flex items-center justify-center border border-premium-borderDark">
+                        <div class="absolute inset-0 bg-black/70 backdrop-blur-md"></div>
+                        <div class="relative z-10 w-full max-w-sm bg-premium-charcoal border border-premium-borderDark rounded-3xl p-8 text-center shadow-2xl">
+                            <div class="w-20 h-20 mx-auto bg-premium-gold/10 rounded-full flex items-center justify-center mb-6 shadow-gold border border-premium-gold/30">
+                                <i data-lucide="send" class="w-8 h-8 text-premium-gold"></i>
+                            </div>
+                            <h3 class="text-2xl font-display font-medium text-white mb-2">Send Invitations?</h3>
+                            <p class="text-zinc-400 text-sm mb-8">You are about to blast WhatsApp tickets to <b>450 guests</b>.</p>
+                            <div class="space-y-3">
+                                <button class="w-full bg-premium-gold text-black py-4 rounded-xl font-bold transition-colors">Confirm & Send</button>
+                                <button class="w-full bg-transparent border border-zinc-700 text-white py-4 rounded-xl font-bold transition-colors">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Destructive Action -->
+                    <div class="relative bg-premium-surfaceDark h-[500px] rounded-[2.5rem] overflow-hidden flex items-center justify-center border border-premium-borderDark">
+                        <div class="relative z-10 w-full max-w-sm bg-premium-charcoal border border-premium-danger/30 rounded-3xl p-8 text-center shadow-danger">
+                            <div class="w-20 h-20 mx-auto bg-premium-dangerDim rounded-full flex items-center justify-center mb-6 border border-premium-danger/30">
+                                <i data-lucide="alert-triangle" class="w-8 h-8 text-premium-danger"></i>
+                            </div>
+                            <h3 class="text-2xl font-display font-medium text-white mb-2">Delete Event?</h3>
+                            <p class="text-zinc-400 text-sm mb-8">This will permanently delete the event. <b>This cannot be undone.</b></p>
+                            <div class="space-y-3">
+                                <button class="w-full bg-premium-danger/10 text-premium-danger py-4 rounded-xl font-bold border border-premium-danger/30 scale-on-click">Delete</button>
+                                <button class="w-full bg-transparent text-zinc-400 py-4 rounded-xl font-bold">Keep Event</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Toasts -->
+                <div id="toasts" class="bg-premium-surfaceDark p-10 rounded-[2.5rem] border border-premium-borderDark flex flex-col gap-6 items-center">
+                    <div class="w-full max-w-md bg-premium-charcoal border border-premium-neon/30 rounded-2xl p-4 flex items-center gap-4 shadow-neon">
+                        <div class="w-10 h-10 rounded-full bg-premium-neonDim flex items-center justify-center shrink-0"><i data-lucide="camera" class="w-5 h-5 text-premium-neon"></i></div>
+                        <div class="flex-1">
+                            <h4 class="font-display font-medium text-white text-sm">Photo Synced!</h4>
+                            <p class="text-zinc-400 text-xs">Your photo is now live on the stage wall.</p>
+                        </div>
+                    </div>
+                    <div class="w-full max-w-md bg-premium-charcoal border border-premium-gold/30 rounded-2xl p-4 flex items-center gap-4 shadow-gold">
+                        <div class="w-10 h-10 rounded-full bg-premium-goldDim flex items-center justify-center shrink-0"><i data-lucide="check-circle-2" class="w-5 h-5 text-premium-gold"></i></div>
+                        <div class="flex-1">
+                            <h4 class="font-display font-medium text-white text-sm">Eleanor Hughes Checked-in</h4>
+                            <p class="text-zinc-400 text-xs">VIP Guest • Table 4</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Builder Module -->
+                <div id="email-builder" class="bg-premium-charcoal border border-premium-borderDark rounded-[2.5rem] overflow-hidden flex flex-col h-[700px] shadow-2xl">
+                    <div class="h-16 bg-premium-surfaceDark border-b border-premium-borderDark flex items-center justify-between px-6">
+                        <div class="flex items-center gap-4"><button class="text-zinc-400 hover:text-white"><i data-lucide="arrow-left" class="w-5 h-5"></i></button><span class="font-display font-medium">Editing: VIP Invitation</span></div>
+                        <button class="px-6 py-2 bg-premium-gold text-black font-bold rounded-xl shadow-gold">Save</button>
+                    </div>
+                    <div class="flex flex-1 overflow-hidden">
+                        <div class="w-72 bg-premium-black border-r border-premium-borderDark p-6 overflow-y-auto">
+                            <h4 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-6">Drag Blocks</h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-premium-charcoal border border-premium-borderDark rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-grab"><i data-lucide="type" class="w-6 h-6 text-zinc-400"></i><span class="text-xs font-medium">Text</span></div>
+                                <div class="bg-premium-charcoal border border-premium-borderDark rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-grab"><i data-lucide="image" class="w-6 h-6 text-zinc-400"></i><span class="text-xs font-medium">Image</span></div>
+                                <div class="bg-premium-charcoal border border-premium-gold rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-grab"><i data-lucide="qr-code" class="w-6 h-6 text-premium-gold"></i><span class="text-xs font-medium text-premium-gold">QR Ticket</span></div>
+                                <div class="bg-premium-charcoal border border-premium-borderDark rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-grab"><i data-lucide="mouse-pointer-click" class="w-6 h-6 text-zinc-400"></i><span class="text-xs font-medium">Button</span></div>
+                            </div>
+                        </div>
+                        <div class="flex-1 bg-zinc-950 p-8 flex justify-center overflow-y-auto relative">
+                            <div class="w-full max-w-sm mt-8 bg-white rounded-[2rem] overflow-hidden shadow-2xl relative">
+                                <div class="h-32 bg-[url('https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center group relative cursor-pointer hover:border-premium-gold border-2 border-transparent">
+                                    <div class="absolute inset-0 bg-black/40"></div>
+                                </div>
+                                <div class="p-8 text-black text-center space-y-6">
+                                    <div class="group relative p-2 border-2 border-transparent hover:border-premium-gold rounded-lg cursor-pointer">
+                                        <h2 class="text-2xl font-display font-bold text-zinc-900">Tech Summit '26</h2>
+                                        <p class="text-zinc-600 mt-2 text-sm">Dear {guest_name}, here is your pass.</p>
+                                    </div>
+                                    <div class="group relative p-4 border-2 border-transparent hover:border-premium-gold rounded-xl cursor-pointer bg-zinc-50">
+                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=example" class="w-32 h-32 mx-auto rounded-lg mb-2">
+                                        <p class="text-xs text-zinc-500 font-bold tracking-widest uppercase">ID: {ticket_id}</p>
+                                    </div>
+                                    <div class="group relative border-2 border-transparent hover:border-premium-gold rounded-xl cursor-pointer">
+                                        <button class="w-full bg-black text-white py-3 rounded-xl font-bold">View Schedule</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- GAMIFICATION & MOBILE SANDBOX -->
+            <section id="gamification" class="space-y-12 scroll-mt-32">
+                <div class="border-b border-premium-borderDark pb-4">
+                    <h2 class="text-3xl font-display font-medium flex items-center gap-3">
+                        Gamification <span class="w-3 h-3 rounded-full bg-premium-neon glow-neon inline-block"></span>
+                    </h2>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <!-- Leaderboard -->
+                    <div class="bg-premium-charcoal border border-premium-borderDark rounded-[2.5rem] p-10 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-premium-neon/10 rounded-full blur-[100px]"></div>
+                        <div class="flex items-center justify-between mb-8 relative z-10">
+                            <h3 class="text-2xl font-display font-medium text-white">Live Leaderboard</h3>
+                            <span class="px-4 py-1.5 rounded-full bg-premium-neon/20 text-premium-neon text-sm font-bold border border-premium-neon/30 glow-neon animate-pulse">Live</span>
+                        </div>
+                        <div class="space-y-4 relative z-10">
+                            <div class="flex items-center justify-between p-4 bg-gradient-to-r from-premium-surfaceDark to-premium-charcoal border border-premium-gold/30 rounded-2xl shadow-gold">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-full bg-premium-gold text-black flex items-center justify-center font-display font-bold text-xl">1</div>
+                                    <span class="font-display text-xl font-medium text-white">Sarah Jenkins</span>
+                                </div>
+                                <div class="text-2xl font-display font-bold text-premium-neon glow-neon">9,450 pts</div>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-premium-surfaceDark rounded-2xl">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-full bg-zinc-800 text-zinc-400 flex items-center justify-center font-display font-bold text-xl">2</div>
+                                    <span class="font-display text-xl font-medium text-zinc-300">Michael Chen</span>
+                                </div>
+                                <div class="text-xl font-display font-bold text-white">8,920 pts</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Photo Wall Download Card -->
+                    <div class="bg-premium-surfaceDark rounded-[3rem] border border-premium-borderDark p-8 flex flex-col items-center justify-center text-center">
+                        <div class="bg-zinc-900 p-2 rounded-2xl mb-8 relative group cursor-pointer">
+                            <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=400&auto=format&fit=crop" class="w-48 h-auto rounded-xl">
+                            <div class="absolute inset-2 border-4 border-premium-gold rounded-lg pointer-events-none flex items-end justify-center pb-2">
+                                <span class="bg-black/50 backdrop-blur px-2 py-1 rounded text-premium-gold font-display font-bold text-[10px]">#TechSummit2026</span>
+                            </div>
+                        </div>
+                        <h3 class="text-2xl font-display font-medium text-white mb-2">Save with Frame</h3>
+                        <p class="text-zinc-400 text-sm mb-6">Download your photo with the exclusive event frame applied.</p>
+                        <button class="w-full bg-premium-charcoal border border-premium-gold text-premium-gold hover:bg-premium-gold hover:text-black py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="download" class="w-5 h-5"></i> Download
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="mobile-sandbox" class="space-y-12 scroll-mt-32 pb-20">
+                <div class="border-b border-premium-borderDark pb-4">
+                    <h2 class="text-3xl font-display font-medium flex items-center gap-3 text-premium-neon">
+                        <i data-lucide="smartphone" class="w-8 h-8"></i> Mobile Sandbox
+                    </h2>
+                    <p class="text-zinc-500 mt-2">Simulasi interaksi layar sentuh tamu. Klik kartu tiket atau tombol "Open Camera" di dalam mockup.</p>
+                </div>
+
+                <!-- Interactive Mobile Mockup -->
+                <div class="flex justify-center">
+                    <div class="w-full max-w-[400px] h-[800px] bg-premium-black rounded-[3.5rem] border-[12px] border-premium-charcoal shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col ring-1 ring-zinc-800">
+                        <div class="px-6 pt-12 pb-4 flex justify-between items-center bg-premium-surfaceDark relative z-20">
+                            <div><p class="text-premium-gold text-xs font-bold uppercase tracking-widest mb-1">Live Event</p><h3 class="font-display font-bold text-xl">Tech Summit '26</h3></div>
+                            <div class="w-10 h-10 rounded-full bg-premium-charcoal border border-premium-borderDark flex items-center justify-center relative scale-on-click cursor-pointer" onclick="showMobileToast('New announcement posted!')">
+                                <i data-lucide="bell" class="w-5 h-5"></i><div class="absolute top-2 right-2 w-2 h-2 bg-premium-danger rounded-full border border-premium-charcoal"></div>
+                            </div>
+                        </div>
+
+                        <!-- Scrollable View -->
+                        <div class="flex-1 overflow-y-auto px-6 py-6 space-y-6 hide-scrollbar relative z-10 pb-32">
+                            <!-- Ticket Card -->
+                            <div class="bg-gradient-to-br from-premium-charcoal to-black rounded-3xl border border-premium-borderDark overflow-hidden ticket-cutout scale-on-click cursor-pointer" onclick="openBottomSheet('ticket-sheet')">
+                                <div class="p-6 border-b-2 border-dashed border-zinc-800 flex justify-between items-center">
+                                    <div><p class="text-zinc-500 text-xs font-bold uppercase mb-1">Your Pass</p><h4 class="font-display font-medium text-lg">Marcus J.</h4></div>
+                                    <div class="w-12 h-12 bg-white rounded-lg p-1"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=VIP" class="w-full h-full object-cover"></div>
+                                </div>
+                                <div class="px-6 py-4 bg-premium-surfaceDark flex justify-between items-center text-sm"><span class="text-zinc-400">Tap to expand ticket</span><i data-lucide="chevron-up" class="w-4 h-4 text-zinc-500"></i></div>
+                            </div>
+
+                            <!-- Gamification Banner -->
+                            <div class="bg-premium-charcoal border border-premium-neon/30 rounded-3xl p-6 relative overflow-hidden shadow-neon">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-premium-neon/10 rounded-full blur-2xl pointer-events-none"></div>
+                                <div class="relative z-10">
+                                    <div class="w-12 h-12 rounded-full bg-premium-neonDim text-premium-neon flex items-center justify-center mb-4 glow-neon"><i data-lucide="camera" class="w-6 h-6"></i></div>
+                                    <h4 class="font-display font-bold text-xl text-white mb-2">Live Photo Wall</h4>
+                                    <button onclick="openBottomSheet('camera-sheet')" class="w-full bg-premium-neon text-black py-4 rounded-2xl font-bold transition-all scale-on-click flex items-center justify-center gap-2 shadow-neon mt-4">Open Camera <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fixed Bottom Nav -->
+                        <div class="absolute bottom-8 left-6 right-6 glass-panel rounded-[2rem] p-2 px-6 flex justify-between items-center z-30 shadow-2xl border border-zinc-700">
+                            <button class="p-3 text-white flex flex-col items-center gap-1 scale-on-click"><i data-lucide="home" class="w-6 h-6"></i><div class="w-1 h-1 bg-premium-gold rounded-full"></div></button>
+                            <button class="p-3 text-zinc-500 hover:text-white transition-colors flex flex-col items-center gap-1 scale-on-click"><i data-lucide="search" class="w-6 h-6"></i></button>
+                            <button onclick="openBottomSheet('scanner-sheet')" class="w-14 h-14 bg-premium-gold text-black rounded-full flex items-center justify-center transform -translate-y-4 shadow-gold scale-on-click"><i data-lucide="scan" class="w-6 h-6"></i></button>
+                            <button class="p-3 text-zinc-500 hover:text-white transition-colors flex flex-col items-center gap-1 scale-on-click"><i data-lucide="message-square" class="w-6 h-6"></i></button>
+                            <button class="p-3 text-zinc-500 hover:text-white transition-colors flex flex-col items-center gap-1 scale-on-click"><i data-lucide="user" class="w-6 h-6"></i></button>
+                        </div>
+
+                        <!-- BOTTOM SHEETS -->
+                        <div id="ticket-sheet" class="bottom-sheet absolute bottom-0 left-0 right-0 h-[85%] bg-premium-charcoal rounded-t-[2.5rem] z-[70] flex flex-col border-t border-premium-borderDark">
+                            <div class="w-full flex justify-center py-4 cursor-pointer" onclick="closeAllModals()"><div class="w-12 h-1.5 bg-zinc-700 rounded-full"></div></div>
+                            <div class="flex-1 overflow-y-auto px-8 pb-10 flex flex-col items-center">
+                                <p class="text-premium-gold font-bold uppercase tracking-widest text-xs mb-6">VIP Access</p>
+                                <div class="w-48 h-48 bg-white rounded-2xl p-3 mb-6"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=VIP" class="w-full h-full"></div>
+                                <h2 class="text-3xl font-display font-medium mb-2 text-white">Marcus Johnson</h2>
+                                <button class="w-full bg-zinc-800 py-4 rounded-2xl text-white font-bold scale-on-click mt-8" onclick="closeAllModals()">Close</button>
+                            </div>
+                        </div>
+
+                        <div id="camera-sheet" class="bottom-sheet absolute bottom-0 left-0 right-0 h-full bg-black z-[70] flex flex-col">
+                            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517457373958-b7bdd4587205?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center"></div>
+                            <div class="absolute inset-0 border-[12px] border-premium-gold/80 m-4 rounded-3xl pointer-events-none"></div>
+                            <div class="relative z-10 flex justify-between p-6 bg-gradient-to-b from-black/80 to-transparent">
+                                <button onclick="closeAllModals()" class="w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-md scale-on-click"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            </div>
+                            <div class="relative z-10 mt-auto glass-panel rounded-t-[2.5rem] p-8 pb-12 flex flex-col items-center border-t-0">
+                                <h3 class="text-xl font-display font-medium text-white mb-6">Share to Stage?</h3>
+                                <div class="flex gap-4 w-full">
+                                    <button onclick="closeAllModals()" class="flex-1 bg-transparent border border-zinc-600 text-white py-4 rounded-2xl font-bold scale-on-click">Retake</button>
+                                    <button onclick="triggerShareSheet()" class="flex-[2] bg-premium-neon text-black py-4 rounded-2xl font-bold shadow-neon scale-on-click">Send Photo</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="share-sheet" class="bottom-sheet absolute bottom-0 left-0 right-0 bg-premium-surfaceDark rounded-t-[2.5rem] z-[80] border-t border-premium-borderDark p-6 pb-12">
+                            <div class="text-center mb-6 pt-2">
+                                <div class="w-12 h-12 mx-auto rounded-full bg-premium-success/20 flex items-center justify-center mb-3 border border-premium-success/30"><i data-lucide="check" class="w-6 h-6 text-premium-success"></i></div>
+                                <h3 class="font-display font-bold text-xl text-white">Photo Uploaded!</h3>
+                            </div>
+                            <button onclick="closeAllModals()" class="w-full bg-zinc-800 text-white py-4 rounded-2xl font-bold scale-on-click mt-4">Done</button>
+                        </div>
+
+                        <div id="scanner-sheet" class="bottom-sheet absolute bottom-0 left-0 right-0 h-full bg-black z-[70] flex flex-col">
+                            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517457373958-b7bdd4587205?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center opacity-50"></div>
+                            <div class="relative z-10 flex justify-between p-6 bg-gradient-to-b from-black/80 to-transparent">
+                                <button onclick="closeAllModals()" class="w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-md scale-on-click"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+                            </div>
+                            <div class="relative z-10 flex-1 flex flex-col items-center justify-center">
+                                <div class="w-64 h-64 border-2 border-white/20 rounded-3xl overflow-hidden mb-8 relative">
+                                    <div class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-premium-gold rounded-tl-2xl"></div>
+                                    <div class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-premium-gold rounded-tr-2xl"></div>
+                                    <div class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-premium-gold rounded-bl-2xl"></div>
+                                    <div class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-premium-gold rounded-br-2xl"></div>
+                                    <div class="absolute top-0 left-0 w-full h-1 bg-premium-gold shadow-[0_0_15px_#C5A059] animate-scan-line"></div>
+                                </div>
+                                <h3 class="text-xl font-display font-medium text-white mb-2">Scan Guest QR</h3>
+                            </div>
+                        </div>
+
+                        <div id="mobile-toast" class="absolute top-12 left-6 right-6 bg-premium-gold text-black rounded-2xl p-4 shadow-gold transform -translate-y-[200%] transition-transform duration-300 z-[90] flex items-center gap-3 font-bold">
+                            <i data-lucide="bell-ring" class="w-5 h-5"></i><span id="toast-msg" class="text-sm">Notification</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script>
+        lucide.createIcons();
+        const backdrop = document.getElementById('global-backdrop');
+        const sheets = document.querySelectorAll('.bottom-sheet');
+        function openBottomSheet(id) { closeAllModals(); const sheet = document.getElementById(id); if(sheet) { backdrop.classList.add('active'); sheet.classList.add('active'); } }
+        function closeAllModals() { backdrop.classList.remove('active'); sheets.forEach(sheet => { sheet.classList.remove('active'); }); }
+        function triggerShareSheet() { document.getElementById('camera-sheet').classList.remove('active'); setTimeout(() => { document.getElementById('share-sheet').classList.add('active'); }, 150); }
+        function showMobileToast(message) { const toast = document.getElementById('mobile-toast'); document.getElementById('toast-msg').innerText = message; toast.classList.remove('-translate-y-[200%]'); toast.classList.add('translate-y-0'); setTimeout(() => { toast.classList.remove('translate-y-0'); toast.classList.add('-translate-y-[200%]'); }, 3000); }
+    </script>
+</body>
+</html>
