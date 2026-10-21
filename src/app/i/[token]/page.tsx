@@ -2,9 +2,8 @@ import { Check, Hourglass, Heart } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { Suspense } from "react";
 import { EventFacts } from "@/components/guest/event-facts";
-import { GuestShell, GuestSkeleton } from "@/components/guest/guest-shell";
+import { GuestShell } from "@/components/guest/guest-shell";
 import { headingStyle } from "@/components/guest/theme-scope";
 import { Card } from "@/components/ui/card";
 import { firstName, partyLabel } from "@/lib/guest/format";
@@ -24,15 +23,12 @@ export const metadata: Metadata = {
 
 type Props = PageProps<"/i/[token]">;
 
-export default function InvitationPage(props: Props) {
-  return (
-    <Suspense fallback={<GuestSkeleton />}>
-      <InvitationView params={props.params} />
-    </Suspense>
-  );
-}
+// A link that does not work must answer 404, and the status is fixed by the first byte. Everything on this
+// page depends on one read (the guest's invitation), so the route waits for it instead of streaming a
+// placeholder first, and says so to Next with instant = false.
+export const instant = false;
 
-async function InvitationView({ params }: { params: Props["params"] }) {
+export default async function InvitationPage({ params }: Props) {
   const { token } = await params;
   // Opening an invitation records that the guest opened it, so it is work for this request, never prepared ahead.
   await connection();

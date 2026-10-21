@@ -26,17 +26,3 @@ export function GuestShell({ theme, children }: { theme: EventTheme; children: R
     </ThemeScope>
   );
 }
-
-/** What shows while a guest page loads: the frame, in the platform's own colors. */
-export function GuestSkeleton() {
-  return (
-    <div className="min-h-dvh bg-ink" aria-busy="true" aria-label="Loading">
-      <div className="mx-auto w-full max-w-xl space-y-6 px-4 pt-16 sm:px-6">
-        <div className="h-4 w-32 animate-pulse rounded-full bg-panel-raised" />
-        <div className="h-14 w-4/5 animate-pulse rounded-2xl bg-panel-raised" />
-        <div className="h-40 animate-pulse rounded-[2rem] bg-panel" />
-        <div className="h-28 animate-pulse rounded-[2rem] bg-panel" />
-      </div>
-    </div>
-  );
-}

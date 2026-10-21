@@ -1,9 +1,8 @@
 import { CalendarPlus, KeyRound } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 import { EventFacts } from "@/components/guest/event-facts";
-import { GuestShell, GuestSkeleton } from "@/components/guest/guest-shell";
+import { GuestShell } from "@/components/guest/guest-shell";
 import { headingStyle } from "@/components/guest/theme-scope";
 import { buttonStyles } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -34,15 +33,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function EventPage(props: Props) {
-  return (
-    <Suspense fallback={<GuestSkeleton />}>
-      <EventLanding params={props.params} />
-    </Suspense>
-  );
-}
+// A made-up or unpublished address must answer 404, and the status is fixed by the first byte. So the check
+// happens before anything is sent: this route waits for the event (a cached read) instead of streaming a
+// placeholder first, and says so to Next with instant = false.
+export const instant = false;
 
-async function EventLanding({ params }: { params: Props["params"] }) {
+export default async function EventPage({ params }: Props) {
   const { slug } = await params;
   const event = await getCachedPublicEvent(slug);
   if (!event) notFound();

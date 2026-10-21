@@ -68,6 +68,17 @@ async function Guests({ params, searchParams }: { params: Props["params"]; searc
         </div>
       </div>
 
+      {event.status !== "published" && (
+        <p className="rounded-2xl border border-line bg-surface px-5 py-3 text-sm text-muted">
+          {event.status === "archived"
+            ? "This event is archived, so invitation links do not open for guests."
+            : "Invitation links start working for guests once you publish the event."}{" "}
+          <Link href={`/dashboard/events/${eventId}`} className="text-gold underline">
+            Go to the overview
+          </Link>
+        </p>
+      )}
+
       {canEdit && (
         <AddGuestPanel defaultOpen={used === 0}>
           <AddGuestForm eventId={eventId} disabledReason={capacity.full ? "The guest list is full. Remove a guest or add capacity to add more." : undefined} />
