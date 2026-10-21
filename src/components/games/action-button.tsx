@@ -14,6 +14,7 @@ export function ActionButton({
   children,
   confirm,
   className = "",
+  "aria-label": ariaLabel,
   ...props
 }: {
   action: () => Promise<Result>;
@@ -36,9 +37,10 @@ export function ActionButton({
 
   if (asking) {
     return (
-      <span className="inline-flex flex-wrap items-center gap-2" role="group" aria-label={confirm}>
+      <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-2" role="group" aria-label={confirm}>
         <span className="text-sm font-bold">{confirm}</span>
-        <Button {...props} className={className} onClick={run} disabled={pending}>
+        {/* the question above names what "Yes" does, so the button keeps its own plain label */}
+        <Button {...props} variant="danger" className={className} onClick={run} disabled={pending}>
           Yes
         </Button>
         <Button variant="ghost" onClick={() => setAsking(false)}>
@@ -50,7 +52,7 @@ export function ActionButton({
 
   return (
     <span className="inline-flex flex-col items-start gap-1.5">
-      <Button {...props} className={className} disabled={pending || props.disabled} onClick={confirm ? () => setAsking(true) : run}>
+      <Button {...props} aria-label={ariaLabel} className={className} disabled={pending || props.disabled} onClick={confirm ? () => setAsking(true) : run}>
         {children}
       </Button>
       {error && (

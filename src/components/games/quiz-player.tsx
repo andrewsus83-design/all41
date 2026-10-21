@@ -84,7 +84,9 @@ export function QuizPlayer({ token, playKey, firstName, eventName }: { token: st
   }, [state, me, refreshMe]);
 
   async function choose(index: number) {
-    if (!session || !question || session.phase !== "question" || session.position === null || sent) return;
+    if (!session || !question || session.phase !== "question" || session.position === null) return;
+    // an answer already sent for THIS question stands; one sent for an earlier question does not matter
+    if (sent && sent.sessionId === session.id && sent.position === session.position && sent.status !== "refused") return;
     const target = { sessionId: session.id, position: session.position, index };
     setSent({ ...target, status: "sending" });
     setNotice(null);

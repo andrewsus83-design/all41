@@ -212,8 +212,9 @@ export function QuizHost({
   const leaderboard = session?.leaderboard ?? [];
 
   return (
-    <div className={`fixed inset-0 z-50 flex flex-col overflow-hidden bg-ink text-fg ${awake ? "" : "cursor-none"}`}>
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(60rem_40rem_at_85%_-10%,rgb(0_240_255/0.10),transparent),radial-gradient(50rem_36rem_at_-10%_110%,rgb(197_160_89/0.12),transparent)]" />
+    <div
+      className={`fixed inset-0 z-50 flex flex-col overflow-hidden bg-ink bg-[radial-gradient(60rem_40rem_at_85%_-10%,rgb(0_240_255/0.10),transparent),radial-gradient(50rem_36rem_at_-10%_110%,rgb(197_160_89/0.12),transparent)] text-fg ${awake ? "" : "cursor-none"}`}
+    >
 
       <header className="relative flex items-center justify-between gap-6 px-[2.5vw] py-[2vh]">
         <div className="flex min-w-0 items-center gap-4">
@@ -339,7 +340,7 @@ function Picker({
     <div className="m-auto w-full max-w-4xl space-y-8 text-center">
       <div className="space-y-3">
         <Eyebrow>Live quiz</Eyebrow>
-        <h1 className="font-display text-[clamp(2rem,4vw,4.5rem)] font-semibold">Which quiz do you want to run?</h1>
+        <h1 className="font-display text-[clamp(2rem,4vw,4.5rem)] leading-tight font-semibold text-balance">Which quiz do you want to run?</h1>
         {!published && <p className="text-warning">This event is not published yet, so guests cannot join. Publish it first.</p>}
       </div>
       {quizzes.length === 0 ? (
@@ -351,9 +352,9 @@ function Picker({
           .
         </p>
       ) : (
-        <ul className="grid gap-4 text-left sm:grid-cols-2">
+        <ul className="flex flex-wrap justify-center gap-4 text-left">
           {quizzes.map((quiz) => (
-            <li key={quiz.id} className="flex items-center justify-between gap-4 rounded-[2rem] border border-line bg-panel p-6">
+            <li key={quiz.id} className="flex w-full items-center justify-between gap-4 rounded-[2rem] border border-line bg-panel p-6 sm:w-[calc(50%-0.5rem)]">
               <div className="min-w-0">
                 <p className="truncate font-display text-2xl font-semibold">{quiz.title}</p>
                 <p className="text-muted">
@@ -542,7 +543,7 @@ function RevealStage({ session }: { session: QuizSession }) {
 
       <section aria-labelledby="top-heading" className="flex flex-col gap-[2vh]">
         <h2 id="top-heading" className="flex items-center gap-3 font-display text-[clamp(1.4rem,2.2vw,2.75rem)] font-semibold">
-          <Trophy className="size-[1.1em] text-gold" aria-hidden /> Top {rows.length > 0 ? Math.min(10, rows.length) : 10}
+          <Trophy className="size-[1.1em] text-gold" aria-hidden /> {rows.length >= 10 ? "Top 10" : "Leaderboard"}
         </h2>
         <StageBoard rows={rows} />
       </section>
