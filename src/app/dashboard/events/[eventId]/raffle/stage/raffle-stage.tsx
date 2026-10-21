@@ -3,7 +3,7 @@
 import { ArrowRight, Maximize2, RotateCcw, Trophy, Volume2, VolumeX, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { nextPrize, type DrawResult, type RafflePrize } from "@/lib/raffle/records";
+import { nextPrize, unseenDraw, type DrawResult, type RafflePrize, type StageWinner } from "@/lib/raffle/records";
 import { drawForPrize, redrawAbsent, refreshStage } from "../actions";
 import "./stage.css";
 import { useStageSound } from "./use-stage-sound";
@@ -17,20 +17,13 @@ interface StageTheme {
   serif: boolean;
 }
 
-interface Winner {
-  drawId: string;
-  prizeId: string;
-  prizeName: string;
-  name: string;
-  tableNo: string | null;
-}
-
 type Phase = { kind: "idle" } | { kind: "spinning"; result: DrawResult } | { kind: "revealed"; result: DrawResult };
 
 const REEL_STEPS = 30;
 
-const winnerFromDraw = (result: DrawResult): Winner => ({
+const winnerFromDraw = (result: DrawResult): StageWinner => ({
   drawId: result.drawId,
+  drawnAt: result.drawnAt,
   prizeId: result.prize.id,
   prizeName: result.prize.name,
   name: result.winner.name,
@@ -60,7 +53,7 @@ export function RaffleStage({
   backHref: string;
   prizes: RafflePrize[];
   remaining: number;
-  winners: Winner[];
+  winners: StageWinner[];
 }) {
   const [prizes, setPrizes] = useState(initialPrizes);
   const [remaining, setRemaining] = useState(initialRemaining);
@@ -84,16 +77,19 @@ export function RaffleStage({
     setRemaining(left);
   }, []);
 
+  // Asks the server what is true now and shows it. Undefined when it could not be reached.
   const resync = useCallback(async () => {
     try {
       const result = await refreshStage(eventId);
-      if (result.ok) {
-        setPrizes(result.value.prizes);
-        setRemaining(result.value.remaining);
-        setSelectedId((id) => (result.value.prizes.some((prize) => prize.id === id && prize.awarded < prize.quantity) ? id : nextPrize(result.value.prizes)?.id));
-      }
+      if (!result.ok) return undefined;
+      setPrizes(result.value.prizes);
+      setRemaining(result.value.remaining);
+      setWinners(result.value.winners);
+      setSelectedId((id) => (result.value.prizes.some((prize) => prize.id === id && prize.awarded < prize.quantity) ? id : nextPrize(result.value.prizes)?.id));
+      return result.value;
     } catch {
       // The next action will say if the connection is the problem.
+      return undefined;
     }
   }, [eventId]);
 
@@ -103,6 +99,29 @@ export function RaffleStage({
     setShown("");
     setPhase({ kind: "spinning", result });
   }, []);
+
+  // The answer to a tap was lost, but the tap may have reached the server first. Ask what
+  // it recorded: a draw the screen never heard about is revealed like any other, so the
+  // presenter never draws twice for one tap.
+  const recover = useCallback(
+    async (shown: string[], fallback: string, absent?: string) => {
+      const state = await resync();
+      if (!state) {
+        setNotice("No connection. That tap may have gone through: check the raffle log before you draw again.");
+        return;
+      }
+      const missed = unseenDraw(shown, state);
+      if (missed) {
+        startReel(missed);
+      } else if (absent && !state.winners.some((winner) => winner.drawId === absent)) {
+        setPhase({ kind: "idle" });
+        setNotice("The absent winner is recorded. Draw again.");
+      } else {
+        setNotice(fallback);
+      }
+    },
+    [resync, startReel],
+  );
 
   const draw = useCallback(async () => {
     if (!current || busy) return;
@@ -117,14 +136,17 @@ export function RaffleStage({
         return;
       }
       applyPrize(result.value.prize, result.value.remaining);
-      setWinners((now) => [...now, winnerFromDraw(result.value)]);
+      setWinners((now) => [winnerFromDraw(result.value), ...now]);
       startReel(result.value);
     } catch {
-      setNotice("No connection. The draw did not happen. Try again.");
+      await recover(
+        winners.map((winner) => winner.drawId),
+        "No connection. The draw did not happen. Try again.",
+      );
     } finally {
       setBusy(false);
     }
-  }, [current, busy, eventId, unlock, applyPrize, startReel, resync]);
+  }, [current, busy, eventId, winners, unlock, applyPrize, startReel, resync, recover]);
 
   const redraw = useCallback(async () => {
     if (phase.kind !== "revealed" || busy) return;
@@ -147,14 +169,18 @@ export function RaffleStage({
         return;
       }
       applyPrize(result.draw.prize, result.draw.remaining);
-      setWinners((now) => [...now.filter((winner) => winner.drawId !== previous.drawId), winnerFromDraw(result.draw)]);
+      setWinners((now) => [winnerFromDraw(result.draw), ...now.filter((winner) => winner.drawId !== previous.drawId)]);
       startReel(result.draw);
     } catch {
-      setNotice("No connection. Nothing changed. Try again.");
+      await recover(
+        winners.map((winner) => winner.drawId),
+        "No connection. Nothing changed. Try again.",
+        previous.drawId,
+      );
     } finally {
       setBusy(false);
     }
-  }, [phase, busy, eventId, unlock, applyPrize, startReel, resync]);
+  }, [phase, busy, eventId, winners, unlock, applyPrize, startReel, resync, recover]);
 
   const next = useCallback(() => {
     if (phase.kind !== "revealed") return;

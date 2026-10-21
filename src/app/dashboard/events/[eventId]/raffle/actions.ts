@@ -8,8 +8,8 @@ import { getEventRole } from "@/lib/checkin/queries";
 import { getEvent } from "@/lib/events/queries";
 import { fieldErrorsOf, formObject, type FormState } from "@/lib/forms";
 import { describeRaffleError, classifyRaffleError, RAFFLE_MESSAGES } from "@/lib/raffle/errors";
-import { drawWinner, forfeitDraw, loadSummary } from "@/lib/raffle/queries";
-import type { DrawResult, ForfeitResult, RaffleSummary } from "@/lib/raffle/records";
+import { drawWinner, forfeitDraw, loadLog, loadSummary } from "@/lib/raffle/queries";
+import { winnersOf, type DrawResult, type ForfeitResult, type StageState } from "@/lib/raffle/records";
 import { createClient } from "@/lib/supabase/server";
 
 // Owners manage prizes, owners and staff draw. Each action asks who is calling and
@@ -172,13 +172,14 @@ export async function redrawAbsent(eventId: string, drawId: string, prizeId: str
   return { ok: true, forfeited: forfeited.value, draw: drawn.value };
 }
 
-/** The stage reads the prizes and the pool again, for example after another device drew. */
-export async function refreshStage(eventId: string): Promise<ActionResult<RaffleSummary>> {
+/** The stage reads the prizes, the pool and the winners again, for example after another device drew or a connection dropped. */
+export async function refreshStage(eventId: string): Promise<ActionResult<StageState>> {
   if (!(await signedIn())) return { ok: false, error: SIGNED_OUT, signedOut: true };
   if (!isUuid(eventId)) return { ok: false, error: NO_ACCESS };
 
   const supabase = await createClient();
-  const result = await loadSummary(supabase, eventId);
-  if (!result.ok) return { ok: false, error: describeRaffleError(result.error) };
-  return result;
+  const [summary, log] = await Promise.all([loadSummary(supabase, eventId), loadLog(supabase, eventId)]);
+  if (!summary.ok) return { ok: false, error: describeRaffleError(summary.error) };
+  if (!log.ok) return { ok: false, error: describeRaffleError(log.error) };
+  return { ok: true, value: { prizes: summary.value.prizes, remaining: summary.value.remaining, winners: winnersOf(log.value) } };
 }
