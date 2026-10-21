@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { PGlite } from '@electric-sql/pglite';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { classifyGameError, type GameFailure } from '@/lib/games/errors';
 import { quizPoints } from '@/lib/games/scoring';
 import { asAnon, asService, asUser, createDb } from './harness';
 
@@ -193,6 +194,7 @@ describe('access to the game tables', () => {
     for (const signature of [
       'public.a41_game_key(uuid)',
       'public.a41_quiz_host_state(uuid)',
+      'public.a41_hunt_host_board(uuid)',
       'public.a41_quiz_open_lobby(uuid)',
       'public.a41_quiz_control(uuid, text, integer)',
       'public.a41_quiz_move_question(uuid, integer)',
@@ -1157,6 +1159,66 @@ describe('the hunt leaderboard', () => {
     await claim(a.guests[0].token, 'ALPHA1');
     const seen = await rpc<Json>('anon', null, 'public.a41_hunt_public_leaderboard($1)', [await playKey(b)]);
     expect(seen).toEqual({ missions: 0, leaderboard: [] });
+  });
+});
+
+describe('the hunt board for the team', () => {
+  it('shows codes, how often each mission was found and full names, to owners and staff', async () => {
+    const w = await world();
+    const first = await addMission(w, { code: 'ALPHA1', title: 'Selfie' });
+    await addMission(w, { code: 'BRAVO2', title: 'Quiz master', active: false });
+    await claim(w.guests[0].token, 'ALPHA1');
+    await claim(w.guests[1].token, 'ALPHA1');
+    for (const role of ['owner', 'staff'] as const) {
+      const result = await rpc<Json>(role, w, 'public.a41_hunt_host_board($1)', [w.eventId]);
+      expect(result.missions).toMatchObject([
+        { id: first.id, code: 'ALPHA1', found: 2, active: true },
+        { code: 'BRAVO2', found: 0, active: false },
+      ]);
+      expect(result.players).toBe(2);
+      expect((result.leaderboard as Json[]).map((row) => row.name)).toEqual(['Dewi Lestari', 'Budi Santoso']);
+    }
+  });
+
+  it('is closed to strangers and signed-out visitors', async () => {
+    const w = await world();
+    expect((await failure(() => rpc('stranger', w, 'public.a41_hunt_host_board($1)', [w.eventId]))).code).toBe('42501');
+    await expect(rpc('anon', null, 'public.a41_hunt_host_board($1)', [w.eventId])).rejects.toThrow(/permission denied/);
+  });
+});
+
+// The app explains these failures in words. The database raises each one here,
+// so a renamed rule breaks this test and not a host in front of a room.
+describe('database errors the app explains', () => {
+  const classified = async (run: () => Promise<unknown>): Promise<GameFailure> => {
+    const raised = await failure(run);
+    return classifyGameError({ code: raised.code, message: raised.message });
+  };
+
+  it('names every rule a host can hit', async () => {
+    const w = await world();
+    const { quizId, sessionId, questionIds } = await liveQuiz(w);
+    expect(await classified(() => asUser(db, w.owner, () => db.query(`delete from a41_quiz_questions where id = $1`, [questionIds[0]])))).toBe('quiz_in_use');
+    expect(await classified(() => openLobby(w, quizId))).toBe('session_already_live');
+    expect(await classified(() => control(w, sessionId, 'reveal'))).toBe('invalid_transition');
+    await control(w, sessionId, 'start');
+    await control(w, sessionId, 'reveal', 1);
+    await control(w, sessionId, 'next', 1);
+    expect(await classified(() => control(w, sessionId, 'reveal', 1))).toBe('stale_question');
+    expect(await classified(() => control(w, sessionId, 'start', null, 'stranger'))).toBe('forbidden');
+
+    const empty = await world();
+    const { quizId: emptyQuiz } = await addQuiz(empty, []);
+    expect(await classified(() => openLobby(empty, emptyQuiz))).toBe('quiz_has_no_questions');
+    expect(
+      await classified(() => asUser(db, empty.owner, () => db.query(`insert into a41_quiz_questions (quiz_id, prompt, options, correct_index) values ($1, 'Q?', '{a,""}', 0)`, [emptyQuiz]))),
+    ).toBe('invalid_options');
+
+    const missions = await world();
+    await addMission(missions, { code: 'ABC123' });
+    expect(await classified(() => addMission(missions, { code: 'abc123' }))).toBe('duplicate_code');
+    await db.query(`insert into a41_hunt_missions (event_id, title) select $1, 'M' || g from generate_series(1, 49) g`, [missions.eventId]);
+    expect(await classified(() => addMission(missions))).toBe('mission_limit');
   });
 });
 

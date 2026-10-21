@@ -568,7 +568,8 @@ $$;
 
 -- The hunt standing of an event: points per guest, ties share a rank, and the
 -- guest who got there first is listed first.
-create function a41_private.hunt_leaderboard(p_event uuid, p_limit integer) returns jsonb
+create function a41_private.hunt_leaderboard(p_event uuid, p_limit integer, p_full_names boolean default false)
+returns jsonb
 language sql stable security definer set search_path = ''
 as $$
   select coalesce(jsonb_agg(
@@ -578,7 +579,7 @@ as $$
   from (
     select
       a41_private.standing_id(t.guest_id) as id,
-      a41_private.display_name(g.name) as name,
+      case when p_full_names then g.name else a41_private.display_name(g.name) end as name,
       t.score,
       t.missions,
       rank() over (order by t.score desc) as rank,
@@ -599,7 +600,7 @@ revoke execute on function
   a41_private.game_key(uuid),
   a41_private.quiz_state(uuid),
   a41_private.quiz_me(public.a41_guests),
-  a41_private.hunt_leaderboard(uuid, integer),
+  a41_private.hunt_leaderboard(uuid, integer, boolean),
   a41_private.quiz_points(integer, integer, integer),
   a41_private.display_name(text),
   a41_private.standing_id(uuid)
@@ -631,6 +632,31 @@ begin
     raise exception 'forbidden' using errcode = '42501';
   end if;
   return a41_private.quiz_state(p_event);
+end
+$$;
+
+-- The hunt as the team sees it: every mission with its code and how many guests
+-- found it, and the leaderboard with full names.
+create function public.a41_hunt_host_board(p_event uuid) returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  if not a41_private.is_event_member(p_event) then
+    raise exception 'forbidden' using errcode = '42501';
+  end if;
+  return jsonb_build_object(
+    'missions', (
+      select coalesce(jsonb_agg(
+        jsonb_build_object(
+          'id', m.id, 'title', m.title, 'hint', m.hint, 'points', m.points, 'code', m.code,
+          'active', m.active, 'found', (select count(*) from public.a41_hunt_claims c where c.mission_id = m.id)
+        ) order by m.position, m.created_at
+      ), '[]'::jsonb)
+      from public.a41_hunt_missions m where m.event_id = p_event
+    ),
+    'players', (select count(distinct c.guest_id) from public.a41_hunt_claims c where c.event_id = p_event),
+    'leaderboard', a41_private.hunt_leaderboard(p_event, 20, true)
+  );
 end
 $$;
 
@@ -1047,6 +1073,7 @@ $$;
 revoke execute on function
   public.a41_game_key(uuid),
   public.a41_quiz_host_state(uuid),
+  public.a41_hunt_host_board(uuid),
   public.a41_quiz_open_lobby(uuid),
   public.a41_quiz_control(uuid, text, integer),
   public.a41_quiz_move_question(uuid, integer)
@@ -1055,6 +1082,7 @@ from public, anon;
 grant execute on function
   public.a41_game_key(uuid),
   public.a41_quiz_host_state(uuid),
+  public.a41_hunt_host_board(uuid),
   public.a41_quiz_open_lobby(uuid),
   public.a41_quiz_control(uuid, text, integer),
   public.a41_quiz_move_question(uuid, integer)
