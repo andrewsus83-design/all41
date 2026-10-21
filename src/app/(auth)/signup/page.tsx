@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
+export const instant = true;
+
 export default function SignUpPage({ searchParams }: PageProps<"/signup">) {
   return (
     <AuthCard
