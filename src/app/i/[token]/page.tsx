@@ -49,11 +49,15 @@ export default async function InvitationPage({ params }: Props) {
           <StatusChip tone="neutral" icon={<Heart className="size-4" aria-hidden="true" />}>
             You replied: cannot come
           </StatusChip>
-        ) : (
+        ) : invitation.rsvpOpen ? (
           <StatusChip tone="gold">You are invited</StatusChip>
+        ) : (
+          <StatusChip tone="neutral" icon={<Hourglass className="size-4" aria-hidden="true" />}>
+            Replies closed
+          </StatusChip>
         )}
         <p className="pt-2 text-lg text-muted">
-          Hi {name}, {attending ? "we will see you at" : rsvp ? "thank you for letting us know about" : "you are invited to"}
+          Hi {name}, {greeting(invitation)}
         </p>
         <h1 className="font-display text-4xl leading-tight font-semibold break-words sm:text-5xl" style={headingStyle(event.theme)}>
           {event.name}
@@ -67,6 +71,12 @@ export default async function InvitationPage({ params }: Props) {
       </div>
     </GuestShell>
   );
+}
+
+function greeting({ rsvp, rsvpOpen }: Invitation): string {
+  if (rsvp?.response === "attending") return "we will see you at";
+  if (rsvp) return "thank you for letting us know about";
+  return rsvpOpen ? "you are invited to" : "you were invited to";
 }
 
 function StatusChip({ tone, icon, children }: { tone: "gold" | "success" | "neutral"; icon?: React.ReactNode; children: React.ReactNode }) {
@@ -105,7 +115,7 @@ function ConfirmedView({ invitation, token }: { invitation: Invitation; token: s
         timeZone={event.timezone}
         checkedInAt={invitation.checkedInAt}
       />
-      <ActionCards cards={invitationCards({ token, event })} />
+      <ActionCards cards={invitationCards({ token, event, ended: !invitation.rsvpOpen })} />
       <FactsCard invitation={invitation} />
       {invitation.rsvpOpen ? <ChangeAnswer token={token} existing={rsvp} /> : <EndedNote />}
     </>
@@ -141,7 +151,7 @@ function NoAnswerYet({ invitation, token }: { invitation: Invitation; token: str
       ) : (
         <EndedNote />
       )}
-      <ActionCards cards={invitationCards({ token, event: invitation.event })} />
+      <ActionCards cards={invitationCards({ token, event: invitation.event, ended: !invitation.rsvpOpen })} />
     </>
   );
 }

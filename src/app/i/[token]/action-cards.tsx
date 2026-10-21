@@ -19,19 +19,24 @@ export interface ActionCard {
 /**
  * The cards the invitation shows under the pass. Features add theirs here, one entry each, for example
  * `/i/<token>/photos` (photo wall), `/i/<token>/play` (live quiz), `/i/<token>/hunt` (scavenger hunt)
- * and `/i/<token>/album` (photos after the event). Order is the order on screen.
+ * and `/i/<token>/album` (photos after the event). Order is the order on screen. `ended` is true once the event
+ * is over: a card that only makes sense before the event (the calendar entry) is left out then.
  */
-export function invitationCards({ event }: { token: string; event: PublicEvent }): ActionCard[] {
-  return [
-    {
+export function invitationCards({ event, ended }: { token: string; event: PublicEvent; ended: boolean }): ActionCard[] {
+  const cards: ActionCard[] = [];
+
+  if (!ended) {
+    cards.push({
       id: "calendar",
       title: "Add to calendar",
       description: "Save the date in your phone's calendar.",
       href: calendarPath(event.slug),
       icon: CalendarPlus,
       download: true,
-    },
-  ];
+    });
+  }
+
+  return cards;
 }
 
 export function ActionCards({ cards }: { cards: ActionCard[] }) {
