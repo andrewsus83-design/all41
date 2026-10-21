@@ -21,7 +21,7 @@ import { useUploadQueue, type UploadItem } from "./use-upload-queue";
 
 const STATUS_LABEL: Record<PhotoStatus, { label: string; tone: BadgeTone }> = {
   approved: { label: "On the wall", tone: "cyan" },
-  pending: { label: "Waiting for approval", tone: "warning" },
+  pending: { label: "Pending", tone: "warning" },
   rejected: { label: "Not shown", tone: "danger" },
   removed: { label: "Removed", tone: "neutral" },
 };
